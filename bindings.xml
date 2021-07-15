@@ -1,0 +1,12 @@
+<Bindings>
+	<Layer name="General">
+		<Category name="|cFFD700Artaeum Group Tool|r">
+			<Action name="ARTAEUMGROUPTOOL_TOGGLE_SOC">
+				<Down>ArtaeumGroupTool.SOC.startTimer()</Down>
+			</Action>
+			<Action name="ARTAEUMGROUPTOOL_SEND_DISCORD">
+				<Down>ArtaeumGroupTool.Discord.sendDiscord()</Down>
+			</Action>
+		</Category>
+	</Layer>
+</Bindings>
