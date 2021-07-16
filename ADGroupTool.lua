@@ -32,6 +32,11 @@ AD.Settings.DefaultSettings = {
 		showArrow = true,
 		markerType = "Crown",
 		cyrodilOnly = false
+	},
+	Group = {
+		enabled = false,
+		cyrodilOnly = false,
+		frequency = 3000
 	}
 }
 

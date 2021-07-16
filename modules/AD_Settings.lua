@@ -15,6 +15,38 @@ function settings.createSettings()
 
 	local optionsTable = {
 
+		-- Group ULT share
+		{
+			type = "submenu",
+			name = "|cFFD700[Group Ultimate Share Module]|r",
+			controls = {
+				{
+					type = "checkbox",
+					name = "Enable Module",
+					tooltip = "If this is enabled, your ultimate will be shared with the group.",
+					getFunc = function() return vars.Group.enabled end,
+					setFunc = function(value) vars.Group.enabled = value end,
+					requiresReload = true
+				},
+				
+				{
+					type = "checkbox",
+					name = "PvP Only",
+					tooltip = "If this is enabled, this module will only run in Cyrodiil and Imperial City",
+					getFunc = function() return vars.Group.cyrodilOnly end,
+					setFunc = function(value) vars.Group.cyrodilOnly = value end
+				},
+				{
+					type = "editbox",
+					name = "Frequency (ms)",
+					tooltip = "How much time should be spent between transmissions, in milliseconds.",
+					getFunc = function() return vars.Group.frequency end,
+					setFunc = function(value) vars.Group.frequency = tonumber(value) end,
+					isMultiline = false,
+					requiresReload = true
+				}
+			}
+		},
 		-- Crown Arrow Module
 		{
 			type = "submenu",
