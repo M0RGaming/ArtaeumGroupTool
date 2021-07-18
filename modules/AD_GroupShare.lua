@@ -4,10 +4,31 @@ AD.Group = {}
 local group = AD.Group
 local vars = {}
 local LMP = LibMapPing
+local LGPS = LibGPS3
 
 local frameDB = {}
 
 AD.last = {} -- TESTING
+group.toSend = {
+	assistPing = false
+}
+-- Data that is transfered: 
+--[[
+1 [free bit (true or false)] (previously verification)
+1 camp lock
+1 assist ping - if button pressed, beam of light is placed on user
+4 hammer bar (possibly able to remove, depending on demand) GetUnitPower('player',POWERTYPE_DAEDRIC)
+1 [free bit (true or false)] (previously hammer)
+
+8 ult ID
+
+7 ult bar
+1 [free bit (true or false)] may implement proxy timer
+
+4 mag bar
+4 stam bar
+]]
+
 
 
 function group.init()
@@ -15,20 +36,8 @@ function group.init()
 
 	if vars.enabled then
 		group.moveBoxes()
-
-		--[[
-		if IsUnitGrouped('player') then
-			zo_callLater(group.updateBoxes,500)
-		end
-		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Join", EVENT_GROUP_MEMBER_JOINED, group.groupJoin)
-		]]--
-
 		LMP:SuppressPing(MAP_PIN_TYPE_PING)
-
-		--EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Ping", EVENT_MAP_PING , group.pingCallback)
 		LMP:RegisterCallback('AfterPingAdded', group.pingCallback)
-
-
 		SecurePostHook(UNIT_FRAMES, "CreateFrame", function(_, unitTag, anchors, barTextMode, style)
 			if style == "ZO_GroupUnitFrame" then --ZO_GroupUnitFrame --ZO_RaidUnitFrame
 				if frameDB[unitTag] == nil then
@@ -36,7 +45,6 @@ function group.init()
 				end
 			end
 		end)
-
 		EVENT_MANAGER:RegisterForUpdate("AD Group Tool Group Ping", vars.frequency, group.ping)
 	end
 end
@@ -59,48 +67,114 @@ end
 
 
 
+
+function group.toSend:send()
+	local assistPing = self.assistPing and 1 or 0
+	local campLock = (GetNextForwardCampRespawnTime() ~= 0) and 1 or 0
+	local hammerCurrent, hammerMax = GetUnitPower('player',POWERTYPE_DAEDRIC)
+	if hammerMax == 0 then hammerMax = 1 end
+	local hammerBar = math.floor(hammerCurrent/hammerMax*15)
+	local ult = {}
+	ult.id = group.ultiIndexes[GetSlotBoundId(8)]
+	ult.current = GetUnitPower('player',POWERTYPE_ULTIMATE)
+	ult.max = GetSlotAbilityCost(8)
+	ult.percent = math.floor(ult.current/ult.max*100)
+	if ult.percent > 100 then ult.percent = 100 end
+	local magCurrent, magMax = GetUnitPower('player',POWERTYPE_MAGICKA)
+	local magBar = math.floor(magCurrent/magMax*15)
+	local stamCurrent, stamMax = GetUnitPower('player',POWERTYPE_STAMINA)
+	local stamBar = math.floor(stamCurrent/stamMax*15)
+
+
+	local x = group.writeStream(
+		{0,campLock,assistPing,hammerBar,0,ult.id},
+		{1,1,1,4,1,8}
+	)
+	local y = group.writeStream(
+		{ult.percent,0,magBar,stamBar},
+		{7,1,4,4}
+	)
+	LGPS:PushCurrentMap()
+	SetMapToMapListIndex(14)
+	LMP:SetMapPing(
+		MAP_PIN_TYPE_PING,
+		MAP_TYPE_LOCATION_CENTERED,
+		x*group.stepSize,
+		y*group.stepSize
+	)
+	LGPS:PopCurrentMap()
+	--d("Sent")
+end
+--[[
+1 [free bit (true or false)] (previously verification)
+1 camp lock
+1 assist ping - if button pressed, beam of light is placed on user
+4 hammer bar (possibly able to remove, depending on demand) GetUnitPower('player',POWERTYPE_DAEDRIC)
+1 [free bit (true or false)] (previously hammer)
+
+8 ult ID
+
+7 ult bar
+1 [free bit (true or false)] may implement proxy timer
+
+4 mag bar
+4 stam bar
+]]
+
+
+
+
+
+
 function group.ping()
-	--local ult = 38
-	--local current = 140
-	--local max = 191
+	--[[
 	local current = GetUnitPower('player',10)
 	local max = GetSlotAbilityCost(8)
 	local ultID = GetSlotBoundId(8)
 	local ult = group.ultiIndexes[ultID]
 	-- 145 = Artaeum identifier
 	local encX, encY = group.EncodeMessage(145, ult, current, max)
+
+
 	LMP:SetMapPing(
 		MAP_PIN_TYPE_PING,
 		MAP_TYPE_LOCATION_CENTERED,
 		encX,--tonumber(ult/1000), -- for something like 45, it will be 0.145045
 		encY --percent
 	)
+	]]
+	group.toSend:send()
 end
---/script d(tonumber(string.format("%.2f",0.19999)))
 
---function group.pingCallback(eventCode,pingEventType,pingType,pingTag,x,y,isLocalPlayerOwner) 
+
 function group.pingCallback(pingType,pingTag,x,y,isLocalPlayerOwner)
 	if(pingType == MAP_PIN_TYPE_PING) then
-		AD.last = {pingType,pingTag,x,y,isLocalPlayerOwner}
 		if frameDB[pingTag] ~= nil then
-			local i,ult,current,max = group.DecodeMessage(x,y)
-			if i ~= 145 then return end
-			d(i,ult,current,max)
-			local ultIcon = group.ultList[group.ultiIndexes[ult]]
-			if ultIcon == nil then return end
-			group.setUlt(pingTag,current,max,ultIcon)
-			--local ultID = tonumber(string.format("%.3f",x))
-			--if ultID > 0.145 and ultID < 0.145999 then --145 identifies if its AD sending it
-			--local ultPercent = tonumber(string.format("%.3f",y))
-			--local ultOut = math.floor((out-0.145)*1000000)
-			--local ultIcon = group.ultList[group.ultiIndexes[ultID*1000]]
-			--group.setUlt(pingTag, ultPercent, ultIcon)
-			--end
+
+			LGPS:PushCurrentMap()
+			SetMapToMapListIndex(14)
+			x, y = LMP:GetMapPing(pingType, pingTag)
+			if(not LMP:IsPositionOnMap(x, y)) then return false end
+			LGPS:PopCurrentMap()
+
+			
+			
+			x = math.floor(x / group.stepSize + 0.5)
+			y = math.floor(y / group.stepSize + 0.5)
+			local outstreamX = group.readStream(x,{1,1,1,4,1,8})
+			local outstreamY = group.readStream(y,{7,1,4,4})
+
+			AD.last = {outstreamX, outstreamY, pingTag, x, y}
+
+			--local i,ult,current,max = group.DecodeMessage(x,y)
+			--if i ~= 145 then return end
+			--d(i,ult,current,max)
+			--local ultIcon = group.ultList[group.ultiIndexes[ult]]
+			--if ultIcon == nil then return end
+			--group.setUlt(pingTag,current,max,ultIcon)
 		end
 	end
 end
-
-
 
 
 function group.setUlt(unitTag, value, max, icon)
@@ -110,39 +184,6 @@ function group.setUlt(unitTag, value, max, icon)
 		frameDB[unitTag]['image']:SetTexture(icon)
 	end
 end
-
-
---[[
-function group.groupJoin(eventCode, _, name, isLocalPlayer)
-	if GetGroupSize() < 5 then
-		return
-	end
-	if isLocalPlayer then
-		zo_callLater(group.updateBoxes,500)
-		return
-	end
-	for i=1,GetGroupSize() do
-		if GetUnitDisplayName('group'..i) == name then
-			if frameDB[i] == nil then
-				group.setupBox(i)
-			end
-			return
-		end
-	end
-end
-
-function group.updateBoxes()
-	if GetGroupSize() < 5 then
-		return
-	end
-	for i=1,GetGroupSize() do
-		if frameDB[i] == nil then
-			group.setupBox(i)
-		end
-	end
-end
-]]--
-
 
 
 function group.setupBox(unitTag)
@@ -193,10 +234,9 @@ end
 
 --/script PingMap(182, 1, 1 / 2^16, 1 / 2^16) StartChatInput(table.concat({GetMapPlayerWaypoint()}, ","))
 -- Adapted from RdK group tool, who adapted it from lib group socket
-local stepSize = 1.333333329967e-05
---1.333333329967e-05,1.333333329967e-05 
----3.6467070458457e-05,-3.6467070458457e-05
--- 1.4285034012573e-005 from LGS
+group.stepSize = 1.333333329967e-05
+--1.333333329967e-05 in Cyro
+-- 1.4285034012573e-005 from LGS in Coldharbour
 
 
 function group.EncodeMessage(b0, b1, b2, b3)
@@ -204,11 +244,11 @@ function group.EncodeMessage(b0, b1, b2, b3)
 	b1 = b1 or 0
 	b2 = b2 or 0
 	b3 = b3 or 0
-	return (b0 * 0x100 + b1) * stepSize, (b2 * 0x100 + b3) * stepSize
+	return (b0 * 0x100 + b1) * group.stepSize, (b2 * 0x100 + b3) * group.stepSize
 end
 function group.DecodeMessage(x, y)
-	x = math.floor(x / stepSize + 0.5)
-	y = math.floor(y / stepSize + 0.5)
+	x = math.floor(x / group.stepSize + 0.5)
+	y = math.floor(y / group.stepSize + 0.5)
 
 	local b0 = math.floor(x / 0x100)
 	local b1 = x % 0x100
@@ -219,7 +259,7 @@ function group.DecodeMessage(x, y)
 end
 
 -- breakdownArray is in the form of [1,1,2,4] or something, where the number refer to how long to read
-local function readStream(stream, breakdownArray)
+function group.readStream(stream, breakdownArray)
 	local value = 0
 	local outstream = {}
 	local current = 0
@@ -236,8 +276,8 @@ local function readStream(stream, breakdownArray)
 end
 
 
--- [1,0,10] [1,1,4]
-local function writeStream(stream, breakdownArray)
+-- Example inputs: {1,0,10} {1,1,4}, stream is a list of data points
+function group.writeStream(stream, breakdownArray)
 	local index = 0
 	local outstream = 0
 	for i=#breakdownArray,1,-1 do
