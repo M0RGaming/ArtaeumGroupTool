@@ -1,10 +1,16 @@
+name: PushToEsoUI
+
 on: [workflow_dispatch]
 
 jobs:
   hello_world_job:
     runs-on: ubuntu-latest
-    name: A job to say hello
+    name: Pushing
     steps:
+      - uses: actions/checkout@v2
+        with:
+          path: 'ArtaeumGroupTool'
+
       - name: Hello world action step
         id: hello
         uses: M0RGaming/Push-To-EsoUI@main
