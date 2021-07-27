@@ -120,7 +120,7 @@ function guild.createArrow()
 		arrowMagnitude = 3,
 		arrowScale = 1,
 		arrowHeight = 1,
-		arrowColour = "FF0000",
+		arrowColour = "00FF00",
 
 		distanceDigits = 4,
 		distanceScale = 25,
@@ -128,7 +128,7 @@ function guild.createArrow()
 		distanceHeight = 1,
 		distanceColour = "FFFFFF",
 
-		markerColour = "FF0000",
+		markerColour = "00FF00",
 		markerScale = 1,
 	})
 end

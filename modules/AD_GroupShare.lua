@@ -12,6 +12,7 @@ AD.last = {} -- TESTING
 group.toSend = {
 	assistPing = false
 }
+group.arrow = nil
 -- Data that is transfered: 
 --[[
 1 [free bit (true or false)] (previously verification)
@@ -35,41 +36,71 @@ function group.init()
 	vars = AD.vars.Group
 
 	if vars.enabled then
-		group.moveBoxes()
-		LMP:SuppressPing(MAP_PIN_TYPE_PING)
-		LMP:RegisterCallback('AfterPingAdded', group.pingCallback)
+		--group.moveBoxes()
+		--LMP:SuppressPing(MAP_PIN_TYPE_PING)
+		--LMP:MutePing(MAP_PIN_TYPE_PING)
+		LMP:RegisterCallback('BeforePingAdded', group.pingCallback)
+		LMP:RegisterCallback('AfterPingRemoved', group.OnAfterPingRemoved)
+		--[[
 		SecurePostHook(UNIT_FRAMES, "CreateFrame", function(_, unitTag, anchors, barTextMode, style)
-			if style == "ZO_GroupUnitFrame" then --ZO_GroupUnitFrame --ZO_RaidUnitFrame
+			if style == "ZO_RaidUnitFrame" then --ZO_GroupUnitFrame --ZO_RaidUnitFrame
 				if frameDB[unitTag] == nil then
 					group.setupBox(unitTag)
 				end
 			end
 		end)
+		]]
+		AD_Group_TopLevel:SetHidden(false)
+		SecurePostHook(UNIT_FRAMES, "CreateFrame", function(_, unitTag, anchors, barTextMode, style)
+			if style == "ZO_RaidUnitFrame" then --ZO_GroupUnitFrame --ZO_RaidUnitFrame
+				if frameDB[unitTag] == nil then
+					--d(unitTag)
+					frameDB[unitTag] = group.frameObject:new(unitTag)
+				end
+			end
+		end)
 		EVENT_MANAGER:RegisterForUpdate("AD Group Tool Group Ping", vars.frequency, group.ping)
+		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Power", EVENT_POWER_UPDATE, group.powerCallback)
+
+		group.createArrow()
+		group.arrow:SetTarget(0, 0)
+		--CreateControlFromVirtual("AD",AD_Group_TopLevel,"AD_Group_Template")
 	end
 end
 
 
 
-group.isPinging = false
-function group.togglePing()
-	if group.isPinging then
-		EVENT_MANAGER:UnregisterForUpdate("AD Group Tool Group Ping")
-		d("Stopped pinging")
-		group.isPinging = false
-	else 
-		EVENT_MANAGER:RegisterForUpdate("AD Group Tool Group Ping", 3000, group.ping)
-		d('Started pinging')
-		group.isPinging = true
-	end
+
+function group.requestAssistPing()
+	group.toSend.assistPing = true
 end
 
+
+function group.createArrow()
+	group.arrow = Lib3DArrow:CreateArrow({
+		depthBuffer = false,
+		arrowMagnitude = 3,
+		arrowScale = 1,
+		arrowHeight = 1,
+		arrowColour = "FF0000",
+
+		distanceDigits = 4,
+		distanceScale = 25,
+		distanceMagnitude = 3,
+		distanceHeight = 1,
+		distanceColour = "FFFFFF",
+
+		markerColour = "FF0000",
+		markerScale = 1,
+	})
+end
 
 
 
 
 function group.toSend:send()
 	local assistPing = self.assistPing and 1 or 0
+	self.assistPing = false
 	local campLock = (GetNextForwardCampRespawnTime() ~= 0) and 1 or 0
 	local hammerCurrent, hammerMax = GetUnitPower('player',POWERTYPE_DAEDRIC)
 	if hammerMax == 0 then hammerMax = 1 end
@@ -95,7 +126,10 @@ function group.toSend:send()
 		{7,1,4,4}
 	)
 	LGPS:PushCurrentMap()
-	SetMapToMapListIndex(14)
+	if not LMP:IsPingSuppressed(MAP_PIN_TYPE_PING) then
+		LMP:SuppressPing(MAP_PIN_TYPE_PING)
+	end
+	SetMapToMapListIndex(group.mapID)
 	LMP:SetMapPing(
 		MAP_PIN_TYPE_PING,
 		MAP_TYPE_LOCATION_CENTERED,
@@ -103,7 +137,7 @@ function group.toSend:send()
 		y*group.stepSize
 	)
 	LGPS:PopCurrentMap()
-	--d("Sent")
+	--d("Sent"..x.." "..y)
 end
 --[[
 1 [free bit (true or false)] (previously verification)
@@ -149,13 +183,18 @@ end
 
 function group.pingCallback(pingType,pingTag,x,y,isLocalPlayerOwner)
 	if(pingType == MAP_PIN_TYPE_PING) then
+		--d(""..x.." "..y.." "..pingTag)
 		if frameDB[pingTag] ~= nil then
 
 			LGPS:PushCurrentMap()
-			SetMapToMapListIndex(14)
+			SetMapToMapListIndex(group.mapID)
 			x, y = LMP:GetMapPing(pingType, pingTag)
-			if(not LMP:IsPositionOnMap(x, y)) then return false end
+			if(not LMP:IsPositionOnMap(x, y)) then
+				LGPS:PopCurrentMap()
+				return
+			end
 			LGPS:PopCurrentMap()
+			LMP:SuppressPing(pingType, pingTag)
 
 			
 			
@@ -163,37 +202,85 @@ function group.pingCallback(pingType,pingTag,x,y,isLocalPlayerOwner)
 			y = math.floor(y / group.stepSize + 0.5)
 			local outstreamX = group.readStream(x,{1,1,1,4,1,8})
 			local outstreamY = group.readStream(y,{7,1,4,4})
+			-- {0,campLock,assistPing,hammerBar,0,ult.id}
+			-- {ult.percent,0,magBar,stamBar}
 
-			AD.last = {outstreamX, outstreamY, pingTag, x, y}
+			--AD.last = {outstreamX, outstreamY, pingTag, x, y}
 
-			--local i,ult,current,max = group.DecodeMessage(x,y)
-			--if i ~= 145 then return end
-			--d(i,ult,current,max)
-			--local ultIcon = group.ultList[group.ultiIndexes[ult]]
-			--if ultIcon == nil then return end
-			--group.setUlt(pingTag,current,max,ultIcon)
+
+			-- Set Ult
+			local ultIcon = group.ultList[group.ultiIndexes[outstreamX[6]]]
+			if ultIcon == nil then return end
+			group.setUlt(pingTag,outstreamY[1],ultIcon)
+
+			-- Handle assist pings
+			if (outstreamX[3] == 1) then
+				local px, py = GetMapPlayerPosition(pingTag)
+				group.arrow:SetTarget(px, py)
+				zo_callLater(function() group.arrow:SetTarget(0, 0) end, 12500)
+			end
+
+		else
+			LMP:SuppressPing(pingType, pingTag)
+		end
+	end
+end
+
+-- Adapted from RdK Group TOol
+function group.OnAfterPingRemoved(pingType, pingTag, x, y, isPingOwner)
+	if (pingType == MAP_PIN_TYPE_PING) then
+		LMP:UnsuppressPing(pingType, pingTag)
+	end
+end
+
+
+function group.setUlt(unitTag, percent, icon)
+	if frameDB[unitTag] ~= nil then
+		AD.last = frameDB
+		frameDB[unitTag]['bar']:SetMinMax(0,100)
+		frameDB[unitTag]['bar']:SetValue(100-percent)
+		frameDB[unitTag]['image']:SetTexture(icon)
+		frameDB[unitTag].ultPercent:SetText(""..percent.."%")
+		if percent == 100 then
+			frameDB[unitTag].health:SetColor(0,0.8,0,0.8)
+		else
+			frameDB[unitTag].health:SetColor(0.8,26/255,26/255,0.8)
 		end
 	end
 end
 
 
-function group.setUlt(unitTag, value, max, icon)
-	if frameDB[unitTag] ~= nil then
-		frameDB[unitTag]['bar']:SetMinMax(0,max)
-		frameDB[unitTag]['bar']:SetValue(max-value)
-		frameDB[unitTag]['image']:SetTexture(icon)
-	end
-end
 
+
+
+
+
+
+
+
+
+
+
+
+local alliances = {
+	"esoui/art/stats/alliancebadge_aldmeri.dds",
+	"esoui/art/stats/alliancebadge_ebonheart.dds",
+	"esoui/art/stats/alliancebadge_daggerfall.dds",
+}
+local roles = {
+	[1] = "esoui/art/lfg/gamepad/lfg_roleicon_dps.dds",
+	[2] = "esoui/art/lfg/gamepad/lfg_roleicon_tank.dds",
+	[4] = "esoui/art/lfg/gamepad/lfg_roleicon_healer.dds",
+}
 
 function group.setupBox(unitTag)
 	local frame = UNIT_FRAMES:GetFrame(unitTag).frame
 	local width = frame:GetWidth()
-	frame:SetWidth(width+45)
+	frame:SetWidth(width+40)
 
 
 	local ult = CreateControl("ART"..unitTag.."Ult",frame,CT_STATUSBAR)
-	ult:SetDimensions(45,40)
+	ult:SetDimensions(40,40)
 	ult:SetMinMax(0,20)
 	ult:SetValue(0)
 	ult:SetColor(0)
@@ -205,13 +292,82 @@ function group.setupBox(unitTag)
 
 
 	local ulti = CreateControl("ART"..unitTag.."UltImage",frame,CT_TEXTURE)
-	ulti:SetDimensions(45,40)
+	ulti:SetDimensions(40,40)
 	ulti:SetDrawLevel(5)
 	ulti:SetAnchor(8,nil,8,-4,0,0)
-	ulti:SetTexture("esoui/art/stats/alliancebadge_aldmeri.dds")
+
+	local role = GetGroupMemberSelectedRole(unitTag)
+	if role == 0 then
+		local alliance = GetUnitAlliance(unitTag)
+		ulti:SetTexture(alliances[alliance])
+	else
+		ulti:SetTexture(roles[role])
+	end
 	frameDB[unitTag] = {['frame']=frame,['bar']=ult,['image']=ulti}
 	
 end
+
+
+local frameObject = ZO_Object:Subclass()
+local amountCreated = 0
+
+function frameObject:new(unitTag)
+	local frame = ZO_Object.New(self)
+	frame.frame = CreateControlFromVirtual("ART"..unitTag,AD_Group_TopLevel,"AD_Group_Template")
+	frame.bar = WINDOW_MANAGER:GetControlByName("ART"..unitTag.."Ult")
+	frame.image = WINDOW_MANAGER:GetControlByName("ART"..unitTag.."UltIcon")
+	frame.ultPercent = WINDOW_MANAGER:GetControlByName("ART"..unitTag.."UltPercent")
+	frame.name = WINDOW_MANAGER:GetControlByName("ART"..unitTag.."Name")
+	frame.health = WINDOW_MANAGER:GetControlByName("ART"..unitTag.."Health")
+	frame.health:SetValue(0)
+	frame.health:SetColor(0.8,26/255,26/255,0.8)
+
+	frame.unitTag = unitTag
+	frame:setName()
+	if IsUnitGroupLeader(unitTag) then frame:setGroupLeader() end
+	--d(frame.frame)
+	
+	if IsUnitOnline(unitTag) then
+		local health,healthmax = GetUnitPower(unitTag, POWERTYPE_HEALTH)
+		frame.health:SetMinMax(0,healthmax)
+		frame.health:SetValue(health)
+	else
+		frame.name:SetColor(255,255,255,0.7)
+	end
+	
+
+	local _,topl,parentframe,top,x,y,z = frame.frame:GetAnchor()
+	
+	frame.frame:SetAnchor(topl, parentframe, top, x, y+40 * amountCreated)
+	amountCreated = amountCreated + 1
+
+	local role = GetGroupMemberSelectedRole(unitTag)
+	if role == 0 then
+		local alliance = GetUnitAlliance(unitTag)
+		frame.image:SetTexture(alliances[alliance])
+	else
+		frame.image:SetTexture(roles[role])
+	end
+
+
+	return frame
+end
+
+function frameObject:setName()
+	self.name:SetText(GetUnitDisplayName(self.unitTag))
+end
+function frameObject:setGroupLeader()
+	self.name:SetTransformOffsetX(20)
+	self.name:SetWidth(143)
+	WINDOW_MANAGER:GetControlByName("ART"..self.unitTag.."Icon"):SetHidden(false)
+end
+function frameObject:SetHealth(value,max)
+	self.health:SetMinMax(0,max)
+	self.health:SetValue(value)
+end
+
+group.frameObject = frameObject
+
 
 
 
@@ -219,11 +375,43 @@ end
 function group.moveBoxes()
 
 	local _,topl,frame,top,x,y,z = ZO_LargeGroupAnchorFrame2:GetAnchor()
-	ZO_LargeGroupAnchorFrame2:SetAnchor(topl,frame,top,x+45,y,z)
+	ZO_LargeGroupAnchorFrame2:SetAnchor(topl,frame,top,x+40,y,z)
 	local _,topl,frame,top,x,y,z = ZO_LargeGroupAnchorFrame3:GetAnchor()
-	ZO_LargeGroupAnchorFrame3:SetAnchor(topl,frame,top,x+90,y,z)
+	ZO_LargeGroupAnchorFrame3:SetAnchor(topl,frame,top,x+80,y,z)
 
 end
+
+
+
+
+
+
+
+
+
+function group.powerCallback(_, unitTag, powerIndex, powerType, powerValue, powerMax, powerEffectiveMax) 
+	if powerType == POWERTYPE_HEALTH then
+		if frameDB[unitTag] ~= nil then
+			frameDB[unitTag]:SetHealth(powerValue,powerMax)
+		end
+	end
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -234,8 +422,10 @@ end
 
 --/script PingMap(182, 1, 1 / 2^16, 1 / 2^16) StartChatInput(table.concat({GetMapPlayerWaypoint()}, ","))
 -- Adapted from RdK group tool, who adapted it from lib group socket
-group.stepSize = 1.333333329967e-05
---1.333333329967e-05 in Cyro
+group.stepSize = 1.333333329967e-05 -- For some reason cyro's step works, but artaeums doesnt? 
+group.mapID = 33
+-- 1.1058949894505e-05 in Artaeum (ID = 33)
+-- 1.333333329967e-05 in Cyro (ID = 14)
 -- 1.4285034012573e-005 from LGS in Coldharbour
 
 
@@ -301,8 +491,7 @@ end
 
 
 
-
-SLASH_COMMANDS["/togglePing"] = group.togglePing
+ZO_CreateStringId("SI_BINDING_NAME_ARTAEUMGROUPTOOL_REQUEST_PING", "Send a assist ping.")
 SLASH_COMMANDS["/ping"] = group.ping
 --[[
 

@@ -7,6 +7,9 @@
 			<Action name="ARTAEUMGROUPTOOL_SEND_DISCORD">
 				<Down>ArtaeumGroupTool.Discord.sendDiscord()</Down>
 			</Action>
+			<Action name="ARTAEUMGROUPTOOL_REQUEST_PING">
+				<Down>ArtaeumGroupTool.Group.requestAssistPing()</Down>
+			</Action>
 		</Category>
 	</Layer>
 </Bindings>

@@ -6,6 +6,7 @@
 ## DependsOn: LibAddonMenu-2.0 LibMapPins-1.0>=10027 LibMapPing Lib3D LibGPS Lib3DArrow
 
 ADGroupTool.lua
+Textures/ArtaeumGroupTool.xml
 utils/AD_3D.lua
 modules/AD_Discord.lua
 modules/AD_SOC.lua

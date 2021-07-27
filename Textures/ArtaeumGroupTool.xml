@@ -1,0 +1,84 @@
+<GuiXml> 
+	<Controls>
+	
+		<TopLevelControl name="AD_Group_TopLevel" clampedToScreen="true" mouseEnabled="true" movable="true" hidden="true">
+			<Dimensions x="225" y="45" /> <!--supposed to be 0,0-->
+			<Anchor point="TOPLEFT" relativeTo="GuiRoot" relativePoint="CENTER" offsetX="0" offsetY="0"/>
+			
+			<Controls>
+			</Controls>
+		</TopLevelControl>
+
+
+
+		<Control name="AD_Group_Template" virtual="true">
+    		<Anchor point="TOPLEFT" relativeTo="$(parent)" relativePoint="TOPLEFT" offsetX="2" offsetY="3" />
+    		<Dimensions x="219" y="29" /> <!--edge with of 6 probably-->
+    		<Controls>
+
+    			<Backdrop name="$(parent)BG">
+					<Anchor point="TOPLEFT" relativeTo="$(parent)" relativePoint="TOPLEFT" offsetX="-2" offsetY="-3" />
+					<Dimensions x="225" y="36" />
+					<Edge file="EsoUI/Art/Tooltips/UI-Border.dds" edgeFileWidth="128" edgeFileHeight="16" />
+                    <Center file="EsoUI/Art/Tooltips/UI-TooltipCenter.dds" />
+                    <Insets left="16" top="16" right="-16" bottom="-16" />
+				</Backdrop>
+            	<StatusBar name="$(parent)Health" color="cc1a1a">
+            		<OnInitialized>
+            			--ADHealth:SetValue(100)
+            			--ADHealth:SetColor(0,1,0,0.8)
+            		</OnInitialized>
+					<Anchor point="TOPLEFT" relativeTo="$(parent)" relativePoint="TOPLEFT" />
+					<Dimensions x="191" y="29" />
+					<Limits min="0" max="100" />
+				</StatusBar>
+
+
+				<Texture name="$(parent)Icon" textureFile="esoui\art\unitframes\gamepad\gp_group_leader.dds" layer='2' hidden="true">
+                    <Anchor point="TOPLEFT" />
+                    <Dimensions x="20" y="20" />
+                </Texture>
+				<Label name="$(parent)Name" font="ZoFontGame" wrapMode="ELLIPSIS">
+					<Anchor point="TOPLEFT" />
+					<Dimensions x="163" y="29" />
+					<OnInitialized>
+            			--ADName:SetText("@M0R_Gaming")
+            			--ADName:SetTransformOffsetX(20)
+            			--ADName:SetWidth(143)
+            		</OnInitialized>
+
+				</Label>
+				
+
+				<StatusBar name="$(parent)Ult" color="000000" orientation="0" barAlignment="1">
+					<Anchor point="TOPRIGHT" relativeTo="$(parent)" relativePoint="TOPRIGHT"/>
+					<Dimensions x="28" y="28" />
+					<Limits min="0" max="100" />
+					<OnInitialized>
+						--ADUlt:SetColor(0,0,0,0.5)
+            			--ADUlt:SetValue(0)
+            		</OnInitialized>
+					<Controls>
+						<Texture name="$(parent)Icon" textureFile="/esoui/art/icons/ability_sorcerer_crushing_monsoon.dds">
+							<AnchorFill />
+						</Texture>
+						<Label name="$(parent)Percent" font="$(ANTIQUE_FONT)|$(KB_13)|soft-shadow-thick">
+							<Anchor point="BOTTOMLEFT" />
+							<Anchor offsetX="-36" />
+							<Dimensions x="36" y="20" />
+							<OnInitialized>
+                    			--ADUltPercent:SetText("59%")
+                    		</OnInitialized>
+
+						</Label>
+					</Controls>
+				</StatusBar>
+				
+
+			</Controls>
+		</Control>
+
+
+
+	</Controls>
+</GuiXml>
