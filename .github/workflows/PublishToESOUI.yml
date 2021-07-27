@@ -1,16 +1,11 @@
 # This is a basic workflow to help you get started with Actions
 
-name: CI
+name: PublishToEsoUI
 
 # Controls when the workflow will run
 on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
-    inputs:
-        version:
-          description: 'Version of the addon'
-          required: true
-          default: ''
 
 jobs:
   build:
@@ -24,7 +19,7 @@ jobs:
 
       - name: Zip release
         #Zips the release, excluding .git* and .vscode files
-        run: 7z a esoui_release.zip * -xr!*.git* -xr!*.vscode*
+        run: 7z a ArtaeumGroupTool.zip * -xr!*.git* -xr!*.vscode*
         
         
       - name: ESO UI Publish
@@ -34,7 +29,7 @@ jobs:
           # Path to the add-on declaration file to parse versioning from
           addon-file-path:  "./ArtaeumGroupTool/ArtaeumGroupTool.txt"
           # Path to zip file to upload to ESO UI as the new version
-          upload-zip-path: esoui_release.zip
+          upload-zip-path: ArtaeumGroupTool.zip
           addon-id: 3012
           eso-ui-api-key: ${{secrets.ESOUI_API_TOKEN}}
           github-api-key: ${{secrets.TOKEN_GITHUB}}
