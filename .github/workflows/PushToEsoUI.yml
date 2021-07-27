@@ -17,6 +17,9 @@ jobs:
         with:
           path: 'ArtaeumGroupTool'
 
+      - name: Zip release
+        run: 7z a ArtaeumGroupTool.zip * -xr!*.git* -xr!*.vscode*
+
       - name: Push to EsoUI
         id: push
         uses: M0RGaming/Push-To-EsoUI@main
@@ -24,8 +27,5 @@ jobs:
           EsoUIToken: ${{secrets.ESOUI_API_TOKEN}}
           EsoUIID: 3012
           path: './ArtaeumGroupTool/'
-          version: ${{github.event.inputs.logLevel}}
-
-      # Use the output from the `hello` step
-      - name: Get the output time
-        run: echo "The time was ${{ steps.hello.outputs.time }}"
+          version: ${{github.event.inputs.version}}
+          artifact: 'ArtaeumGroupTool.zip'
