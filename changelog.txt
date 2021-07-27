@@ -1,0 +1,22 @@
+Version 2.4
+----------
+Added Crown Arrow
+Added Group Data Share - BETA
+Created github repo
+
+Version 2.3
+----------
+Added "Phase Shift" setting for beta testing - Shifts the transmit by a certain amount of seconds.
+Finished updating data for the location of all the keeps' front doors.
+
+Version 2.2
+----------
+Added Group Guild Share Module - BETA
+
+Version 2.1
+----------
+Messed up the zip file in version 2.0, so heres a quick fix
+
+Version 2.0
+----------
+Added all features from 1.0, cleaner code, and Front doors module
