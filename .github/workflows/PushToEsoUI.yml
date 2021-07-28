@@ -6,7 +6,7 @@ on:
       version:
         description: 'Version'     
         required: true
-        default: '1.0'
+        default: '2.4'
 
 jobs:
   hello_world_job:
@@ -18,7 +18,7 @@ jobs:
           path: 'ArtaeumGroupTool'
 
       - name: Zip release
-        run: 7z a ArtaeumGroupTool.zip * -xr!*.git* -xr!*.vscode*
+        run: 7z a ArtaeumGroupTool.zip * -xr!*.git*
 
       - name: Push to EsoUI
         id: push
