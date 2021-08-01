@@ -1,3 +1,9 @@
+Version 2.4.2
+----------
+Bugfix, where a UI error would popup if no ults were slotted
+Made it so that it only pings when in a group (I hope)
+Set it so that the group updates on join/leave/crown/update
+
 Version 2.4.1
 ----------
 API version bump

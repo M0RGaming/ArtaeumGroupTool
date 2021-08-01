@@ -11,7 +11,7 @@ AD.Settings.DefaultSettings = {
 	SOC = {
 		offCrownTimer = 600,
 		radius = 25500,
-		whitelistGuild = 341929,
+		whitelistGuild = -1,
 	},
 	Discord = {
 		discordLink = "[Insert Discord Link Here]",

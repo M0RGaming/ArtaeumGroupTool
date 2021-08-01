@@ -50,17 +50,29 @@ function group.init()
 			end
 		end)
 		]]
-		AD_Group_TopLevel:SetHidden(false)
+		
 		SecurePostHook(UNIT_FRAMES, "CreateFrame", function(_, unitTag, anchors, barTextMode, style)
-			if style == "ZO_RaidUnitFrame" then --ZO_GroupUnitFrame --ZO_RaidUnitFrame
+			if style == "ZO_RaidUnitFrame" or style == "ZO_GroupUnitFrame" then --ZO_GroupUnitFrame --ZO_RaidUnitFrame
 				if frameDB[unitTag] == nil then
 					--d(unitTag)
 					frameDB[unitTag] = group.frameObject:new(unitTag)
 				end
 			end
 		end)
-		EVENT_MANAGER:RegisterForUpdate("AD Group Tool Group Ping", vars.frequency, group.ping)
+		if IsUnitGrouped("player") then
+			EVENT_MANAGER:RegisterForUpdate("AD Group Tool Group Ping", vars.frequency, group.ping)
+			AD_Group_TopLevel:SetHidden(false)
+		end
+
+		local fragment = ZO_HUDFadeSceneFragment:New(AD_Group_TopLevel, nil, 0)
+		HUD_SCENE:AddFragment(fragment)
+		HUD_UI_SCENE:AddFragment(fragment)
+
 		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Power", EVENT_POWER_UPDATE, group.powerCallback)
+		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Join", EVENT_GROUP_MEMBER_JOINED, group.groupJoin)
+		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Leave", EVENT_GROUP_MEMBER_LEFT, group.groupLeave)
+		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Change", EVENT_LEADER_UPDATE, group.groupUpdate)
+		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Update", EVENT_GROUP_UPDATE, group.groupUpdate)
 
 		group.createArrow()
 		group.arrow:SetTarget(0, 0)
@@ -111,6 +123,7 @@ function group.toSend:send()
 	ult.max = GetSlotAbilityCost(8)
 	ult.percent = math.floor(ult.current/ult.max*100)
 	if ult.percent > 100 then ult.percent = 100 end
+	if ult.max <= 0 then ult.percent = 0 end
 	local magCurrent, magMax = GetUnitPower('player',POWERTYPE_MAGICKA)
 	local magBar = math.floor(magCurrent/magMax*15)
 	local stamCurrent, stamMax = GetUnitPower('player',POWERTYPE_STAMINA)
@@ -161,22 +174,6 @@ end
 
 
 function group.ping()
-	--[[
-	local current = GetUnitPower('player',10)
-	local max = GetSlotAbilityCost(8)
-	local ultID = GetSlotBoundId(8)
-	local ult = group.ultiIndexes[ultID]
-	-- 145 = Artaeum identifier
-	local encX, encY = group.EncodeMessage(145, ult, current, max)
-
-
-	LMP:SetMapPing(
-		MAP_PIN_TYPE_PING,
-		MAP_TYPE_LOCATION_CENTERED,
-		encX,--tonumber(ult/1000), -- for something like 45, it will be 0.145045
-		encY --percent
-	)
-	]]
 	group.toSend:send()
 end
 
@@ -260,6 +257,29 @@ end
 
 
 
+-- Events that consider all possible group join/leave events and adapt the UI respectivly.
+function group.groupJoin(eventCode, _, _, isLocalPlayer)
+	if not isLocalPlayer then
+		return
+	end
+	AD_Group_TopLevel:SetHidden(false)
+	EVENT_MANAGER:RegisterForUpdate("AD Group Tool Group Ping", vars.frequency, group.ping)
+	group.groupUpdate()
+end
+
+function group.groupLeave(eventCode, _, _, isLocalPlayer, _, _)
+	if not isLocalPlayer then
+		return
+	end
+	EVENT_MANAGER:UnregisterForUpdate("AD Group Tool Group Ping")
+	for i=1,12 do
+		local groupInd = 'group'..i
+		if frameDB[groupInd] then
+			frameDB[groupInd].frame:SetHidden(true)
+		end
+	end
+	AD_Group_TopLevel:SetHidden(true)
+end
 
 
 local alliances = {
@@ -272,6 +292,53 @@ local roles = {
 	[2] = "esoui/art/lfg/gamepad/lfg_roleicon_tank.dds",
 	[4] = "esoui/art/lfg/gamepad/lfg_roleicon_healer.dds",
 }
+
+
+function group.groupUpdate()
+	--d(GetGroupSize())
+	local notInGroup = 12-GetGroupSize()
+	for i=GetGroupSize()+1,12 do
+		local groupInd = 'group'..i
+		if frameDB[groupInd] then
+			frameDB[groupInd].frame:SetHidden(true)
+		end
+	end
+
+	for i=1,GetGroupSize() do
+		--d("test")
+		local unitTag = 'group'..i
+		local frame = frameDB[unitTag]
+		if frame then 
+			frame.unitTag = unitTag
+			frame:setName()
+			frame:setGroupLeader()
+			
+			if IsUnitOnline(unitTag) then
+				local health,healthmax = GetUnitPower(unitTag, POWERTYPE_HEALTH)
+				frame.health:SetMinMax(0,healthmax)
+				frame.health:SetValue(health)
+			else
+				frame.name:SetColor(255,255,255,0.7)
+			end
+						
+			local role = GetGroupMemberSelectedRole(unitTag)
+			if role == 0 then
+				local alliance = GetUnitAlliance(unitTag)
+				frame.image:SetTexture(alliances[alliance])
+			else
+				frame.image:SetTexture(roles[role])
+			end
+			frame.frame:SetHidden(false)
+		end		
+	end
+end
+
+
+
+
+
+local amountCreated = 0
+
 
 function group.setupBox(unitTag)
 	local frame = UNIT_FRAMES:GetFrame(unitTag).frame
@@ -309,7 +376,6 @@ end
 
 
 local frameObject = ZO_Object:Subclass()
-local amountCreated = 0
 
 function frameObject:new(unitTag)
 	local frame = ZO_Object.New(self)
@@ -324,7 +390,7 @@ function frameObject:new(unitTag)
 
 	frame.unitTag = unitTag
 	frame:setName()
-	if IsUnitGroupLeader(unitTag) then frame:setGroupLeader() end
+	frame:setGroupLeader()
 	--d(frame.frame)
 	
 	if IsUnitOnline(unitTag) then
@@ -357,13 +423,18 @@ function frameObject:setName()
 	self.name:SetText(GetUnitDisplayName(self.unitTag))
 end
 function frameObject:setGroupLeader()
-	self.name:SetTransformOffsetX(20)
-	self.name:SetWidth(143)
-	WINDOW_MANAGER:GetControlByName("ART"..self.unitTag.."Icon"):SetHidden(false)
+	if IsUnitGroupLeader(self.unitTag) then
+		self.name:SetTransformOffsetX(20)
+		self.name:SetWidth(143)
+		WINDOW_MANAGER:GetControlByName("ART"..self.unitTag.."Icon"):SetHidden(false)
+	else
+		self.name:SetTransformOffsetX(0)
+		self.name:SetWidth(163)
+		WINDOW_MANAGER:GetControlByName("ART"..self.unitTag.."Icon"):SetHidden(true)
+	end
 end
 function frameObject:SetHealth(value,max)
-	self.health:SetMinMax(0,max)
-	self.health:SetValue(value)
+	ZO_StatusBar_SmoothTransition(self.health,value,max)
 end
 
 group.frameObject = frameObject
