@@ -61,12 +61,25 @@ function group.init()
 		end)
 		if IsUnitGrouped("player") then
 			EVENT_MANAGER:RegisterForUpdate("AD Group Tool Group Ping", vars.frequency, group.ping)
-			AD_Group_TopLevel:SetHidden(false)
 		end
 
-		local fragment = ZO_HUDFadeSceneFragment:New(AD_Group_TopLevel, nil, 0)
-		HUD_SCENE:AddFragment(fragment)
-		HUD_UI_SCENE:AddFragment(fragment)
+
+
+
+		group.fragment = ZO_HUDFadeSceneFragment:New(AD_Group_TopLevel, DEFAULT_SCENE_TRANSITION_TIME, DEFAULT_SCENE_TRANSITION_TIME)
+		HUD_SCENE:AddFragment(group.fragment)
+		HUD_UI_SCENE:AddFragment(group.fragment)
+
+
+		AD_Group_TopLevel:SetAnchor(TOPLEFT, GuiRoot, TOPLEFT, vars.windowX, vars.windowY)
+		if not vars.windowLocked then
+			ZO_Alert(UI_ALERT_CATEGORY_ERROR, SOUNDS.NEGATIVE_CLICK, "|cff0000Artaeum Group Tool's group UI has not been locked.|r")
+			group.unlockWindow()
+		end
+		
+
+
+
 
 		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Power", EVENT_POWER_UPDATE, group.powerCallback)
 		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Join", EVENT_GROUP_MEMBER_JOINED, group.groupJoin)
@@ -262,7 +275,6 @@ function group.groupJoin(eventCode, _, _, isLocalPlayer)
 	if not isLocalPlayer then
 		return
 	end
-	AD_Group_TopLevel:SetHidden(false)
 	EVENT_MANAGER:RegisterForUpdate("AD Group Tool Group Ping", vars.frequency, group.ping)
 	group.groupUpdate()
 end
@@ -278,7 +290,6 @@ function group.groupLeave(eventCode, _, _, isLocalPlayer, _, _)
 			frameDB[groupInd].frame:SetHidden(true)
 		end
 	end
-	AD_Group_TopLevel:SetHidden(true)
 end
 
 
@@ -477,9 +488,19 @@ end
 
 
 
+function group.unlockWindow()
+	AD_Group_TopLevel:SetMouseEnabled(true)
+	AD_Group_TopLevelBG:SetHidden(false)
+	vars.windowLocked = false
+end
 
-
-
+function group.lockWindow()
+	vars.windowX = AD_Group_TopLevel:GetLeft()
+	vars.windowY = AD_Group_TopLevel:GetTop()
+	AD_Group_TopLevelBG:SetHidden(true)
+	AD_Group_TopLevel:SetMouseEnabled(false)
+	vars.windowLocked = true
+end
 
 
 

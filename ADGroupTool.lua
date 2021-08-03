@@ -24,19 +24,24 @@ AD.Settings.DefaultSettings = {
 		listenTo = "",
 		transmitTo = "",
 		guildID = -1,
-		phase = 0
+		phase = 0,
+		markerColour = {0,1,0,0.5}
 	},
 	Crown = {
 		enabled = true,
 		showMarker = true,
 		showArrow = true,
 		markerType = "Crown",
-		cyrodilOnly = false
+		cyrodilOnly = false,
+		markerColour = {0,1,1,0.5}
 	},
 	Group = {
 		enabled = false,
 		cyrodilOnly = false,
-		frequency = 3000
+		frequency = 3000,
+		windowX = 0,
+		windowY = 0,
+		windowLocked = false
 	}
 }
 

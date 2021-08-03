@@ -13,11 +13,15 @@
 	</Animations>
 	<Controls>
 	
-		<TopLevelControl name="AD_Group_TopLevel" clampedToScreen="true" mouseEnabled="true" movable="true" hidden="true">
-			<Dimensions x="225" y="45" /> <!--supposed to be 0,0-->
-			<Anchor point="TOPLEFT" relativeTo="GuiRoot" relativePoint="CENTER" offsetX="0" offsetY="0"/>
+		<TopLevelControl name="AD_Group_TopLevel" clampedToScreen="true" mouseEnabled="false" movable="true">
+			<Dimensions x="225" y="480" /> <!--supposed to be 0,0-->
+			<Anchor point="TOPLEFT" relativeTo="GuiRoot" relativePoint="TOPLEFT" offsetX="0" offsetY="0"/>
 			
 			<Controls>
+				<Backdrop name="$(parent)BG" alpha="0.3" centerColor="AA0000" hidden="true">
+					<AnchorFill />
+					<Edge edgeSize="1"/>
+				</Backdrop>
 			</Controls>
 		</TopLevelControl>
 

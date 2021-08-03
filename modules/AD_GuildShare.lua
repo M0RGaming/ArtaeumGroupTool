@@ -160,6 +160,11 @@ function guild.toggleTransmit()
 	end
 end
 
+function guild.updateColours()
+	local rgb = vars.markerColour
+	guild.arrow.arrow.chevron:SetColor(rgb[1],rgb[2],rgb[3])
+	guild.arrow.marker.pillar:SetColor(rgb[1],rgb[2],rgb[3],rgb[4])
+end
 
 
 function guild.toggleMarker()

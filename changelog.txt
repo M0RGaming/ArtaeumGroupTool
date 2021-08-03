@@ -1,3 +1,8 @@
+Version 2.4.3
+----------
+Added Colour Customizability
+Added the ability to save/load window locations for the group window
+
 Version 2.4.2
 ----------
 Bugfix, where a UI error would popup if no ults were slotted

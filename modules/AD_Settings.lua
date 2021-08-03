@@ -45,7 +45,21 @@ function settings.createSettings()
 					setFunc = function(value) vars.Group.frequency = tonumber(value) end,
 					isMultiline = false,
 					requiresReload = true
-				}
+				},
+				{
+					type = "button",
+					name = "Unlock Window",
+					tooltip = "Click here to enable windows to move around",
+					width = "half",
+					func = AD.Group.unlockWindow,
+				},
+				{
+					type = "button",
+					name = "Lock Window",
+					tooltip = "Click here to disable windows from moving around",
+					width = "half",
+					func = AD.Group.lockWindow,
+				},
 			}
 		},
 		-- Crown Arrow Module
@@ -87,6 +101,25 @@ function settings.createSettings()
 						AD.Crown.pin:updateMarkerData(AD.Crown.markerTypes[value])
 					end
 				},
+				{
+	                type = "colorpicker",
+	                name = "Arrow/Marker Colour",
+	                tooltip = "This sets the colour of the arrow and/or marker. The alpha only affects the marker.",
+	                getFunc = function() local rgb = vars.Crown.markerColour; return rgb[1], rgb[2], rgb[3] end,	--(alpha is optional)
+	                setFunc = function(r,g,b) local rgb = vars.Crown.markerColour; rgb[1] = r; rgb[2] = g; rgb[3] = b; AD.Crown.updateColours() end,	--(alpha is optional)
+	            	width = "half",
+	            },
+	            {
+			        type = "slider",
+			        name = "Marker Opacity",
+			        tooltip = "This sets the opacity of the marker.",
+			        min = 0,
+			        max = 100,
+			        step = 1,	--(optional)
+			        getFunc = function() return vars.Crown.markerColour[4]*100 end,
+			        setFunc = function(a) vars.Crown.markerColour[4] = a/100; AD.Crown.updateColours() end,
+			        width = "half",	--or "full" (optional)
+			    },
 				{
 					type = "checkbox",
 					name = "Show 3D Arrow",
@@ -226,16 +259,37 @@ function settings.createSettings()
 					isMultiline = false
 				},
 				{
+	                type = "colorpicker",
+	                name = "Arrow/Marker Colour",
+	                tooltip = "This sets the colour of the arrow and/or marker. The alpha only affects the marker.",
+	                getFunc = function() local rgb = vars.Guild.markerColour; return rgb[1], rgb[2], rgb[3] end,	--(alpha is optional)
+	                setFunc = function(r,g,b) local rgb = vars.Guild.markerColour; rgb[1] = r; rgb[2] = g; rgb[3] = b; AD.Guild.updateColours() end,	--(alpha is optional)
+	            	width = "half",
+	            },
+	            {
+			        type = "slider",
+			        name = "Marker Opacity",
+			        tooltip = "This sets the opacity of the marker.",
+			        min = 0,
+			        max = 100,
+			        step = 1,	--(optional)
+			        getFunc = function() return vars.Guild.markerColour[4]*100 end,
+			        setFunc = function(a) vars.Guild.markerColour[4] = a/100; AD.Guild.updateColours() end,
+			        width = "half",	--or "full" (optional)
+			    },
+				{
 					type = "button",
 					name = "Toggle Transmitting",
 					tooltip = "Click here to toggle transmitting the data of crown location. Must have edit guild notes permission",
-					func = AD.Guild.toggleTransmit
+					func = AD.Guild.toggleTransmit,
+					width = "half",
 				},
 				{
 					type = "button",
 					name = "Toggle Listening",
 					tooltip = "Click here to toggle listening for the data of crown location.",
-					func = AD.Guild.toggleListen
+					func = AD.Guild.toggleListen,
+					width = "half",
 				}
 			}
 		}

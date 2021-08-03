@@ -52,7 +52,7 @@ function AD3D.create3D(toplevel, data)
 	end
 
 	function beam:setColour(r,g,b,a)
-		self:SetColor(r/255,g/255,b/255,a)
+		self:SetColor(r,g,b,a)
 	end
 
 

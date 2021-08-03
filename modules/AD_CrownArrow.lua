@@ -67,8 +67,13 @@ function crown.createArrow()
 	})
 	crown.arrow.marker:SetHidden(true)
 	crown.pin = AD.AD3D.create3D(toplevel, crown.markerTypes[vars.markerType])
-	crown.pin:setColour(0,255,255,0.5)
+	crown.updateColours()
+end
 
+function crown.updateColours()
+	local rgb = vars.markerColour
+	crown.arrow.arrow.chevron:SetColor(rgb[1],rgb[2],rgb[3])
+	crown.pin:setColour(rgb[1],rgb[2],rgb[3],rgb[4])
 end
 
 
