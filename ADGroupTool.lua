@@ -39,9 +39,11 @@ AD.Settings.DefaultSettings = {
 		enabled = false,
 		cyrodilOnly = false,
 		frequency = 3000,
-		windowX = 0,
-		windowY = 0,
-		windowLocked = false
+		windowLocations = {},
+		windowLocked = false,
+		amountOfWindows = 1,
+		hideBaseUnitFrames = false,
+		barToShare = nil
 	}
 }
 

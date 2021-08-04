@@ -13,7 +13,7 @@
 	</Animations>
 	<Controls>
 	
-		<TopLevelControl name="AD_Group_TopLevel" clampedToScreen="true" mouseEnabled="false" movable="true">
+		<TopLevelControl name="AD_Group_TopLevel" clampedToScreen="true" mouseEnabled="false" movable="true" virtual="true">
 			<Dimensions x="225" y="480" /> <!--supposed to be 0,0-->
 			<Anchor point="TOPLEFT" relativeTo="GuiRoot" relativePoint="TOPLEFT" offsetX="0" offsetY="0"/>
 			
@@ -22,6 +22,9 @@
 					<AnchorFill />
 					<Edge edgeSize="1"/>
 				</Backdrop>
+				<Label name="$(parent)Name" font="$(ANTIQUE_FONT)|$(KB_20)|soft-shadow-thick" wrapMode="ELLIPSIS" hidden="true">
+					<AnchorFill />
+				</Label>
 			</Controls>
 		</TopLevelControl>
 
@@ -40,10 +43,6 @@
                     <Insets left="16" top="16" right="-16" bottom="-16" />
 				</Backdrop>
             	<StatusBar name="$(parent)Health" color="cc1a1a">
-            		<OnInitialized>
-            			--ADHealth:SetValue(100)
-            			--ADHealth:SetColor(0,1,0,0.8)
-            		</OnInitialized>
 					<Anchor point="TOPLEFT" relativeTo="$(parent)" relativePoint="TOPLEFT" />
 					<Dimensions x="191" y="29" />
 					<Limits min="0" max="100" />
@@ -57,11 +56,6 @@
 				<Label name="$(parent)Name" font="ZoFontGame" wrapMode="ELLIPSIS">
 					<Anchor point="TOPLEFT" />
 					<Dimensions x="163" y="29" />
-					<OnInitialized>
-            			--ADName:SetText("@M0R_Gaming")
-            			--ADName:SetTransformOffsetX(20)
-            			--ADName:SetWidth(143)
-            		</OnInitialized>
 
 				</Label>
 				
@@ -70,10 +64,6 @@
 					<Anchor point="TOPRIGHT" relativeTo="$(parent)" relativePoint="TOPRIGHT"/>
 					<Dimensions x="28" y="28" />
 					<Limits min="0" max="100" />
-					<OnInitialized>
-						--ADUlt:SetColor(0,0,0,0.5)
-            			--ADUlt:SetValue(0)
-            		</OnInitialized>
 					<Controls>
 						<Texture name="$(parent)Icon" textureFile="/esoui/art/icons/ability_sorcerer_crushing_monsoon.dds">
 							<AnchorFill />
@@ -82,10 +72,6 @@
 							<Anchor point="BOTTOMLEFT" />
 							<Anchor offsetX="-36" />
 							<Dimensions x="36" y="20" />
-							<OnInitialized>
-                    			--ADUltPercent:SetText("59%")
-                    		</OnInitialized>
-
 						</Label>
 					</Controls>
 				</StatusBar>

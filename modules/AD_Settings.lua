@@ -34,7 +34,8 @@ function settings.createSettings()
 					name = "PvP Only",
 					tooltip = "If this is enabled, this module will only run in Cyrodiil and Imperial City",
 					getFunc = function() return vars.Group.cyrodilOnly end,
-					setFunc = function(value) vars.Group.cyrodilOnly = value end
+					setFunc = function(value) vars.Group.cyrodilOnly = value end,
+					disabled = true
 				},
 				{
 					type = "editbox",
@@ -47,6 +48,26 @@ function settings.createSettings()
 					requiresReload = true
 				},
 				{
+					type = "checkbox",
+					name = "Hide default Unit Frames",
+					tooltip = "If this is enabled, the default group healthbars will be hidden.",
+					getFunc = function() return vars.Group.hideBaseUnitFrames end,
+					setFunc = function(value) vars.Group.hideBaseUnitFrames = value; ZO_UnitFramesGroups:SetHidden(value) end,
+					width = "half",
+				},
+				{
+			        type = "slider",
+			        name = "Amount of group windows",
+			        tooltip = "This sets the opacity of the marker.",
+			        min = 1,
+			        max = 12,
+			        step = 1,	--(optional)
+			        getFunc = function() return vars.Group.amountOfWindows end,
+			        setFunc = function(amount) vars.Group.amountOfWindows = amount end,
+			        requiresReload = true,
+			       	width = "half",
+			    },
+			    {
 					type = "button",
 					name = "Unlock Window",
 					tooltip = "Click here to enable windows to move around",
@@ -59,6 +80,30 @@ function settings.createSettings()
 					tooltip = "Click here to disable windows from moving around",
 					width = "half",
 					func = AD.Group.lockWindow,
+				},
+			    {
+					type = "dropdown",
+					name = "Ultimate Share Bar",
+					tooltip = "Which ultimate should be shared.",
+					choices = {"Active Bar", "Front Bar", "Back Bar"},
+					getFunc = function()
+						if vars.Group.barToShare == nil then
+							return "Active Bar"
+						elseif vars.Group.barToShare == HOTBAR_CATEGORY_PRIMARY then
+							return "Front Bar"
+						elseif vars.Group.barToShare == HOTBAR_CATEGORY_BACKUP then
+							return "Back Bar"
+						end
+					end,
+					setFunc = function(value)
+						if value == "Active Bar" then
+							vars.Group.barToShare = nil
+						elseif value == "Front Bar" then
+							vars.Group.barToShare = HOTBAR_CATEGORY_PRIMARY
+						elseif value == "Back Bar" then
+							vars.Group.barToShare = HOTBAR_CATEGORY_BACKUP
+						end
+					end
 				},
 			}
 		},

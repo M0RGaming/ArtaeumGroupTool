@@ -6,6 +6,8 @@ local vars = {}
 local LMP = LibMapPing
 local LGPS = LibGPS3
 
+
+local toplevels = {}
 local frameDB = {}
 
 AD.last = {} -- TESTING
@@ -36,9 +38,6 @@ function group.init()
 	vars = AD.vars.Group
 
 	if vars.enabled then
-		--group.moveBoxes()
-		--LMP:SuppressPing(MAP_PIN_TYPE_PING)
-		--LMP:MutePing(MAP_PIN_TYPE_PING)
 		LMP:RegisterCallback('BeforePingAdded', group.pingCallback)
 		LMP:RegisterCallback('AfterPingRemoved', group.OnAfterPingRemoved)
 		--[[
@@ -51,34 +50,43 @@ function group.init()
 		end)
 		]]
 		
+		
 		SecurePostHook(UNIT_FRAMES, "CreateFrame", function(_, unitTag, anchors, barTextMode, style)
 			if style == "ZO_RaidUnitFrame" or style == "ZO_GroupUnitFrame" then --ZO_GroupUnitFrame --ZO_RaidUnitFrame
 				if frameDB[unitTag] == nil then
 					--d(unitTag)
 					frameDB[unitTag] = group.frameObject:new(unitTag)
+					group.groupUpdate()
 				end
 			end
 		end)
 		if IsUnitGrouped("player") then
 			EVENT_MANAGER:RegisterForUpdate("AD Group Tool Group Ping", vars.frequency, group.ping)
 		end
+		
 
 
+		group.createTopLevels()
+		if vars.hideBaseUnitFrames then
+			ZO_UnitFramesGroups:SetHidden(true)
+		end
 
 
-		group.fragment = ZO_HUDFadeSceneFragment:New(AD_Group_TopLevel, DEFAULT_SCENE_TRANSITION_TIME, DEFAULT_SCENE_TRANSITION_TIME)
-		HUD_SCENE:AddFragment(group.fragment)
-		HUD_UI_SCENE:AddFragment(group.fragment)
+		for i=1,#toplevels do
+			local fragment = ZO_HUDFadeSceneFragment:New(toplevels[i], DEFAULT_SCENE_TRANSITION_TIME, DEFAULT_SCENE_TRANSITION_TIME)
+			HUD_SCENE:AddFragment(fragment)
+			HUD_UI_SCENE:AddFragment(fragment)
+		end
 
 
-		AD_Group_TopLevel:SetAnchor(TOPLEFT, GuiRoot, TOPLEFT, vars.windowX, vars.windowY)
+		
+		
+
 		if not vars.windowLocked then
 			ZO_Alert(UI_ALERT_CATEGORY_ERROR, SOUNDS.NEGATIVE_CLICK, "|cff0000Artaeum Group Tool's group UI has not been locked.|r")
 			group.unlockWindow()
 		end
 		
-
-
 
 
 		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Power", EVENT_POWER_UPDATE, group.powerCallback)
@@ -93,6 +101,33 @@ function group.init()
 	end
 end
 
+
+
+
+function group.createTopLevels()
+	for i=1,vars.amountOfWindows do
+		toplevels[i] = CreateControlFromVirtual("AD_Group_TopLevel"..i,nil,"AD_Group_TopLevel")
+		toplevels[i]:SetHeight(40*12/vars.amountOfWindows)
+		if not vars.windowLocations[i] then
+			vars.windowLocations[i] = {0,0}
+		end
+		WINDOW_MANAGER:GetControlByName("AD_Group_TopLevel"..i.."Name"):SetText("Group "..i)
+		toplevels[i]:SetAnchor(TOPLEFT, GuiRoot, TOPLEFT, vars.windowLocations[i][1], vars.windowLocations[i][2])
+	end
+end
+
+
+
+
+function group.populate()
+	for i=1,12 do
+		local unitTag = "group"..i
+		if frameDB[unitTag] == nil then
+			--d(unitTag)
+			frameDB[unitTag] = group.frameObject:new(unitTag)
+		end
+	end
+end
 
 
 
@@ -131,7 +166,7 @@ function group.toSend:send()
 	if hammerMax == 0 then hammerMax = 1 end
 	local hammerBar = math.floor(hammerCurrent/hammerMax*15)
 	local ult = {}
-	ult.id = group.ultiIndexes[GetSlotBoundId(8)]
+	ult.id = group.ultiIndexes[GetSlotBoundId(8, vars.barToShare)]
 	ult.current = GetUnitPower('player',POWERTYPE_ULTIMATE)
 	ult.max = GetSlotAbilityCost(8)
 	ult.percent = math.floor(ult.current/ult.max*100)
@@ -390,7 +425,8 @@ local frameObject = ZO_Object:Subclass()
 
 function frameObject:new(unitTag)
 	local frame = ZO_Object.New(self)
-	frame.frame = CreateControlFromVirtual("ART"..unitTag,AD_Group_TopLevel,"AD_Group_Template")
+	topLevelID = math.floor((amountCreated)*vars.amountOfWindows/12)+1
+	frame.frame = CreateControlFromVirtual("ART"..unitTag,toplevels[topLevelID],"AD_Group_Template")
 	frame.bar = WINDOW_MANAGER:GetControlByName("ART"..unitTag.."Ult")
 	frame.image = WINDOW_MANAGER:GetControlByName("ART"..unitTag.."UltIcon")
 	frame.ultPercent = WINDOW_MANAGER:GetControlByName("ART"..unitTag.."UltPercent")
@@ -414,8 +450,8 @@ function frameObject:new(unitTag)
 	
 
 	local _,topl,parentframe,top,x,y,z = frame.frame:GetAnchor()
-	
-	frame.frame:SetAnchor(topl, parentframe, top, x, y+40 * amountCreated)
+
+	frame.frame:SetAnchor(topl, parentframe, top, x, y+40 * (amountCreated%(12/vars.amountOfWindows)))
 	amountCreated = amountCreated + 1
 
 	local role = GetGroupMemberSelectedRole(unitTag)
@@ -446,6 +482,11 @@ function frameObject:setGroupLeader()
 end
 function frameObject:SetHealth(value,max)
 	ZO_StatusBar_SmoothTransition(self.health,value,max)
+	if value == 0 then
+		self.name:SetColor(1,0,0,1)
+	else
+		self.name:SetColor(1,1,1,1)
+	end
 end
 
 group.frameObject = frameObject
@@ -489,20 +530,30 @@ end
 
 
 function group.unlockWindow()
-	AD_Group_TopLevel:SetMouseEnabled(true)
-	AD_Group_TopLevelBG:SetHidden(false)
+	for i=1,#toplevels do
+		local toplevel = toplevels[i]
+		toplevel:SetMouseEnabled(true)
+		WINDOW_MANAGER:GetControlByName("AD_Group_TopLevel"..i.."BG"):SetHidden(false)
+		WINDOW_MANAGER:GetControlByName("AD_Group_TopLevel"..i.."Name"):SetHidden(false)
+	end
 	vars.windowLocked = false
 end
 
 function group.lockWindow()
-	vars.windowX = AD_Group_TopLevel:GetLeft()
-	vars.windowY = AD_Group_TopLevel:GetTop()
-	AD_Group_TopLevelBG:SetHidden(true)
-	AD_Group_TopLevel:SetMouseEnabled(false)
+	for i=1,#toplevels do
+		local toplevel = toplevels[i]
+		toplevel:SetMouseEnabled(false)
+		WINDOW_MANAGER:GetControlByName("AD_Group_TopLevel"..i.."BG"):SetHidden(true)
+		WINDOW_MANAGER:GetControlByName("AD_Group_TopLevel"..i.."Name"):SetHidden(true)
+
+		if not vars.windowLocations[i] then
+			vars.windowLocations[i] = {}
+		end
+		vars.windowLocations[i][1] = toplevel:GetLeft()
+		vars.windowLocations[i][2] = toplevel:GetTop()
+	end
 	vars.windowLocked = true
 end
-
-
 
 
 
