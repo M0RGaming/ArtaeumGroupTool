@@ -9,6 +9,8 @@ local LGPS = LibGPS3
 
 local toplevels = {}
 local frameDB = {}
+local groupTranslation = {}
+
 
 AD.last = {} -- TESTING
 group.toSend = {
@@ -38,8 +40,10 @@ function group.init()
 	vars = AD.vars.Group
 
 	if vars.enabled then
+		
 		LMP:RegisterCallback('BeforePingAdded', group.pingCallback)
 		LMP:RegisterCallback('AfterPingRemoved', group.OnAfterPingRemoved)
+
 		--[[
 		SecurePostHook(UNIT_FRAMES, "CreateFrame", function(_, unitTag, anchors, barTextMode, style)
 			if style == "ZO_RaidUnitFrame" then --ZO_GroupUnitFrame --ZO_RaidUnitFrame
@@ -49,34 +53,28 @@ function group.init()
 			end
 		end)
 		]]
-		
-		
-		SecurePostHook(UNIT_FRAMES, "CreateFrame", function(_, unitTag, anchors, barTextMode, style)
-			if style == "ZO_RaidUnitFrame" or style == "ZO_GroupUnitFrame" then --ZO_GroupUnitFrame --ZO_RaidUnitFrame
-				if frameDB[unitTag] == nil then
-					--d(unitTag)
-					frameDB[unitTag] = group.frameObject:new(unitTag)
-					group.groupUpdate()
-				end
-			end
-		end)
-		if IsUnitGrouped("player") then
-			EVENT_MANAGER:RegisterForUpdate("AD Group Tool Group Ping", vars.frequency, group.ping)
-		end
-		
 
 
 		group.createTopLevels()
 		if vars.hideBaseUnitFrames then
 			ZO_UnitFramesGroups:SetHidden(true)
 		end
+		
 
 
+		
+		local fragments = {}
 		for i=1,#toplevels do
-			local fragment = ZO_HUDFadeSceneFragment:New(toplevels[i], DEFAULT_SCENE_TRANSITION_TIME, DEFAULT_SCENE_TRANSITION_TIME)
-			HUD_SCENE:AddFragment(fragment)
-			HUD_UI_SCENE:AddFragment(fragment)
+			fragments[i] = ZO_HUDFadeSceneFragment:New(toplevels[i], DEFAULT_SCENE_TRANSITION_TIME, 0)
+			--fragments[i] = ZO_SimpleSceneFragment:New(toplevels[i])
 		end
+		HUD_SCENE:AddFragmentGroup(fragments)
+		HUD_UI_SCENE:AddFragmentGroup(fragments)
+
+		for i=1,12 do
+			frameDB[i] = group.frameObject:new(i)
+		end
+		group.groupUpdate()
 
 
 		
@@ -94,6 +92,13 @@ function group.init()
 		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Leave", EVENT_GROUP_MEMBER_LEFT, group.groupLeave)
 		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Change", EVENT_LEADER_UPDATE, group.groupUpdate)
 		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Update", EVENT_GROUP_UPDATE, group.groupUpdate)
+		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Death", EVENT_UNIT_DEATH_STATE_CHANGED, group.updateDead)
+		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Connect", EVENT_GROUP_MEMBER_CONNECTED_STATUS, group.updateOnline)
+		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Player Alive", EVENT_PLAYER_ALIVE, group.alive)
+		if IsUnitGrouped("player") then
+			EVENT_MANAGER:RegisterForUpdate("AD Group Tool Group Ping", vars.frequency, group.ping)
+		end
+
 
 		group.createArrow()
 		group.arrow:SetTarget(0, 0)
@@ -116,18 +121,6 @@ function group.createTopLevels()
 	end
 end
 
-
-
-
-function group.populate()
-	for i=1,12 do
-		local unitTag = "group"..i
-		if frameDB[unitTag] == nil then
-			--d(unitTag)
-			frameDB[unitTag] = group.frameObject:new(unitTag)
-		end
-	end
-end
 
 
 
@@ -161,12 +154,12 @@ end
 function group.toSend:send()
 	local assistPing = self.assistPing and 1 or 0
 	self.assistPing = false
-	local campLock = (GetNextForwardCampRespawnTime() ~= 0) and 1 or 0
+	local campLock = (GetNextForwardCampRespawnTime() > GetGameTimeMilliseconds()) and 1 or 0
 	local hammerCurrent, hammerMax = GetUnitPower('player',POWERTYPE_DAEDRIC)
 	if hammerMax == 0 then hammerMax = 1 end
 	local hammerBar = math.floor(hammerCurrent/hammerMax*15)
 	local ult = {}
-	ult.id = group.ultiIndexes[GetSlotBoundId(8, vars.barToShare)]
+	ult.id = group.ultiIndexes[GetSlotBoundId(8, vars.barToShare)] or 255
 	ult.current = GetUnitPower('player',POWERTYPE_ULTIMATE)
 	ult.max = GetSlotAbilityCost(8, vars.barToShare)
 	ult.percent = math.floor(ult.current/ult.max*100)
@@ -177,7 +170,7 @@ function group.toSend:send()
 	local stamCurrent, stamMax = GetUnitPower('player',POWERTYPE_STAMINA)
 	local stamBar = math.floor(stamCurrent/stamMax*15)
 
-
+	--AD.last = {0,campLock,assistPing,hammerBar,0,ult.id}
 	local x = group.writeStream(
 		{0,campLock,assistPing,hammerBar,0,ult.id},
 		{1,1,1,4,1,8}
@@ -216,6 +209,22 @@ end
 4 stam bar
 ]]
 
+function group.alive()
+	group.updateDead(nil, "group"..GetGroupIndexByUnitTag('player'), false)
+end
+
+
+function group.updateDead(_, unitTag, isDead)
+	if frameDB[groupTranslation[unitTag]] then
+		frameDB[groupTranslation[unitTag]]:SetDead(isDead)
+	end
+end
+
+function group.updateOnline(_, unitTag, isOnline)
+	if frameDB[groupTranslation[unitTag]] then
+		frameDB[groupTranslation[unitTag]]:SetOnline(isOnline)
+	end
+end
 
 
 
@@ -229,7 +238,7 @@ end
 function group.pingCallback(pingType,pingTag,x,y,isLocalPlayerOwner)
 	if(pingType == MAP_PIN_TYPE_PING) then
 		--d(""..x.." "..y.." "..pingTag)
-		if frameDB[pingTag] ~= nil then
+		if frameDB[groupTranslation[pingTag]] ~= nil then
 
 			LGPS:PushCurrentMap()
 			SetMapToMapListIndex(group.mapID)
@@ -252,12 +261,16 @@ function group.pingCallback(pingType,pingTag,x,y,isLocalPlayerOwner)
 
 			--AD.last = {outstreamX, outstreamY, pingTag, x, y}
 
+			local campLock = (outstreamX[2] == 1) and true or false
+			if campLock then
+				frameDB[groupTranslation[pingTag]].backdrop:SetEdgeColor(1,0,0,1)
+			else
+				frameDB[groupTranslation[pingTag]].backdrop:SetEdgeColor(1,1,1,1)
+			end
 
 			-- Set Ult
 			local ultIcon = group.ultList[group.ultiIndexes[outstreamX[6]]]
-			if ultIcon == nil then return end
-			group.setUlt(pingTag,outstreamY[1],ultIcon)
-
+			if ultIcon then group.setUlt(pingTag,outstreamY[1],ultIcon) end
 			-- Handle assist pings
 			if (outstreamX[3] == 1) then
 				local px, py = GetMapPlayerPosition(pingTag)
@@ -271,7 +284,7 @@ function group.pingCallback(pingType,pingTag,x,y,isLocalPlayerOwner)
 	end
 end
 
--- Adapted from RdK Group TOol
+-- Adapted from RdK Group Tool
 function group.OnAfterPingRemoved(pingType, pingTag, x, y, isPingOwner)
 	if (pingType == MAP_PIN_TYPE_PING) then
 		LMP:UnsuppressPing(pingType, pingTag)
@@ -280,16 +293,16 @@ end
 
 
 function group.setUlt(unitTag, percent, icon)
-	if frameDB[unitTag] ~= nil then
-		AD.last = frameDB
-		frameDB[unitTag]['bar']:SetMinMax(0,100)
-		frameDB[unitTag]['bar']:SetValue(100-percent)
-		frameDB[unitTag]['image']:SetTexture(icon)
-		frameDB[unitTag].ultPercent:SetText(""..percent.."%")
+	local frame = frameDB[groupTranslation[unitTag]]
+	if frame ~= nil then
+		frame['bar']:SetMinMax(0,100)
+		frame['bar']:SetValue(100-percent)
+		frame['image']:SetTexture(icon)
+		frame.ultPercent:SetText(""..percent.."%")
 		if percent == 100 then
-			frameDB[unitTag].health:SetColor(0,0.8,0,0.8)
+			frame.health:SetColor(0,0.8,0,0.8)
 		else
-			frameDB[unitTag].health:SetColor(0.8,26/255,26/255,0.8)
+			frame.health:SetColor(0.8,26/255,26/255,0.8)
 		end
 	end
 end
@@ -316,13 +329,14 @@ end
 
 function group.groupLeave(eventCode, _, _, isLocalPlayer, _, _)
 	if not isLocalPlayer then
+		group.groupUpdate()
 		return
 	end
 	EVENT_MANAGER:UnregisterForUpdate("AD Group Tool Group Ping")
 	for i=1,12 do
 		local groupInd = 'group'..i
-		if frameDB[groupInd] then
-			frameDB[groupInd].frame:SetHidden(true)
+		if frameDB[groupTranslation[unitTag]] then
+			frameDB[groupTranslation[unitTag]].frame:SetHidden(true)
 		end
 	end
 end
@@ -341,31 +355,34 @@ local roles = {
 
 
 function group.groupUpdate()
-	--d(GetGroupSize())
-	local notInGroup = 12-GetGroupSize()
-	for i=GetGroupSize()+1,12 do
-		local groupInd = 'group'..i
-		if frameDB[groupInd] then
-			frameDB[groupInd].frame:SetHidden(true)
+
+	local x = 1
+	for i=1,12 do
+		if GetUnitDisplayName('group'..i) then
+			groupTranslation["group"..i] = x
+			groupTranslation[x] = "group"..i
+			x = x+1
+		end
+	end
+	AD.last = groupTranslation
+
+
+	for i=x,12 do
+		if frameDB[i] then
+			frameDB[i].frame:SetHidden(true)
 		end
 	end
 
-	for i=1,GetGroupSize() do
-		--d("test")
-		local unitTag = 'group'..i
-		local frame = frameDB[unitTag]
+	for i=1,x-1 do
+		local unitTag = groupTranslation[i]
+		local frame = frameDB[groupTranslation[unitTag]]
 		if frame then 
 			frame.unitTag = unitTag
 			frame:setName()
 			frame:setGroupLeader()
+			frame.health:SetColor(0.8,26/255,26/255,0.8)
 			
-			if IsUnitOnline(unitTag) then
-				local health,healthmax = GetUnitPower(unitTag, POWERTYPE_HEALTH)
-				frame.health:SetMinMax(0,healthmax)
-				frame.health:SetValue(health)
-			else
-				frame.name:SetColor(255,255,255,0.7)
-			end
+			frame:SetOnline(IsUnitOnline(unitTag))
 						
 			local role = GetGroupMemberSelectedRole(unitTag)
 			if role == 0 then
@@ -432,37 +449,14 @@ function frameObject:new(unitTag)
 	frame.ultPercent = WINDOW_MANAGER:GetControlByName("ART"..unitTag.."UltPercent")
 	frame.name = WINDOW_MANAGER:GetControlByName("ART"..unitTag.."Name")
 	frame.health = WINDOW_MANAGER:GetControlByName("ART"..unitTag.."Health")
+	frame.backdrop = WINDOW_MANAGER:GetControlByName("ART"..unitTag.."BG")
 	frame.health:SetValue(0)
 	frame.health:SetColor(0.8,26/255,26/255,0.8)
-
-	frame.unitTag = unitTag
-	frame:setName()
-	frame:setGroupLeader()
-	--d(frame.frame)
-	
-	if IsUnitOnline(unitTag) then
-		local health,healthmax = GetUnitPower(unitTag, POWERTYPE_HEALTH)
-		frame.health:SetMinMax(0,healthmax)
-		frame.health:SetValue(health)
-	else
-		frame.name:SetColor(255,255,255,0.7)
-	end
-	
+	frame.unitTag = ''
 
 	local _,topl,parentframe,top,x,y,z = frame.frame:GetAnchor()
-
 	frame.frame:SetAnchor(topl, parentframe, top, x, y+40 * (amountCreated%(12/vars.amountOfWindows)))
 	amountCreated = amountCreated + 1
-
-	local role = GetGroupMemberSelectedRole(unitTag)
-	if role == 0 then
-		local alliance = GetUnitAlliance(unitTag)
-		frame.image:SetTexture(alliances[alliance])
-	else
-		frame.image:SetTexture(roles[role])
-	end
-
-
 	return frame
 end
 
@@ -473,19 +467,44 @@ function frameObject:setGroupLeader()
 	if IsUnitGroupLeader(self.unitTag) then
 		self.name:SetTransformOffsetX(20)
 		self.name:SetWidth(143)
-		WINDOW_MANAGER:GetControlByName("ART"..self.unitTag.."Icon"):SetHidden(false)
+		WINDOW_MANAGER:GetControlByName("ART"..groupTranslation[self.unitTag].."Icon"):SetHidden(false)
 	else
 		self.name:SetTransformOffsetX(0)
 		self.name:SetWidth(163)
-		WINDOW_MANAGER:GetControlByName("ART"..self.unitTag.."Icon"):SetHidden(true)
+		WINDOW_MANAGER:GetControlByName("ART"..groupTranslation[self.unitTag].."Icon"):SetHidden(true)
 	end
 end
 function frameObject:SetHealth(value,max)
 	ZO_StatusBar_SmoothTransition(self.health,value,max)
-	if value == 0 then
+end
+
+
+function frameObject:SetDead(dead)
+	current, max = GetUnitPower(self.unitTag, POWERTYPE_HEALTH)
+	if dead then
 		self.name:SetColor(1,0,0,1)
+		self:SetHealth(0,max)
 	else
 		self.name:SetColor(1,1,1,1)
+		self:SetHealth(current,max)
+	end
+end
+
+function frameObject:SetOnline(online)
+	current, max = GetUnitPower(self.unitTag, POWERTYPE_HEALTH)
+	if online then
+		self.name:SetColor(1,1,1,1)
+		self:SetHealth(current,max)
+		self.frame:SetAlpha(1)
+		self.image:SetColor(1,1,1,1)
+	else
+		self.name:SetColor(1,1,1,0.5)
+		self.frame:SetAlpha(0.7)
+		self:SetHealth(0,max)
+
+		local alliance = GetUnitAlliance(unitTag)
+		self.image:SetTexture(alliances[alliance])
+		self.image:SetColor(1,1,1,0.5)
 	end
 end
 
@@ -514,8 +533,8 @@ end
 
 function group.powerCallback(_, unitTag, powerIndex, powerType, powerValue, powerMax, powerEffectiveMax) 
 	if powerType == POWERTYPE_HEALTH then
-		if frameDB[unitTag] ~= nil then
-			frameDB[unitTag]:SetHealth(powerValue,powerMax)
+		if frameDB[groupTranslation[unitTag]] ~= nil then
+			frameDB[groupTranslation[unitTag]]:SetHealth(powerValue,powerMax)
 		end
 	end
 end
@@ -554,7 +573,6 @@ function group.lockWindow()
 	end
 	vars.windowLocked = true
 end
-
 
 
 

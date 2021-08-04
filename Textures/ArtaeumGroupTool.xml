@@ -12,7 +12,7 @@
 		</AnimationTimeline>
 	</Animations>
 	<Controls>
-	
+		
 		<TopLevelControl name="AD_Group_TopLevel" clampedToScreen="true" mouseEnabled="false" movable="true" virtual="true">
 			<Dimensions x="225" y="480" /> <!--supposed to be 0,0-->
 			<Anchor point="TOPLEFT" relativeTo="GuiRoot" relativePoint="TOPLEFT" offsetX="0" offsetY="0"/>
