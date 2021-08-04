@@ -168,7 +168,7 @@ function group.toSend:send()
 	local ult = {}
 	ult.id = group.ultiIndexes[GetSlotBoundId(8, vars.barToShare)]
 	ult.current = GetUnitPower('player',POWERTYPE_ULTIMATE)
-	ult.max = GetSlotAbilityCost(8)
+	ult.max = GetSlotAbilityCost(8, vars.barToShare)
 	ult.percent = math.floor(ult.current/ult.max*100)
 	if ult.percent > 100 then ult.percent = 100 end
 	if ult.max <= 0 then ult.percent = 0 end

@@ -1,3 +1,7 @@
+Version 2.4.4.1
+----------
+Bugfix - Tiny logical error
+
 Version 2.4.4
 ----------
 Added the ability to split into multiple groups
