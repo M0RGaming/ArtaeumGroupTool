@@ -69,8 +69,7 @@
 							<AnchorFill />
 						</Texture>
 						<Label name="$(parent)Percent" font="$(ANTIQUE_FONT)|$(KB_13)|soft-shadow-thick">
-							<Anchor point="BOTTOMLEFT" />
-							<Anchor offsetX="-36" />
+							<Anchor point="BOTTOMLEFT" offsetX="-36" />
 							<Dimensions x="36" y="20" />
 						</Label>
 					</Controls>

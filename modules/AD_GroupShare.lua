@@ -75,6 +75,7 @@ function group.init()
 			frameDB[i] = group.frameObject:new(i)
 		end
 		group.groupUpdate()
+		group.scaleWindow()
 
 
 		
@@ -400,6 +401,32 @@ end
 
 
 
+
+
+--TODO: Replace this entire thing with transform scale next patch
+function group.scaleWindow()
+	local scale = vars.scale
+	for i=1,#toplevels do
+		toplevels[i]:SetScale(scale)
+	end
+	for i=1,12 do
+		local frame = frameDB[i]
+		for i,v in pairs(frame.anchors) do
+			frame[i]:ClearAnchors()
+			frame[i]:SetAnchor(v[2], v[3], v[4], v[5]*scale, v[6]*scale)
+		end
+		frame:setGroupLeader()
+	end
+end
+
+
+function group.showWindows()
+	for i=1,#toplevels do
+		toplevels[i]:SetHidden(false)
+	end
+end
+
+
 local amountCreated = 0
 
 
@@ -450,13 +477,23 @@ function frameObject:new(unitTag)
 	frame.name = WINDOW_MANAGER:GetControlByName("ART"..unitTag.."Name")
 	frame.health = WINDOW_MANAGER:GetControlByName("ART"..unitTag.."Health")
 	frame.backdrop = WINDOW_MANAGER:GetControlByName("ART"..unitTag.."BG")
+	frame.groupLead = WINDOW_MANAGER:GetControlByName("ART"..unitTag.."Icon")
 	frame.health:SetValue(0)
 	frame.health:SetColor(0.8,26/255,26/255,0.8)
 	frame.unitTag = ''
 
 	local _,topl,parentframe,top,x,y,z = frame.frame:GetAnchor()
+	frame.frame:ClearAnchors()
 	frame.frame:SetAnchor(topl, parentframe, top, x, y+40 * (amountCreated%(12/vars.amountOfWindows)))
 	amountCreated = amountCreated + 1
+
+	--TODO: Replace this entire thing with transform scale next patch
+	frame.anchors = {}
+	local toIterate = {"frame","bar","ultPercent","name","health","backdrop","groupLead"}
+	for i=1,#toIterate do
+		frame.anchors[toIterate[i]] = {frame[toIterate[i]]:GetAnchor()}
+	end
+
 	return frame
 end
 
@@ -464,8 +501,9 @@ function frameObject:setName()
 	self.name:SetText(GetUnitDisplayName(self.unitTag))
 end
 function frameObject:setGroupLeader()
+	if self.unitTag == "" then return end
 	if IsUnitGroupLeader(self.unitTag) then
-		self.name:SetTransformOffsetX(20)
+		self.name:SetTransformOffsetX(20*vars.scale)
 		self.name:SetWidth(143)
 		WINDOW_MANAGER:GetControlByName("ART"..groupTranslation[self.unitTag].."Icon"):SetHidden(false)
 	else

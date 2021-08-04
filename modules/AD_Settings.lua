@@ -53,12 +53,22 @@ function settings.createSettings()
 					tooltip = "If this is enabled, the default group healthbars will be hidden.",
 					getFunc = function() return vars.Group.hideBaseUnitFrames end,
 					setFunc = function(value) vars.Group.hideBaseUnitFrames = value; ZO_UnitFramesGroups:SetHidden(value) end,
-					width = "half",
 				},
 				{
 			        type = "slider",
+			        name = "Window Scale",
+			        tooltip = "This sets the size of the window.",
+			        min = 0,
+			        max = 2,
+			        step = 0.1,	--(optional)
+			        getFunc = function() return vars.Group.scale end,
+			        setFunc = function(scale) vars.Group.scale = scale; AD.Group.scaleWindow() end,
+			       	width = "half",
+			    },
+				{
+			        type = "slider",
 			        name = "Amount of group windows",
-			        tooltip = "This sets the opacity of the marker.",
+			        tooltip = "This sets the amount of windows to display. If set to 2, it will display 2 windows of 6 people each.",
 			        min = 1,
 			        max = 12,
 			        step = 1,	--(optional)
@@ -104,6 +114,13 @@ function settings.createSettings()
 							vars.Group.barToShare = HOTBAR_CATEGORY_BACKUP
 						end
 					end
+				},
+				{
+					type = "button",
+					name = "Show Windows",
+					tooltip = "Click here to Show Windows on this page",
+					width = "full",
+					func = AD.Group.showWindows,
 				},
 			}
 		},

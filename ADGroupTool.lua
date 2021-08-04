@@ -38,12 +38,13 @@ AD.Settings.DefaultSettings = {
 	Group = {
 		enabled = false,
 		cyrodilOnly = false,
-		frequency = 3000,
+		frequency = 1000,
 		windowLocations = {},
 		windowLocked = false,
 		amountOfWindows = 1,
 		hideBaseUnitFrames = false,
-		barToShare = nil
+		barToShare = nil,
+		scale = 1
 	}
 }
 
