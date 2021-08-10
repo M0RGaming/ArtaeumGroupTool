@@ -8,6 +8,13 @@ local vars = {}
 function guild.init()
 	vars = AD.vars.Guild
 	guild.createArrow()
+	--[[
+	local editBox = ZO_AutoComplete:New(WINDOW_MANAGER:GetControlByName(AD_Settings_Listen))
+	editBox:SetIncludeFlags({AUTO_COMPLETE_FLAG_GUILD})
+	editBox:SetExcludeFlags({})
+	editBox:SetOnlineOnly(AUTO_COMPLETION_ONLINE_OR_OFFLINE)
+	editBox:SetMaxResults(MAX_AUTO_COMPLETION_RESULTS)
+	]]
 end
 
 
@@ -33,10 +40,6 @@ guild.markerShown = true
 
 function guild.setListento(displayName)
 	vars.listenTo = displayName
-end
-function guild.setGuild(guildID)
-	vars.guildID = guildID
-	guild.transmitTo = GetPlayerGuildMemberIndex(guildID)
 end
 
 function guild.toggleListen()

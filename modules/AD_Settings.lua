@@ -2,7 +2,19 @@ local AD = ArtaeumGroupTool
 local settings = AD.Settings
 
 function settings.createSettings()
-
+	local guilds = {
+		[-1] = "No Guild",
+		["No Guild"] = -1
+	}
+	local guildNames = {
+		"No Guild"
+	}
+	for i=1,GetNumGuilds() do
+		local guildID = GetGuildId(i)
+		guilds[GetGuildName(guildID)] = guildID
+		guilds[guildID] = GetGuildName(guildID)
+		guildNames[i+1] = GetGuildName(guildID)
+	end
 	local vars = AD.vars
 
 	local panelName = "ArtaeumGroupToolSettingsPanel"
@@ -15,6 +27,65 @@ function settings.createSettings()
 
 	local optionsTable = {
 
+		{
+			type = "submenu",
+			name = "|cff0000C|cff2a00h|cff5500a|cff7f00n|cffbf00g|cffff00e|caaff00 |c55ff00C|c00ff00o|c00ff80l|c00ffffo|c00aaffu|c0055ffr|c0000ffs|r",
+			controls = {
+				{
+					type = "description",
+					title = "|cFFD700[Crown Module]|r",
+					text = "The Following will edit the colours from the Crown Arrow Module",
+					width = "full",
+				},
+				{
+	                type = "colorpicker",
+	                name = "Arrow/Marker Colour",
+	                tooltip = "This sets the colour of the arrow and/or marker. The alpha only affects the marker.",
+	                getFunc = function() local rgb = vars.Crown.markerColour; return rgb[1], rgb[2], rgb[3] end,	--(alpha is optional)
+	                setFunc = function(r,g,b) local rgb = vars.Crown.markerColour; rgb[1] = r; rgb[2] = g; rgb[3] = b; AD.Crown.updateColours() end,	--(alpha is optional)
+	            	width = "half",
+	            },
+	            {
+			        type = "slider",
+			        name = "Marker Opacity",
+			        tooltip = "This sets the opacity of the marker.",
+			        min = 0,
+			        max = 100,
+			        step = 1,	--(optional)
+			        getFunc = function() return vars.Crown.markerColour[4]*100 end,
+			        setFunc = function(a) vars.Crown.markerColour[4] = a/100; AD.Crown.updateColours() end,
+			        width = "half",	--or "full" (optional)
+			    },
+			    {
+					type = "divider",
+				},
+			    {
+					type = "description",
+					title = "|cFFD700[Guild Note Module]|r",
+					text = "The Following will edit the colours from the Guild Note Share Module",
+					width = "full",
+				},
+				{
+	                type = "colorpicker",
+	                name = "Arrow/Marker Colour",
+	                tooltip = "This sets the colour of the arrow and/or marker. The alpha only affects the marker.",
+	                getFunc = function() local rgb = vars.Guild.markerColour; return rgb[1], rgb[2], rgb[3] end,	--(alpha is optional)
+	                setFunc = function(r,g,b) local rgb = vars.Guild.markerColour; rgb[1] = r; rgb[2] = g; rgb[3] = b; AD.Guild.updateColours() end,	--(alpha is optional)
+	            	width = "half",
+	            },
+	            {
+			        type = "slider",
+			        name = "Marker Opacity",
+			        tooltip = "This sets the opacity of the marker.",
+			        min = 0,
+			        max = 100,
+			        step = 1,	--(optional)
+			        getFunc = function() return vars.Guild.markerColour[4]*100 end,
+			        setFunc = function(a) vars.Guild.markerColour[4] = a/100; AD.Guild.updateColours() end,
+			        width = "half",	--or "full" (optional)
+			    },
+			}
+		},
 		-- Group ULT share
 		{
 			type = "submenu",
@@ -164,25 +235,6 @@ function settings.createSettings()
 					end
 				},
 				{
-	                type = "colorpicker",
-	                name = "Arrow/Marker Colour",
-	                tooltip = "This sets the colour of the arrow and/or marker. The alpha only affects the marker.",
-	                getFunc = function() local rgb = vars.Crown.markerColour; return rgb[1], rgb[2], rgb[3] end,	--(alpha is optional)
-	                setFunc = function(r,g,b) local rgb = vars.Crown.markerColour; rgb[1] = r; rgb[2] = g; rgb[3] = b; AD.Crown.updateColours() end,	--(alpha is optional)
-	            	width = "half",
-	            },
-	            {
-			        type = "slider",
-			        name = "Marker Opacity",
-			        tooltip = "This sets the opacity of the marker.",
-			        min = 0,
-			        max = 100,
-			        step = 1,	--(optional)
-			        getFunc = function() return vars.Crown.markerColour[4]*100 end,
-			        setFunc = function(a) vars.Crown.markerColour[4] = a/100; AD.Crown.updateColours() end,
-			        width = "half",	--or "full" (optional)
-			    },
-				{
 					type = "checkbox",
 					name = "Show 3D Arrow",
 					tooltip = "If this is enabled, a 3D arrow will be created and point towards the group leader.",
@@ -229,16 +281,16 @@ function settings.createSettings()
 					name = "Radius",
 					tooltip = "If pugs are this much away, the timer will start counting for them. A forward camp radius is 25500 units.",
 					getFunc = function() return vars.SOC.radius end,
-					setFunc = function(value) vars.SOC.radius = value end,
+					setFunc = function(value) vars.SOC.radius = tonumber(value) end,
 					isMultiline = false
 				},
 				{
-					type = "editbox",
-					name = "Guild ID",
-					tooltip = "Enter your whitelist Guild ID in here (-1 for no whitelist)",
-					getFunc = function() return vars.SOC.whitelistGuild end,
-					setFunc = function(value) vars.SOC.whitelistGuild = value end,
-					isMultiline = false
+					type = "dropdown",
+					name = "Whitelist Guild",
+					tooltip = "Please select the Guild where you would like to not kick pugs from.",
+					choices = guildNames,
+					getFunc = function() return guilds[vars.SOC.whitelistGuild] end,
+					setFunc = function(value) vars.SOC.whitelistGuild = guilds[value] end
 				},
 				{
 					type = "button",
@@ -289,12 +341,16 @@ function settings.createSettings()
 					width = "full",
 				},
 				{
-					type = "editbox",
-					name = "Guild ID",
-					tooltip = "Please add the Guild ID of where you would like to transmit/recieve data from.",
-					getFunc = function() return vars.Guild.guildID end,
-					setFunc = AD.Guild.setGuild,
-					isMultiline = false
+					type = "dropdown",
+					name = "Guild To Share To",
+					tooltip = "Please select the guild where you would like to transmit/recieve data from.",
+					choices = guildNames,
+					getFunc = function() return guilds[vars.Guild.guildID] end,
+					setFunc = function(value)
+						local guildID = guilds[value]
+						vars.Guild.guildID = guildID
+						AD.Guild.transmitTo = GetPlayerGuildMemberIndex(guildID)
+					end
 				},
 				{
 					type = "editbox",
@@ -302,7 +358,8 @@ function settings.createSettings()
 					tooltip = "Please add the @ Name of the person who's notes you would like to recieve data from.",
 					getFunc = function() return vars.Guild.listenTo end,
 					setFunc = function(value) vars.Guild.listenTo = value end,
-					isMultiline = false
+					isMultiline = false,
+					reference = "AD_Settings_Listen"
 				},
 				{
 					type = "editbox",
@@ -310,7 +367,8 @@ function settings.createSettings()
 					tooltip = "Please add the @ Name of the person who's notes you would like to send data to.",
 					getFunc = function() return vars.Guild.transmitTo end,
 					setFunc = function(value) vars.Guild.transmitTo = value end,
-					isMultiline = false
+					isMultiline = false,
+					reference = "AD_Settings_Transmit"
 				},
 				{
 					type = "editbox",
@@ -320,25 +378,6 @@ function settings.createSettings()
 					setFunc = function(value) vars.Guild.phase = tonumber(value) end,
 					isMultiline = false
 				},
-				{
-	                type = "colorpicker",
-	                name = "Arrow/Marker Colour",
-	                tooltip = "This sets the colour of the arrow and/or marker. The alpha only affects the marker.",
-	                getFunc = function() local rgb = vars.Guild.markerColour; return rgb[1], rgb[2], rgb[3] end,	--(alpha is optional)
-	                setFunc = function(r,g,b) local rgb = vars.Guild.markerColour; rgb[1] = r; rgb[2] = g; rgb[3] = b; AD.Guild.updateColours() end,	--(alpha is optional)
-	            	width = "half",
-	            },
-	            {
-			        type = "slider",
-			        name = "Marker Opacity",
-			        tooltip = "This sets the opacity of the marker.",
-			        min = 0,
-			        max = 100,
-			        step = 1,	--(optional)
-			        getFunc = function() return vars.Guild.markerColour[4]*100 end,
-			        setFunc = function(a) vars.Guild.markerColour[4] = a/100; AD.Guild.updateColours() end,
-			        width = "half",	--or "full" (optional)
-			    },
 				{
 					type = "button",
 					name = "Toggle Transmitting",

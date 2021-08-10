@@ -1,3 +1,7 @@
+Version 2.4.7
+----------
+Added user friendlyness, such as colours and skins
+
 Version 2.4.6
 ----------
 Added Support for Scaling the windows up or down.

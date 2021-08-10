@@ -88,14 +88,14 @@ function group.init()
 		
 
 
-		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Power", EVENT_POWER_UPDATE, group.powerCallback)
+		--EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Power", EVENT_POWER_UPDATE, group.powerCallback)
 		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Join", EVENT_GROUP_MEMBER_JOINED, group.groupJoin)
 		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Leave", EVENT_GROUP_MEMBER_LEFT, group.groupLeave)
 		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Change", EVENT_LEADER_UPDATE, group.groupUpdate)
 		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Update", EVENT_GROUP_UPDATE, group.groupUpdate)
 		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Death", EVENT_UNIT_DEATH_STATE_CHANGED, group.updateDead)
 		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Connect", EVENT_GROUP_MEMBER_CONNECTED_STATUS, group.updateOnline)
-		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Player Alive", EVENT_PLAYER_ALIVE, group.alive)
+		--EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Player Alive", EVENT_PLAYER_ALIVE, group.alive)
 		if IsUnitGrouped("player") then
 			EVENT_MANAGER:RegisterForUpdate("AD Group Tool Group Ping", vars.frequency, group.ping)
 		end
@@ -104,6 +104,12 @@ function group.init()
 		group.createArrow()
 		group.arrow:SetTarget(0, 0)
 		--CreateControlFromVirtual("AD",AD_Group_TopLevel,"AD_Group_Template")
+
+
+
+
+		-- adapted from ZOS's Code
+	    ZO_MostRecentPowerUpdateHandler:New("AD_UnitFrames", group.PowerUpdateHandlerFunction)
 	end
 end
 
@@ -216,6 +222,9 @@ end
 
 
 function group.updateDead(_, unitTag, isDead)
+	d(unitTag)
+	d(isDead)
+	d()
 	if frameDB[groupTranslation[unitTag]] then
 		frameDB[groupTranslation[unitTag]]:SetDead(isDead)
 	end
@@ -226,6 +235,33 @@ function group.updateOnline(_, unitTag, isOnline)
 		frameDB[groupTranslation[unitTag]]:SetOnline(isOnline)
 	end
 end
+
+
+function group.PowerUpdateHandlerFunction(unitTag, powerPoolIndex, powerType, powerPool, powerPoolMax)
+	if powerType == POWERTYPE_HEALTH and frameDB[groupTranslation[unitTag]] then
+	    local unitFrame = frameDB[groupTranslation[unitTag]]
+        local oldHealth = unitFrame.health:GetValue()
+        --d("Old Health: "..oldHealth.." | New Health: "..powerPool)
+
+        if oldHealth ~= nil and oldHealth == 0 then
+            -- Unit went from dead to non dead...update reaction
+            --d('res')
+            unitFrame:SetDead(false)
+            return
+        end
+        if powerPool == 0 then
+        	unitFrame:SetDead(true)
+        	--d('die')
+        	return
+        end
+        
+    	frameDB[groupTranslation[unitTag]]:SetHealth(powerPool,powerPoolMax)
+    	
+    end
+end
+
+
+
 
 
 
