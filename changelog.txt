@@ -1,6 +1,10 @@
+Version 2.4.8
+----------
+A whole bunch of bug fixes (I hope)
+
 Version 2.4.7
 ----------
-Added user friendlyness, such as colours and skins
+Added user friendlyness, such as colours, and guild selectors
 
 Version 2.4.6
 ----------
