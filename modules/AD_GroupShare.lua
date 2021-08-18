@@ -16,6 +16,14 @@ group.toSend = {
 	assistPing = false
 }
 group.arrow = nil
+
+
+
+group.units = {}
+
+
+
+
 -- Data that is transfered: 
 --[[
 1 [free bit (true or false)] (previously verification)
@@ -93,26 +101,25 @@ function group.init()
 			group.unlockWindow()
 		end
 		
-		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Init", EVENT_PLAYER_ACTIVATED, function(_, init)
-			EVENT_MANAGER:UnregisterForUpdate("AD Group Tool Group Init", EVENT_PLAYER_ACTIVATED)
-			if not init then return end
-			LMP:RegisterCallback('BeforePingAdded', group.pingCallback)
-			LMP:RegisterCallback('AfterPingRemoved', group.OnAfterPingRemoved)
-			--EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Power", EVENT_POWER_UPDATE, group.powerCallback)
-			EVENT_MANAGER:RegisterForEvent("AD Group Tool Unit Created", EVENT_UNIT_CREATED, group.unitCreate)
-			EVENT_MANAGER:RegisterForEvent("AD Group Tool Unit Created", EVENT_UNIT_DESTROYED, group.unitDestroy)
-			EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Join", EVENT_GROUP_MEMBER_JOINED, group.groupJoin)
-			EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Leave", EVENT_GROUP_MEMBER_LEFT, group.groupLeave)
-			EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Change", EVENT_LEADER_UPDATE, group.groupLeadChange)
-			EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Update", EVENT_GROUP_UPDATE, group.groupUpdate)
-			EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Death", EVENT_UNIT_DEATH_STATE_CHANGED, group.updateDead)
-			EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Connect", EVENT_GROUP_MEMBER_CONNECTED_STATUS, group.updateOnline)
-			
-			if IsUnitGrouped("player") then
-				EVENT_MANAGER:RegisterForUpdate("AD Group Tool Group Ping", vars.frequency, group.ping)
-			end
+		--EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Init", EVENT_PLAYER_ACTIVATED, function(_, init)
+			--EVENT_MANAGER:UnregisterForUpdate("AD Group Tool Group Init", EVENT_PLAYER_ACTIVATED)
+		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Activated", EVENT_PLAYER_ACTIVATED, group.playerActivated)
+			--if not init then return end
+		LMP:RegisterCallback('BeforePingAdded', group.pingCallback)
+		LMP:RegisterCallback('AfterPingRemoved', group.OnAfterPingRemoved)
+		--EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Power", EVENT_POWER_UPDATE, group.powerCallback)
+		EVENT_MANAGER:RegisterForEvent("AD Group Tool Unit Created", EVENT_UNIT_CREATED, group.unitCreate)
+		EVENT_MANAGER:RegisterForEvent("AD Group Tool Unit Destroyed", EVENT_UNIT_DESTROYED, group.unitDestroy)
+		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Join", EVENT_GROUP_MEMBER_JOINED, group.groupJoin)
+		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Leave", EVENT_GROUP_MEMBER_LEFT, group.groupLeave)
+		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Change", EVENT_LEADER_UPDATE, group.groupLeadChange)
+		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Update", EVENT_GROUP_UPDATE, group.groupUpdate)
+		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Death", EVENT_UNIT_DEATH_STATE_CHANGED, group.updateDead)
+		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Connect", EVENT_GROUP_MEMBER_CONNECTED_STATUS, group.updateOnline)
+		
+		
 
-		end)
+		--end)
 		
 
 
@@ -201,11 +208,12 @@ function group.toSend:send()
 		{ult.percent,0,magBar,stamBar},
 		{7,1,4,4}
 	)
+	--d("Try to send Ping")
 	LGPS:PushCurrentMap()
 	if not LMP:IsPingSuppressed(MAP_PIN_TYPE_PING) then
 		LMP:SuppressPing(MAP_PIN_TYPE_PING)
 	end
-	SetMapToMapListIndex(group.mapID)
+	SetMapToMapId(group.mapID)
 	LMP:SetMapPing(
 		MAP_PIN_TYPE_PING,
 		MAP_TYPE_LOCATION_CENTERED,
@@ -213,6 +221,8 @@ function group.toSend:send()
 		y*group.stepSize
 	)
 	LGPS:PopCurrentMap()
+	--d("Sent Ping")
+	--d()
 	--d("Sent"..x.." "..y)
 end
 --[[
@@ -286,13 +296,13 @@ end
 
 
 function group.pingCallback(pingType,pingTag,x,y,isLocalPlayerOwner)
+	--d(""..x.." "..y.." "..pingTag)
 	if(pingType == MAP_PIN_TYPE_PING) then
-		--d(""..x.." "..y.." "..pingTag)
 		local groupIndex = GetGroupIndexByUnitTag(pingTag)
 		if frameDB[groupIndex] then
 
 			LGPS:PushCurrentMap()
-			SetMapToMapListIndex(group.mapID)
+			SetMapToMapId(group.mapID)
 			x, y = LMP:GetMapPing(pingType, pingTag)
 			if(not LMP:IsPositionOnMap(x, y)) then
 				LGPS:PopCurrentMap()
@@ -352,29 +362,29 @@ function group.setUlt(unitTag, percent, icon)
 		frame['image']:SetTexture(icon)
 		frame.ultPercent:SetText(""..percent.."%")
 		if percent == 100 then
-			frame.health:SetColor(0,0.8,0,0.8)
+			--frame.health:SetColor(0,0.8,0,0.8)
+			local rgb = vars.colours.fullUlt
+			frame.health:SetColor(rgb[1],rgb[2],rgb[3],rgb[4])
 		else
-			frame.health:SetColor(0.8,26/255,26/255,0.8)
+			--frame.health:SetColor(0.8,26/255,26/255,0.8)
+			local rgb = vars.colours.standardHealth
+			frame.health:SetColor(rgb[1],rgb[2],rgb[3],rgb[4])
 		end
 	end
 end
 
 
 
-
+--Need to find alternative
 function group.unitCreate(_, unitTag)
-	local i = GetGroupIndexByUnitTag(unitTag)
-	local frame = frameDB[i]
-	if frame then
-		if DoesUnitExist(unitTag) then 
-			frame:Update(unitTag)
-		else 
-			frame.frame:SetHidden(true)
-		end
-	end
+	if not (unitTag:find("group") or IsUnitGrouped(unitTag)) then return end
+	--d("Created "..unitTag)
+	group.groupUpdate()
 end
 
 function group.unitDestroy(_, unitTag)
+	if not (unitTag:find("group") or IsUnitGrouped(unitTag)) then return end
+	--d("Destroyed "..unitTag)
 	group.groupUpdate()
 end
 
@@ -398,14 +408,15 @@ function group.groupJoin(eventCode, _, _, isLocalPlayer)
 	if not isLocalPlayer then
 		return
 	end
-	EVENT_MANAGER:RegisterForUpdate("AD Group Tool Group Ping", vars.frequency, group.ping)
+	group.updateSharing()
 end
 
 function group.groupLeave(eventCode, _, _, isLocalPlayer)
 	if not isLocalPlayer then
 		return
 	end
-	EVENT_MANAGER:UnregisterForUpdate("AD Group Tool Group Ping")
+	group.updateSharing()
+	group.groupUpdate()
 end
 
 
@@ -422,6 +433,13 @@ local roles = {
 
 
 function group.groupUpdate()
+	if not IsUnitGrouped('player') then
+		for i=1,12 do
+			local frame = frameDB[i]
+			if frame then frame.frame:SetHidden(true) end
+		end
+		return
+	end
 	for i=1,12 do
 		local unitTag = GetGroupUnitTagByIndex(i)
 		local frame = frameDB[i]
@@ -429,7 +447,7 @@ function group.groupUpdate()
 			if DoesUnitExist(unitTag) then 
 				frame:Update(unitTag)
 			else 
-				frameDB[i].frame:SetHidden(true)
+				frame.frame:SetHidden(true)
 			end
 		end
 	end
@@ -532,7 +550,19 @@ end
 
 
 
-
+function group.updateColours()
+	for i=1,12 do
+		local frame = frameDB[i]
+		percentHidden = frame.bar:GetValue()
+		if percentHidden == 0 then
+			local rgb = vars.colours.fullUlt
+			frame.health:SetColor(rgb[1],rgb[2],rgb[3],rgb[4])
+		else
+			local rgb = vars.colours.standardHealth
+			frame.health:SetColor(rgb[1],rgb[2],rgb[3],rgb[4])
+		end
+	end
+end
 
 
 
@@ -574,7 +604,8 @@ end
 --/script PingMap(182, 1, 1 / 2^16, 1 / 2^16) StartChatInput(table.concat({GetMapPlayerWaypoint()}, ","))
 -- Adapted from RdK group tool, who adapted it from lib group socket
 group.stepSize = 1.333333329967e-05 -- For some reason cyro's step works, but artaeums doesnt? 
-group.mapID = 33
+--group.mapID = 33
+group.mapID = 1429
 -- 1.1058949894505e-05 in Artaeum (ID = 33)
 -- 1.333333329967e-05 in Cyro (ID = 14)
 -- 1.4285034012573e-005 from LGS in Coldharbour
@@ -632,7 +663,33 @@ end
 
 
 
+function group.updateSharing()
 
+	EVENT_MANAGER:UnregisterForUpdate("AD Group Tool Group Ping")
+	group.groupUpdate()
+	--d(IsUnitGrouped("player"))
+	if IsUnitGrouped("player") then
+		EVENT_MANAGER:RegisterForUpdate("AD Group Tool Group Ping", vars.frequency, group.ping)
+	end
+
+end
+
+
+
+
+function group.playerActivated(...)
+	--d(...)
+	if IsActiveWorldBattleground() then
+		--d("Player is in a BG")
+		--d(GetCurrentMapId())
+		group.updateSharing()
+	elseif (not vars.cyrodilOnly) or (IsPlayerInAvAWorld() and vars.cyrodilOnly) then
+		group.updateSharing()
+	else
+		EVENT_MANAGER:UnregisterForUpdate("AD Group Tool Group Ping")
+	end
+
+end
 
 
 

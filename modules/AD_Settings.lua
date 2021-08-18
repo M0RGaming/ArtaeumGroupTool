@@ -33,6 +33,50 @@ function settings.createSettings()
 			controls = {
 				{
 					type = "description",
+					title = "|cFFD700[Group Share Module]|r",
+					text = "The Following will edit the colours from the Group Ult Share Module",
+					width = "full",
+				},
+				{
+	                type = "colorpicker",
+	                name = "Assist Ping Colour",
+	                tooltip = "This sets the colour of the arrow and/or marker of the assist ping.",
+	                getFunc = function() local rgb = vars.Group.colours.marker; return rgb[1], rgb[2], rgb[3] end,	--(alpha is optional)
+	                setFunc = function(r,g,b) local rgb = vars.Group.colours.marker; rgb[1] = r; rgb[2] = g; rgb[3] = b; AD.Group.updateColours() end,	--(alpha is optional)
+	            	width = "half",
+	            },
+	            {
+			        type = "slider",
+			        name = "Assist Ping Opacity",
+			        tooltip = "This sets the opacity of the marker of the assist ping.",
+			        min = 0,
+			        max = 100,
+			        step = 1,	--(optional)
+			        getFunc = function() return vars.Group.colours.marker[4]*100 end,
+			        setFunc = function(a) vars.Group.colours.marker[4] = a/100; AD.Group.updateColours() end,
+			        width = "half",	--or "full" (optional)
+			    },
+			    {
+	                type = "colorpicker",
+	                name = "Standard Health Colour",
+	                tooltip = "This sets the colour of players whos ultimate is not full.",
+	                getFunc = function() local rgb = vars.Group.colours.standardHealth; return rgb[1], rgb[2], rgb[3], rgb[4] end,	--(alpha is optional)
+	                setFunc = function(r,g,b,a) local rgb = vars.Group.colours.standardHealth; rgb[1] = r; rgb[2] = g; rgb[3] = b; rgb[4] = a; AD.Group.updateColours() end,	--(alpha is optional)
+	            	width = "half",
+	            },
+	            {
+	                type = "colorpicker",
+	                name = "Full Ult Health Colour",
+	                tooltip = "This sets the colour of players whos ultimate is full.",
+	                getFunc = function() local rgb = vars.Group.colours.fullUlt; return rgb[1], rgb[2], rgb[3], rgb[4] end,	--(alpha is optional)
+	                setFunc = function(r,g,b,a) local rgb = vars.Group.colours.fullUlt; rgb[1] = r; rgb[2] = g; rgb[3] = b; rgb[4] = a; AD.Group.updateColours() end,	--(alpha is optional)
+	            	width = "half",
+	            },
+			    {
+					type = "divider",
+				},
+				{
+					type = "description",
 					title = "|cFFD700[Crown Module]|r",
 					text = "The Following will edit the colours from the Crown Arrow Module",
 					width = "full",
@@ -106,7 +150,6 @@ function settings.createSettings()
 					tooltip = "If this is enabled, this module will only run in Cyrodiil and Imperial City",
 					getFunc = function() return vars.Group.cyrodilOnly end,
 					setFunc = function(value) vars.Group.cyrodilOnly = value end,
-					disabled = true
 				},
 				{
 					type = "editbox",

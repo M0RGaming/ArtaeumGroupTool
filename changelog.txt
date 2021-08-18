@@ -1,3 +1,10 @@
+Version 2.4.9
+----------
+Bgs (should) work now, more fixes regarding them coming soon
+Better group share should now also work in bgs
+Cyro only mode maybe?
+Added more colour options
+
 Version 2.4.8
 ----------
 A whole bunch of bug fixes (I hope)

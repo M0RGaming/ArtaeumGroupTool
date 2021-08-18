@@ -36,15 +36,20 @@ AD.Settings.DefaultSettings = {
 		markerColour = {0,1,1,0.5}
 	},
 	Group = {
-		enabled = false,
-		cyrodilOnly = false,
+		enabled = true,
+		cyrodilOnly = true,
 		frequency = 1000,
 		windowLocations = {},
 		windowLocked = false,
 		amountOfWindows = 1,
 		hideBaseUnitFrames = false,
 		barToShare = nil,
-		scale = 1
+		scale = 1,
+		colours = {
+			marker = {1,0,0,0.5},
+			standardHealth = {0.8,26/255,26/255,0.8},
+			fullUlt = {0,0.8,0,0.8}
+		}
 	}
 }
 

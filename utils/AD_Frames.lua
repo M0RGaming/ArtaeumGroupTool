@@ -112,9 +112,11 @@ function frameObject:SetOnline(online)
 		self.frame:SetAlpha(0.7)
 		self:SetHealth(0,max)
 
-		local alliance = GetUnitAlliance(unitTag)
+		local alliance = GetUnitAlliance(self.unitTag)
 		self.image:SetTexture(alliances[alliance])
 		self.image:SetColor(1,1,1,0.5)
+		self.bar:SetMinMax(0,100)
+		self.bar:SetValue(0)
 	end
 end
 
@@ -123,7 +125,9 @@ end
 
 function frameObject:Update(unitTag)
 	self.unitTag = unitTag
-	self.health:SetColor(0.8,26/255,26/255,0.8)
+	local rgb = AD.vars.Group.colours.standardHealth
+	self.health:SetColor(rgb[1],rgb[2],rgb[3],rgb[4])
+	--self.health:SetColor(0.8,26/255,26/255,0.8)
 	self:setName()
 	self:setGroupLeader()
 	self:SetOnline(IsUnitOnline(unitTag))
@@ -134,6 +138,7 @@ function frameObject:Update(unitTag)
 	else
 		self.image:SetTexture(roles[role])
 	end
+	self.backdrop:SetEdgeColor(1,1,1,1)
 	self.frame:SetHidden(false)
 	self.ultPercent:SetText("")
 end

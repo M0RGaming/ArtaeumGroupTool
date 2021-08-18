@@ -104,6 +104,7 @@ function guild.seekPhase()
 	if t % 10 == vars.phase then
 		guild.transmitTo = GetGuildMemberIndexFromDisplayName(vars.guildID, vars.transmitTo)
 		EVENT_MANAGER:RegisterForUpdate("AD Group Tool Note Transmit", 10000, guild.autoTransmit)
+		guild.autoTransmit()
 		EVENT_MANAGER:UnregisterForUpdate("AD Group Tool Phase Seek")
 		guild.phaseSeek = false
 		d("Phase found, beginning transmition on phase "..vars.phase.." to user "..vars.transmitTo)
