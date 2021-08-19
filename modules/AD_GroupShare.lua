@@ -18,6 +18,8 @@ group.toSend = {
 group.arrow = nil
 
 
+group.running = false
+
 
 group.units = {}
 
@@ -62,71 +64,48 @@ function group.init()
 
 
 		group.createTopLevels()
+		AD.initAnchors(toplevels)
+		--[[
 		if vars.hideBaseUnitFrames then
 			ZO_UnitFramesGroups:SetHidden(true)
 		end
-		
-
-
+		]]
 		
 		local fragments = {}
 		for i=1,#toplevels do
 			fragments[i] = ZO_HUDFadeSceneFragment:New(toplevels[i], DEFAULT_SCENE_TRANSITION_TIME, 0)
-			--fragments[i] = ZO_SimpleSceneFragment:New(toplevels[i])
 		end
 		HUD_SCENE:AddFragmentGroup(fragments)
 		HUD_UI_SCENE:AddFragmentGroup(fragments)
 
 		for i=1,12 do
 			local topLevelID = math.floor((i-1)*AD.vars.Group.amountOfWindows/12)+1
-			frameDB[i] = AD.Frame:new(i,toplevels[topLevelID])
-
-			local unitTag = GetGroupUnitTagByIndex(i)
-			if DoesUnitExist(unitTag) then 
-				frameDB[i]:Update(unitTag)
-			else 
-				frameDB[i].frame:SetHidden(true)
-			end
-
+			frameDB['group'..i] = AD.Frame:new('group'..i, toplevels[topLevelID])
 		end
-		--group.groupUpdate()
 		group.scaleWindow()
-
-
-		
-		
 
 		if not vars.windowLocked then
 			ZO_Alert(UI_ALERT_CATEGORY_ERROR, SOUNDS.NEGATIVE_CLICK, "|cff0000Artaeum Group Tool's group UI has not been locked.|r")
 			group.unlockWindow()
 		end
 		
-		--EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Init", EVENT_PLAYER_ACTIVATED, function(_, init)
-			--EVENT_MANAGER:UnregisterForUpdate("AD Group Tool Group Init", EVENT_PLAYER_ACTIVATED)
 		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Activated", EVENT_PLAYER_ACTIVATED, group.playerActivated)
-			--if not init then return end
+		--[[
 		LMP:RegisterCallback('BeforePingAdded', group.pingCallback)
 		LMP:RegisterCallback('AfterPingRemoved', group.OnAfterPingRemoved)
-		--EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Power", EVENT_POWER_UPDATE, group.powerCallback)
 		EVENT_MANAGER:RegisterForEvent("AD Group Tool Unit Created", EVENT_UNIT_CREATED, group.unitCreate)
 		EVENT_MANAGER:RegisterForEvent("AD Group Tool Unit Destroyed", EVENT_UNIT_DESTROYED, group.unitDestroy)
-		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Join", EVENT_GROUP_MEMBER_JOINED, group.groupJoin)
-		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Leave", EVENT_GROUP_MEMBER_LEFT, group.groupLeave)
+		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Join", EVENT_GROUP_MEMBER_JOINED, group.groupJoinLeave)
+		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Leave", EVENT_GROUP_MEMBER_LEFT, group.groupJoinLeave)
 		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Change", EVENT_LEADER_UPDATE, group.groupLeadChange)
 		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Update", EVENT_GROUP_UPDATE, group.groupUpdate)
 		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Death", EVENT_UNIT_DEATH_STATE_CHANGED, group.updateDead)
 		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Connect", EVENT_GROUP_MEMBER_CONNECTED_STATUS, group.updateOnline)
-		
-		
-
-		--end)
-		
+		--]]		
 
 
 		group.createArrow()
 		group.arrow:SetTarget(0, 0)
-		--CreateControlFromVirtual("AD",AD_Group_TopLevel,"AD_Group_Template")
-
 
 
 
@@ -151,10 +130,37 @@ function group.createTopLevels()
 end
 
 
-
+local directions = {
+	["North"] = {-1/8,1/8},
+	["North East"] = {1/8,3/8},
+	["East"] = {3/8,5/8},
+	["South East"] = {5/8,7/8},
+	["South West"] = {-7/8,-5/8},
+	["West"] = {-5/8,-3/8},
+	["North West"] = {-3/8,-1/8}
+}
 
 function group.requestAssistPing()
 	group.toSend.assistPing = true
+	local playerX,playerY = GetMapPlayerPosition('player')
+	local crownX,crownY = GetMapPlayerPosition(GetGroupLeaderUnitTag())
+	local dir = math.atan2(playerX-crownX,crownY-playerY)/math.pi
+	local direction = ""
+	for key,value in pairs(directions) do
+		if dir >= value[1] and dir < value[2] then
+			direction = key
+			break
+		end
+	end
+	-- Do south seperatly cause pairs doesnt go in order
+	if direction == "" and dir >= -9/8 and dir < 9/8 then direction = "South" end 
+	if direction ~= "" then
+		d("You are "..direction.." of crown.")
+	end
+end
+
+function group.ping()
+	group.toSend:send()
 end
 
 
@@ -199,7 +205,6 @@ function group.toSend:send()
 	local stamCurrent, stamMax = GetUnitPower('player',POWERTYPE_STAMINA)
 	local stamBar = math.floor(stamCurrent/stamMax*15)
 
-	--AD.last = {0,campLock,assistPing,hammerBar,0,ult.id}
 	local x = group.writeStream(
 		{0,campLock,assistPing,hammerBar,0,ult.id},
 		{1,1,1,4,1,8}
@@ -208,7 +213,6 @@ function group.toSend:send()
 		{ult.percent,0,magBar,stamBar},
 		{7,1,4,4}
 	)
-	--d("Try to send Ping")
 	LGPS:PushCurrentMap()
 	if not LMP:IsPingSuppressed(MAP_PIN_TYPE_PING) then
 		LMP:SuppressPing(MAP_PIN_TYPE_PING)
@@ -221,85 +225,13 @@ function group.toSend:send()
 		y*group.stepSize
 	)
 	LGPS:PopCurrentMap()
-	--d("Sent Ping")
-	--d()
-	--d("Sent"..x.." "..y)
-end
---[[
-1 [free bit (true or false)] (previously verification)
-1 camp lock
-1 assist ping - if button pressed, beam of light is placed on user
-4 hammer bar (possibly able to remove, depending on demand) GetUnitPower('player',POWERTYPE_DAEDRIC)
-1 [free bit (true or false)] (previously hammer)
-
-8 ult ID
-
-7 ult bar
-1 [free bit (true or false)] may implement proxy timer
-
-4 mag bar
-4 stam bar
-]]
-
-
-
-function group.updateDead(_, unitTag, isDead)
-	local index = GetGroupIndexByUnitTag(unitTag)
-	if frameDB[index] then
-		frameDB[index]:SetDead(isDead)
-	end
-end
-
-function group.updateOnline(_, unitTag, isOnline)
-	local index = GetGroupIndexByUnitTag(unitTag)
-	if frameDB[index] then
-		frameDB[index]:SetOnline(isOnline)
-	end
-end
-
-
-function group.PowerUpdateHandlerFunction(unitTag, powerPoolIndex, powerType, powerPool, powerPoolMax)
-	local groupIndex = GetGroupIndexByUnitTag(unitTag)
-	if powerType == POWERTYPE_HEALTH and frameDB[groupIndex] then
-	    local unitFrame = frameDB[groupIndex]
-        local oldHealth = unitFrame.health:GetValue()
-        --d("Old Health: "..oldHealth.." | New Health: "..powerPool)
-        if oldHealth == powerPool then return end
-
-        if oldHealth ~= nil and oldHealth == 0 then
-            -- Unit went from dead to non dead...update reaction
-            --d('res')
-            unitFrame:SetDead(false)
-            return
-        end
-        if powerPool == 0 then
-        	unitFrame:SetDead(true)
-        	--d('die')
-        	return
-        end
-        
-    	unitFrame:SetHealth(powerPool,powerPoolMax)
-    	
-    end
-end
-
-
-
-
-
-
-
-
-function group.ping()
-	group.toSend:send()
 end
 
 
 function group.pingCallback(pingType,pingTag,x,y,isLocalPlayerOwner)
 	--d(""..x.." "..y.." "..pingTag)
 	if(pingType == MAP_PIN_TYPE_PING) then
-		local groupIndex = GetGroupIndexByUnitTag(pingTag)
-		if frameDB[groupIndex] then
+		if frameDB[pingTag] then
 
 			LGPS:PushCurrentMap()
 			SetMapToMapId(group.mapID)
@@ -320,18 +252,17 @@ function group.pingCallback(pingType,pingTag,x,y,isLocalPlayerOwner)
 			-- {0,campLock,assistPing,hammerBar,0,ult.id}
 			-- {ult.percent,0,magBar,stamBar}
 
-			--AD.last = {outstreamX, outstreamY, pingTag, x, y}
-
 			local campLock = (outstreamX[2] == 1) and true or false
 			if campLock then
-				frameDB[groupIndex].backdrop:SetEdgeColor(1,0,0,1)
+				frameDB[pingTag].backdrop:SetEdgeColor(1,0,0,1)
 			else
-				frameDB[groupIndex].backdrop:SetEdgeColor(1,1,1,1)
+				frameDB[pingTag].backdrop:SetEdgeColor(1,1,1,1)
 			end
 
 			-- Set Ult
 			local ultIcon = group.ultList[group.ultiIndexes[outstreamX[6]]]
-			if ultIcon then group.setUlt(pingTag,outstreamY[1],ultIcon) end
+			if ultIcon then frameDB[pingTag]:setUlt(outstreamY[1],ultIcon) end
+
 			-- Handle assist pings
 			if (outstreamX[3] == 1) then
 				local px, py = GetMapPlayerPosition(pingTag)
@@ -353,25 +284,48 @@ function group.OnAfterPingRemoved(pingType, pingTag, x, y, isPingOwner)
 end
 
 
-function group.setUlt(unitTag, percent, icon)
-	local groupIndex = GetGroupIndexByUnitTag(unitTag)
-	local frame = frameDB[groupIndex]
-	if frame ~= nil then
-		frame['bar']:SetMinMax(0,100)
-		frame['bar']:SetValue(100-percent)
-		frame['image']:SetTexture(icon)
-		frame.ultPercent:SetText(""..percent.."%")
-		if percent == 100 then
-			--frame.health:SetColor(0,0.8,0,0.8)
-			local rgb = vars.colours.fullUlt
-			frame.health:SetColor(rgb[1],rgb[2],rgb[3],rgb[4])
-		else
-			--frame.health:SetColor(0.8,26/255,26/255,0.8)
-			local rgb = vars.colours.standardHealth
-			frame.health:SetColor(rgb[1],rgb[2],rgb[3],rgb[4])
-		end
+
+
+
+
+
+function group.updateDead(_, unitTag, isDead)
+	if frameDB[unitTag] then
+		frameDB[unitTag]:SetDead(isDead)
 	end
 end
+
+function group.updateOnline(_, unitTag, isOnline)
+	if frameDB[unitTag] then
+		frameDB[unitTag]:SetOnline(isOnline)
+	end
+end
+
+
+-- Adapted from zos
+function group.PowerUpdateHandlerFunction(unitTag, powerPoolIndex, powerType, powerPool, powerPoolMax)
+	if powerType == POWERTYPE_HEALTH and frameDB[unitTag] then
+	    local unitFrame = frameDB[unitTag]
+        local oldHealth = unitFrame.health:GetValue()
+        if oldHealth == powerPool then return end
+
+        if oldHealth ~= nil and oldHealth == 0 then
+            -- Unit went from dead to non dead...update reaction
+            unitFrame:SetDead(false)
+            return
+        end
+        if powerPool == 0 then
+        	unitFrame:SetDead(true)
+        	return
+        end
+    	unitFrame:SetHealth(powerPool,powerPoolMax)
+    end
+end
+
+
+
+
+
 
 
 
@@ -398,41 +352,30 @@ end
 
 function group.groupLeadChange()
 	for i=1,12 do
-		frameDB[i]:setGroupLeader()
+		frameDB['group'..i]:setGroupLeader()
 	end
 end
 
 
 -- Events that consider all possible group join/leave events and adapt the UI respectivly.
-function group.groupJoin(eventCode, _, _, isLocalPlayer)
-	if not isLocalPlayer then
-		return
-	end
-	group.updateSharing()
-end
-
-function group.groupLeave(eventCode, _, _, isLocalPlayer)
-	if not isLocalPlayer then
-		return
-	end
-	group.updateSharing()
+function group.groupJoinLeave(eventCode, _, _, isLocalPlayer)
 	group.groupUpdate()
+	if isLocalPlayer then
+		if IsUnitGrouped('player') then
+			EVENT_MANAGER:RegisterForUpdate("AD Group Tool Group Ping", vars.frequency, group.ping)
+		else
+			EVENT_MANAGER:UnregisterForUpdate("AD Group Tool Group Ping")
+		end
+	end
 end
-
-
-local alliances = {
-	"esoui/art/stats/alliancebadge_aldmeri.dds",
-	"esoui/art/stats/alliancebadge_ebonheart.dds",
-	"esoui/art/stats/alliancebadge_daggerfall.dds",
-}
-local roles = {
-	[1] = "esoui/art/lfg/gamepad/lfg_roleicon_dps.dds",
-	[2] = "esoui/art/lfg/gamepad/lfg_roleicon_tank.dds",
-	[4] = "esoui/art/lfg/gamepad/lfg_roleicon_healer.dds",
-}
-
 
 function group.groupUpdate()
+	for i=1,12 do
+		if frameDB['group'..i] then
+			frameDB['group'..i]:Update()
+		end
+	end
+	--[[
 	if not IsUnitGrouped('player') then
 		for i=1,12 do
 			local frame = frameDB[i]
@@ -451,6 +394,7 @@ function group.groupUpdate()
 			end
 		end
 	end
+	--]]
 end
 
 
@@ -466,13 +410,13 @@ function group.scaleWindow()
 		toplevels[i]:SetScale(scale)
 	end
 	for i=1,12 do
-		local frame = frameDB[i]
+		local frame = frameDB['group'..i]
 		for i,v in pairs(frame.anchors) do
 			frame[i]:ClearAnchors()
 			frame[i]:SetAnchor(v[2], v[3], v[4], v[5]*scale, v[6]*scale)
 		end
 
-		if DoesUnitExist(GetGroupUnitTagByIndex(i)) then frame:setGroupLeader() end
+		if DoesUnitExist('group'..i) then frame:setGroupLeader() end
 	end
 end
 
@@ -483,42 +427,6 @@ function group.showWindows()
 	end
 end
 
-
-
-
-function group.setupBox(unitTag)
-	local frame = UNIT_FRAMES:GetFrame(unitTag).frame
-	local width = frame:GetWidth()
-	frame:SetWidth(width+40)
-
-
-	local ult = CreateControl("ART"..unitTag.."Ult",frame,CT_STATUSBAR)
-	ult:SetDimensions(40,40)
-	ult:SetMinMax(0,20)
-	ult:SetValue(0)
-	ult:SetColor(0)
-	ult:SetAlpha(0.8)
-	ult:SetOrientation(0)
-	ult:SetBarAlignment(1)
-	ult:SetAnchor(8,nil,8,-4,0,0)
-	ult:SetDrawLevel(6)
-
-
-	local ulti = CreateControl("ART"..unitTag.."UltImage",frame,CT_TEXTURE)
-	ulti:SetDimensions(40,40)
-	ulti:SetDrawLevel(5)
-	ulti:SetAnchor(8,nil,8,-4,0,0)
-
-	local role = GetGroupMemberSelectedRole(unitTag)
-	if role == 0 then
-		local alliance = GetUnitAlliance(unitTag)
-		ulti:SetTexture(alliances[alliance])
-	else
-		ulti:SetTexture(roles[role])
-	end
-	frameDB[unitTag] = {['frame']=frame,['bar']=ult,['image']=ulti}
-	
-end
 
 
 function group.moveBoxes()
@@ -532,27 +440,9 @@ end
 
 
 
-
-
-
-
-
-
-function group.powerCallback(_, unitTag, powerIndex, powerType, powerValue, powerMax, powerEffectiveMax) 
-	if powerType == POWERTYPE_HEALTH then
-		local groupIndex = GetGroupIndexByUnitTag(unitTag)
-		if frameDB[groupIndex] ~= nil then
-			frameDB[groupIndex]:SetHealth(powerValue,powerMax)
-		end
-	end
-end
-
-
-
-
 function group.updateColours()
 	for i=1,12 do
-		local frame = frameDB[i]
+		local frame = frameDB['group'..i]
 		percentHidden = frame.bar:GetValue()
 		if percentHidden == 0 then
 			local rgb = vars.colours.fullUlt
@@ -610,26 +500,6 @@ group.mapID = 1429
 -- 1.333333329967e-05 in Cyro (ID = 14)
 -- 1.4285034012573e-005 from LGS in Coldharbour
 
-
-function group.EncodeMessage(b0, b1, b2, b3)
-	b0 = b0 or 0
-	b1 = b1 or 0
-	b2 = b2 or 0
-	b3 = b3 or 0
-	return (b0 * 0x100 + b1) * group.stepSize, (b2 * 0x100 + b3) * group.stepSize
-end
-function group.DecodeMessage(x, y)
-	x = math.floor(x / group.stepSize + 0.5)
-	y = math.floor(y / group.stepSize + 0.5)
-
-	local b0 = math.floor(x / 0x100)
-	local b1 = x % 0x100
-	local b2 = math.floor(y / 0x100)
-	local b3 = y % 0x100
-
-	return b0, b1, b2, b3
-end
-
 -- breakdownArray is in the form of [1,1,2,4] or something, where the number refer to how long to read
 function group.readStream(stream, breakdownArray)
 	local value = 0
@@ -663,14 +533,49 @@ end
 
 
 
-function group.updateSharing()
+function group.updateSharing(sharing)
 
-	EVENT_MANAGER:UnregisterForUpdate("AD Group Tool Group Ping")
-	group.groupUpdate()
-	--d(IsUnitGrouped("player"))
-	if IsUnitGrouped("player") then
-		EVENT_MANAGER:RegisterForUpdate("AD Group Tool Group Ping", vars.frequency, group.ping)
-	end
+	if group.running and not sharing then
+		EVENT_MANAGER:UnregisterForUpdate("AD Group Tool Group Ping")
+		LMP:UnregisterCallback('BeforePingAdded', group.pingCallback)
+		LMP:UnregisterCallback('AfterPingRemoved', group.OnAfterPingRemoved)
+		EVENT_MANAGER:UnregisterForEvent("AD Group Tool Unit Created", EVENT_UNIT_CREATED)
+		EVENT_MANAGER:UnregisterForEvent("AD Group Tool Unit Destroyed", EVENT_UNIT_DESTROYED)
+		EVENT_MANAGER:UnregisterForEvent("AD Group Tool Group Join", EVENT_GROUP_MEMBER_JOINED)
+		EVENT_MANAGER:UnregisterForEvent("AD Group Tool Group Leave", EVENT_GROUP_MEMBER_LEFT)
+		EVENT_MANAGER:UnregisterForEvent("AD Group Tool Group Change", EVENT_LEADER_UPDATE)
+		EVENT_MANAGER:UnregisterForEvent("AD Group Tool Group Update", EVENT_GROUP_UPDATE)
+		EVENT_MANAGER:UnregisterForEvent("AD Group Tool Group Death", EVENT_UNIT_DEATH_STATE_CHANGED)
+		EVENT_MANAGER:UnregisterForEvent("AD Group Tool Group Connect", EVENT_GROUP_MEMBER_CONNECTED_STATUS)
+		
+		for i=1,12 do
+			frameDB['group'..i].frame:SetHidden(true)
+		end
+		ZO_UnitFramesGroups:SetHidden(false)
+		group.running = false
+		
+
+	elseif not group.running and sharing then
+		LMP:RegisterCallback('BeforePingAdded', group.pingCallback)
+		LMP:RegisterCallback('AfterPingRemoved', group.OnAfterPingRemoved)
+		EVENT_MANAGER:RegisterForEvent("AD Group Tool Unit Created", EVENT_UNIT_CREATED, group.unitCreate)
+		EVENT_MANAGER:RegisterForEvent("AD Group Tool Unit Destroyed", EVENT_UNIT_DESTROYED, group.unitDestroy)
+		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Join", EVENT_GROUP_MEMBER_JOINED, group.groupJoinLeave)
+		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Leave", EVENT_GROUP_MEMBER_LEFT, group.groupJoinLeave)
+		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Change", EVENT_LEADER_UPDATE, group.groupLeadChange)
+		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Update", EVENT_GROUP_UPDATE, group.groupUpdate)
+		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Death", EVENT_UNIT_DEATH_STATE_CHANGED, group.updateDead)
+		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Connect", EVENT_GROUP_MEMBER_CONNECTED_STATUS, group.updateOnline)	
+		if IsUnitGrouped("player") then
+			EVENT_MANAGER:RegisterForUpdate("AD Group Tool Group Ping", vars.frequency, group.ping)
+		end
+		if vars.hideBaseUnitFrames then
+			ZO_UnitFramesGroups:SetHidden(true)
+		end
+
+		group.running = true
+		group.groupUpdate()
+	end	
 
 end
 
@@ -679,6 +584,9 @@ end
 
 function group.playerActivated(...)
 	--d(...)
+	local active = (not vars.cyrodilOnly) or ((IsPlayerInAvAWorld() or IsActiveWorldBattleground()) and vars.cyrodilOnly) 
+	group.updateSharing(active)
+	--[[
 	if IsActiveWorldBattleground() then
 		--d("Player is in a BG")
 		--d(GetCurrentMapId())
@@ -688,6 +596,7 @@ function group.playerActivated(...)
 	else
 		EVENT_MANAGER:UnregisterForUpdate("AD Group Tool Group Ping")
 	end
+	]]
 
 end
 

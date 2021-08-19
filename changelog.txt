@@ -1,3 +1,9 @@
+Version 2.4.10
+----------
+Alot more fixes, Bgs work better.
+Cyro only option now actually works
+More things
+
 Version 2.4.9
 ----------
 Bgs (should) work now, more fixes regarding them coming soon

@@ -1,16 +1,4 @@
 <GuiXml> 
-	<Animations>
-		<AnimationTimeline name="ADFadeIn">
-			<Animations>
-				<AlphaAnimation duration="1000" startAlpha="0" endAlpha="1" />
-			</Animations>
-		</AnimationTimeline>
-		<AnimationTimeline name="ADFadeOut">
-			<Animations>
-				<AlphaAnimation duration="1000" startAlpha="1" endAlpha="0" />
-			</Animations>
-		</AnimationTimeline>
-	</Animations>
 	<Controls>
 		
 		<TopLevelControl name="AD_Group_TopLevel" clampedToScreen="true" mouseEnabled="false" movable="true" virtual="true">
