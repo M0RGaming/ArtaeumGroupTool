@@ -1,3 +1,11 @@
+Version 2.5
+----------
+Adds the ability to store presets
+Included my default settings in a deleteable presets
+API Bump
+Fixed Window Scaling
+
+
 Version 2.4.10
 ----------
 Alot more fixes, Bgs work better.

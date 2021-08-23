@@ -44,14 +44,6 @@ function frameObject:new(unitTag, parent)
 
 	frame.frame:SetHidden(true)
 
-	
-
-	--TODO: Replace this entire thing with transform scale next patch
-	frame.anchors = {}
-	local toIterate = {"frame","bar","ultPercent","name","health","backdrop","groupLead"}
-	for i=1,#toIterate do
-		frame.anchors[toIterate[i]] = {frame[toIterate[i]]:GetAnchor()}
-	end
 
 	return frame
 end
@@ -108,12 +100,17 @@ function frameObject:setName()
 end
 
 function frameObject:setGroupLeader()
+	local _,topl,parentframe,top,x,y,z = self.name:GetAnchor()
 	if IsUnitGroupLeader(self.unitTag) then
-		self.name:SetTransformOffsetX(20*AD.vars.Group.scale)
+		self.name:SetAnchor(topl, parentframe, top, 20, y)
+		--self.name.setAnchor(self.frame.name.anchor)
+		--self.name:SetTransformOffsetX(20*AD.vars.Group.scale)
 		self.name:SetWidth(143)
 		self.groupLead:SetHidden(false)
 	else
-		self.name:SetTransformOffsetX(0)
+		--self.name:SetTransformOffsetX(0)
+		--self.name.anchorUntabbed:Set(self.name)
+		self.name:SetAnchor(topl, parentframe, top, 0, y)
 		self.name:SetWidth(163)
 		self.groupLead:SetHidden(true)
 	end

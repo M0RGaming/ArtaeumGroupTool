@@ -15,6 +15,13 @@ function settings.createSettings()
 		guilds[guildID] = GetGuildName(guildID)
 		guildNames[i+1] = GetGuildName(guildID)
 	end
+
+	settings.profileList = {}
+	for i,v in pairs( getmetatable( AD.profiles )['__index'] ) do
+		if type(v) == "table" then
+			table.insert(settings.profileList, i)
+		end
+	end
 	local vars = AD.vars
 
 	local panelName = "ArtaeumGroupToolSettingsPanel"
@@ -26,6 +33,50 @@ function settings.createSettings()
 	}
 
 	local optionsTable = {
+		{
+			type = "description",
+			title = "|cFFD700Presets|r",
+			text = "These are pre-made saved settings that you can choose to restore to at any point. You may have to reload your UI after loading a different profile for the settings to be applied.",
+			width = "full"
+		},
+		{
+			type = "dropdown",
+			name = "Saved Preset",
+			choices = settings.profileList,
+			getFunc = function() return AD.profiles.currentSavedPreset end,
+			setFunc = function(value) AD.profiles.currentSavedPreset = value end,
+			width = "full",
+			reference = "AD_Preset_List"
+		},
+		{
+			type = "button",
+			name = "Delete Preset",
+			width = "half",
+			func = function() AD.Profiles.delete(AD.profiles.currentSavedPreset) end,
+		},
+		{
+			type = "button",
+			name = "Load Preset",
+			width = "half",
+			func = function() AD.Profiles.set(AD.profiles.currentSavedPreset) end,
+			requiresReload = true
+		},
+		{
+			type = "editbox",
+			name = "Current Preset Name",
+			getFunc = function() return AD.profiles.currentSavedPreset end,
+			setFunc = function(value) AD.profiles.currentSavedPreset = value end,
+			isMultiline = false,
+			width = "full",
+			reference = "AD_Preset_Current"
+		},
+		{
+			type = "button",
+			name = "Save Preset",
+			width = "full",
+			func = function() AD.Profiles.save(AD.profiles.currentSavedPreset) end,
+		},
+
 
 		{
 			type = "submenu",

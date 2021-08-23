@@ -1,8 +1,8 @@
 ## Title: |cFFD700Artaeum Group Tool|r
-## APIVersion: 100035
+## APIVersion: 101031
 ## Description: A toolset for groups in Cyrodiil
 ## Author: |c0DC1CF@M0R_Gaming|r
-## SavedVariables: ADVars
+## SavedVariables: ADVars ADProfiles
 ## DependsOn: LibAddonMenu-2.0 LibMapPins-1.0>=10027 LibMapPing Lib3D LibGPS Lib3DArrow
 
 ADGroupTool.lua

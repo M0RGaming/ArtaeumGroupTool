@@ -8,6 +8,7 @@ AD.varversion = 1
 
 AD.Settings = {}
 AD.Settings.DefaultSettings = {
+	currentSavedPreset = "",
 	SOC = {
 		offCrownTimer = 600,
 		radius = 25500,
@@ -28,7 +29,7 @@ AD.Settings.DefaultSettings = {
 		markerColour = {0,1,0,0.5}
 	},
 	Crown = {
-		enabled = true,
+		enabled = false,
 		showMarker = true,
 		showArrow = true,
 		markerType = "Crown",
@@ -36,7 +37,7 @@ AD.Settings.DefaultSettings = {
 		markerColour = {0,1,1,0.5}
 	},
 	Group = {
-		enabled = true,
+		enabled = false,
 		cyrodilOnly = true,
 		frequency = 1000,
 		windowLocations = {},
@@ -53,9 +54,118 @@ AD.Settings.DefaultSettings = {
 	}
 }
 
+
+AD.Profiles = {}
+AD.Profiles.DefaultSettings = {
+	["M0R's Default"] = {
+		Group = {
+	        windowLocations = { {43.5,75} , {289.5,75} },
+	        frequency = 1000,
+	        hideBaseUnitFrames = true,
+	        windowLocked = true,
+	        enabled = true,
+	        amountOfWindows = 2,
+	        scale = 1,
+	        colours = {
+				marker = {1,0,0,0.5},
+				standardHealth = {0.8,26/255,26/255,0.8},
+				fullUlt = {0,0.8,0,0.8}
+			},
+	        cyrodilOnly = false,
+	        hideCustomFrame = false,
+	        barToShare = 1,
+	    },
+	    FD = {
+		    rightClickMenu=true
+		},
+	    SOC = {
+	        whitelistGuild = 366011,
+	        radius = 25500,
+	        offCrownTimer = 300,
+	    },
+	    Crown = {
+	        markerType = "Crown",
+	        showMarker = true,
+	        cyrodilOnly = false,
+	        showArrow = true,
+	        markerColour = {0,1,1,0.5},
+	        enabled = true,
+	    },
+	    Guild = {
+	        transmitTo = "@M0R_Gaming",
+	        phase = 0,
+	        guildID = 366011,
+	        listenTo = "@M0R_Gaming",
+	        markerColour = {0,1,0,0.5}
+	    },
+	    Discord = {
+	    	discordLink = "the link in the guild MOTD.",
+	    	discordInvite = "Come join us in discord! Even if you don't have a mic, it still helps us coordinate attacks! Come join us at"
+	    }
+	}
+}
+
+
+local toCopy = {"Group", "FD", "SOC", "Crown", "Guild", "Discord"}
+
+function AD.Profiles.set(name)
+	if AD.profiles and AD.profiles[name] then
+		--local varMeta = getmetatable(AD.vars)
+		for i=1,#toCopy do
+			AD.vars[toCopy[i]] = ZO_DeepTableCopy(AD.profiles[name][toCopy[i]])
+		end
+		--AD.vars = ZO_DeepTableCopy(AD.profiles[name], AD.vars)
+		--CopyDefaults(AD.vars, AD.profiles[name])
+		--setmetatable(AD.vars, varMeta)
+		AD_Preset_Current:UpdateValue()
+		ZO_Alert(UI_ALERT_CATEGORY_ALERT, SOUNDS.POSITIVE_CLICK, "|c00ff00Loaded Preset!|r")
+	else
+		ZO_Alert(UI_ALERT_CATEGORY_ERROR, SOUNDS.NEGATIVE_CLICK, "|cff0000The specified preset does not exist!|r")
+	end
+end
+
+function AD.Profiles.save(name)
+	if name == "" then
+		ZO_Alert(UI_ALERT_CATEGORY_ERROR, SOUNDS.NEGATIVE_CLICK, "|cff0000No Preset Name was provided!|r")
+		return
+	end
+	if AD.profiles then
+		--AD.profiles[name] = ZO_DeepTableCopy(getmetatable(AD.vars)['__index'])
+		AD.profiles[name] = {}
+		for i=1,#toCopy do
+			AD.profiles[name][toCopy[i]] = ZO_DeepTableCopy(AD.vars[toCopy[i]])
+		end
+		ZO_Alert(UI_ALERT_CATEGORY_ALERT, SOUNDS.POSITIVE_CLICK, "|c00ff00Saved Preset!|r")
+		table.insert(AD.Settings.profileList,name)
+		AD_Preset_List:UpdateChoices()
+		AD_Preset_List:UpdateValue()
+		AD_Preset_Current:UpdateValue()
+
+	else
+		ZO_Alert(UI_ALERT_CATEGORY_ERROR, SOUNDS.NEGATIVE_CLICK, "|cff0000Failed to save preset!|r")
+	end
+end
+
+function AD.Profiles.delete(name)
+	if AD.profiles and AD.profiles[name] then
+		--table.remove(AD.profiles,name)
+		AD.profiles[name] = nil
+		ZO_Alert(UI_ALERT_CATEGORY_ALERT, SOUNDS.NEGATIVE_CLICK, "|cff0000Deleted Preset!|r")
+		for i=1,#AD.Settings.profileList do
+			if AD.Settings.profileList[i] == name then
+				table.remove(AD.Settings.profileList,i)
+				break
+			end
+		end
+		AD_Preset_List:UpdateChoices()
+	else
+		ZO_Alert(UI_ALERT_CATEGORY_ERROR, SOUNDS.NEGATIVE_CLICK, "|cff0000Failed to delete preset!|r")
+	end
+end
+
+
+
 -- The following was adapted from https://wiki.esoui.com/Circonians_Stamina_Bar_Tutorial#lua_Structure
-
-
 
 -------------------------------------------------------------------------------------------------
 --  OnAddOnLoaded  --
@@ -72,6 +182,7 @@ end
 function AD:Initialize()
 	-- Addon Settings Menu
 	AD.vars = ZO_SavedVars:NewAccountWide("ADVars", AD.varversion, nil, AD.Settings.DefaultSettings)
+	AD.profiles = ZO_SavedVars:NewAccountWide("ADProfiles", 1, nil, AD.Profiles.DefaultSettings)
 	AD.Settings.createSettings()
 
 	AD.Discord.init()

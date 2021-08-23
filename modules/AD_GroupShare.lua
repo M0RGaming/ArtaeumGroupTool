@@ -409,15 +409,6 @@ function group.scaleWindow()
 	for i=1,#toplevels do
 		toplevels[i]:SetScale(scale)
 	end
-	for i=1,12 do
-		local frame = frameDB['group'..i]
-		for i,v in pairs(frame.anchors) do
-			frame[i]:ClearAnchors()
-			frame[i]:SetAnchor(v[2], v[3], v[4], v[5]*scale, v[6]*scale)
-		end
-
-		if DoesUnitExist('group'..i) then frame:setGroupLeader() end
-	end
 end
 
 
@@ -600,6 +591,15 @@ function group.playerActivated(...)
 
 end
 
+
+
+function ADpopulate()
+	for i=1,12 do
+		frameDB['group'..i].index = i
+		frameDB['group'..i]:setAnchors()
+		frameDB['group'..i].frame:SetHidden(false)
+	end
+end
 
 
 

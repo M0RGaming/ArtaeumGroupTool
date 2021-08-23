@@ -38,7 +38,7 @@
 
 
 				<Texture name="$(parent)Icon" textureFile="esoui\art\unitframes\gamepad\gp_group_leader.dds" layer='2' hidden="true">
-                    <Anchor point="TOPLEFT" />
+                    <Anchor point="TOPLEFT"/>
                     <Dimensions x="20" y="20" />
                 </Texture>
 				<Label name="$(parent)Name" font="ZoFontGame" wrapMode="ELLIPSIS">
