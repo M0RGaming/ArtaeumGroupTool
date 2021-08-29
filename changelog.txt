@@ -1,3 +1,7 @@
+Version 2.5.1
+----------
+Dependancy Version Specification
+
 Version 2.5
 ----------
 Adds the ability to store presets

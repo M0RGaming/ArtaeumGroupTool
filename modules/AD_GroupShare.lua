@@ -587,6 +587,14 @@ function group.playerActivated(...)
 	else
 		EVENT_MANAGER:UnregisterForUpdate("AD Group Tool Group Ping")
 	end
+
+
+	--RDK uses the following
+	if RdKGTool.group.ro.state.registredGlobalConsumers then
+		EVENT_MANAGER:UnregisterForUpdate(RdKGroupToolResourceOverviewNetworking)
+		EVENT_MANAGER:UnregisterForUpdate(RdKGroupToolResourceOverviewMessageUpdate)
+	end
+
 	]]
 
 end
