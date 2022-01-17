@@ -71,12 +71,18 @@ function group.init()
 		end
 		]]
 		
-		local fragments = {}
+		group.fragments = {}
 		for i=1,#toplevels do
-			fragments[i] = ZO_HUDFadeSceneFragment:New(toplevels[i], DEFAULT_SCENE_TRANSITION_TIME, 0)
+			group.fragments[i] = ZO_HUDFadeSceneFragment:New(toplevels[i], DEFAULT_SCENE_TRANSITION_TIME, 0)
 		end
-		HUD_SCENE:AddFragmentGroup(fragments)
-		HUD_UI_SCENE:AddFragmentGroup(fragments)
+		if vars.hideUI then
+			for i=1,#toplevels do
+				group.fragments[i] = toplevels[i]:SetHidden(true)
+			end
+		else
+			HUD_SCENE:AddFragmentGroup(group.fragments)
+			HUD_UI_SCENE:AddFragmentGroup(group.fragments)
+		end
 
 		for i=1,12 do
 			local topLevelID = math.floor((i-1)*AD.vars.Group.amountOfWindows/12)+1
@@ -111,10 +117,25 @@ function group.init()
 
 		-- adapted from ZOS's Code
 	    ZO_MostRecentPowerUpdateHandler:New("AD_UnitFrames", group.PowerUpdateHandlerFunction)
+
+	    -- Mute all ping sounds.
+		SOUNDS.MAP_PING = nil
+		SOUNDS.MAP_PING_REMOVE = nil
 	end
 end
 
-
+function group.hideUI(value)
+	if value then
+		HUD_SCENE:RemoveFragmentGroup(group.fragments)
+		HUD_UI_SCENE:RemoveFragmentGroup(group.fragments)
+	else
+		HUD_SCENE:AddFragmentGroup(group.fragments)
+		HUD_UI_SCENE:AddFragmentGroup(group.fragments)
+	end
+	for i=1,#toplevels do
+		toplevels[i]:SetHidden(value)
+	end
+end
 
 
 function group.createTopLevels()

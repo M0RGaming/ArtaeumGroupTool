@@ -43,6 +43,7 @@ AD.Settings.DefaultSettings = {
 		windowLocations = {},
 		windowLocked = false,
 		amountOfWindows = 1,
+		hideUI = false,
 		hideBaseUnitFrames = false,
 		barToShare = nil,
 		scale = 1,

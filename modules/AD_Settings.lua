@@ -220,6 +220,13 @@ function settings.createSettings()
 					setFunc = function(value) vars.Group.hideBaseUnitFrames = value; ZO_UnitFramesGroups:SetHidden(value) end,
 				},
 				{
+					type = "checkbox",
+					name = "Hide Addon Frames",
+					tooltip = "If this is enabled, the group healthbars from this addon will be hidden.",
+					getFunc = function() return vars.Group.hideUI end,
+					setFunc = function(value) vars.Group.hideUI = value; AD.Group.hideUI(value) end,
+				},
+				{
 			        type = "slider",
 			        name = "Window Scale",
 			        tooltip = "This sets the size of the window.",
