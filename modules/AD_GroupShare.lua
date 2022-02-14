@@ -121,6 +121,19 @@ function group.init()
 	    -- Mute all ping sounds.
 		SOUNDS.MAP_PING = nil
 		SOUNDS.MAP_PING_REMOVE = nil
+
+
+		if AD.rdk then
+			if RdKGTool.util.networking.state.isRunning then
+				EVENT_MANAGER:UnregisterForUpdate("RdKGroupToolUtilNetworking")
+				RdKGTool.util.networking.state.isRunning = false
+			else
+				LMP:RegisterCallback("BeforePingAdded", RdKGTool.util.networking.OnBeforePingAdded)
+				LMP:RegisterCallback("AfterPingRemoved", RdKGTool.util.networking.OnAfterPingRemoved)
+			end
+		end
+
+
 	end
 end
 
@@ -258,8 +271,17 @@ function group.pingCallback(pingType,pingTag,x,y,isLocalPlayerOwner)
 			SetMapToMapId(group.mapID)
 			x, y = LMP:GetMapPing(pingType, pingTag)
 			if(not LMP:IsPositionOnMap(x, y)) then
-				LGPS:PopCurrentMap()
-				return
+				SetMapToMapListIndex(23) -- RDK's location
+				if (LMP:IsPositionOnMap(x, y)) then
+					-- RDK is sending ping
+					LGPS:PopCurrentMap()
+					LMP:SuppressPing(pingType, pingTag)
+					group.readFromRDK(pingTag,x,y)
+					return
+				else
+					LGPS:PopCurrentMap()
+					return
+				end
 			end
 			LGPS:PopCurrentMap()
 			LMP:SuppressPing(pingType, pingTag)
@@ -303,6 +325,17 @@ function group.OnAfterPingRemoved(pingType, pingTag, x, y, isPingOwner)
 		LMP:UnsuppressPing(pingType, pingTag)
 	end
 end
+
+
+
+
+
+
+
+function group.readFromRDK(pingTag,x,y)
+	-- Note to self: code this in	
+end
+
 
 
 

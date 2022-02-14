@@ -1,3 +1,8 @@
+Version 2.6.1
+----------
+Temporarily fixed incompatibility with rdk's networking, where the user would get kicked for spam.
+- Note: This means that RdK will no longer share ult when Artaeum is sharing. If you wish to use RdK to transmit, disable Artaeum's ult share function.
+
 Version 2.6
 ----------
 Added Guild share functionality for sharing rally markers

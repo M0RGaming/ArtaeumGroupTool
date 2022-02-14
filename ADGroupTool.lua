@@ -172,6 +172,8 @@ end
 --  OnAddOnLoaded  --
 -------------------------------------------------------------------------------------------------
 function AD.OnAddOnLoaded(event, addonName)
+
+	if addonName == "RdKGroupTool" then AD.rdk = true end
 	if addonName ~= AD.name then return end
 
 	AD:Initialize()
