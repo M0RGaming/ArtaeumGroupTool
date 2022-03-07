@@ -51,7 +51,8 @@ AD.Settings.DefaultSettings = {
 			marker = {1,0,0,0.5},
 			standardHealth = {0.8,26/255,26/255,0.8},
 			fullUlt = {0,0.8,0,0.8}
-		}
+		},
+		UI = "Custom" -- Vanilla, Custom, AUI, Bandits
 	}
 }
 
@@ -75,6 +76,7 @@ AD.Profiles.DefaultSettings = {
 	        cyrodilOnly = false,
 	        hideCustomFrame = false,
 	        barToShare = 1,
+			UI = "Custom",
 	    },
 	    FD = {
 		    rightClickMenu=true

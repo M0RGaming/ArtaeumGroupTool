@@ -22,6 +22,13 @@ function settings.createSettings()
 			table.insert(settings.profileList, i)
 		end
 	end
+
+
+	local UI_Options = {
+		"Custom",
+		"Vanilla"
+	}
+
 	local vars = AD.vars
 
 	local panelName = "ArtaeumGroupToolSettingsPanel"
@@ -213,55 +220,74 @@ function settings.createSettings()
 					requiresReload = true
 				},
 				{
-					type = "checkbox",
-					name = "Hide default Unit Frames",
-					tooltip = "If this is enabled, the default group healthbars will be hidden.",
-					getFunc = function() return vars.Group.hideBaseUnitFrames end,
-					setFunc = function(value) vars.Group.hideBaseUnitFrames = value; ZO_UnitFramesGroups:SetHidden(value) end,
+					type = "dropdown",
+					name = "UI Mode",
+					choices = UI_Options,
+					getFunc = function() return vars.Group.UI end,
+					setFunc = function(value) vars.Group.UI = value end,
+					width = "full",
+					reference = "AD_UI_LIST",
+					requiresReload = true
 				},
 				{
-					type = "checkbox",
-					name = "Hide Addon Frames",
-					tooltip = "If this is enabled, the group healthbars from this addon will be hidden.",
-					getFunc = function() return vars.Group.hideUI end,
-					setFunc = function(value) vars.Group.hideUI = value; AD.Group.hideUI(value) end,
-				},
-				{
-			        type = "slider",
-			        name = "Window Scale",
-			        tooltip = "This sets the size of the window.",
-			        min = 0,
-			        max = 2,
-			        step = 0.1,	--(optional)
-			        getFunc = function() return vars.Group.scale end,
-			        setFunc = function(scale) vars.Group.scale = scale; AD.Group.scaleWindow() end,
-			       	width = "half",
-			    },
-				{
-			        type = "slider",
-			        name = "Amount of group windows",
-			        tooltip = "This sets the amount of windows to display. If set to 2, it will display 2 windows of 6 people each.",
-			        min = 1,
-			        max = 12,
-			        step = 1,	--(optional)
-			        getFunc = function() return vars.Group.amountOfWindows end,
-			        setFunc = function(amount) vars.Group.amountOfWindows = amount end,
-			        requiresReload = true,
-			       	width = "half",
-			    },
-			    {
-					type = "button",
-					name = "Unlock Window",
-					tooltip = "Click here to enable windows to move around",
-					width = "half",
-					func = AD.Group.unlockWindow,
-				},
-				{
-					type = "button",
-					name = "Lock Window",
-					tooltip = "Click here to disable windows from moving around",
-					width = "half",
-					func = AD.Group.lockWindow,
+					type = "submenu",
+					name = "|cCF9FFFCustom UI Options|r",
+					reference = "AD_UI_CUSTOM_DROPDOWN",
+					disabled = function() return not (vars.Group.UI == "Custom") end,
+					disabledLabel = function() return not (vars.Group.UI == "Custom") end,
+					controls = {
+						{
+							type = "checkbox",
+							name = "Hide default Unit Frames",
+							tooltip = "If this is enabled, the default group healthbars will be hidden.",
+							getFunc = function() return vars.Group.hideBaseUnitFrames end,
+							setFunc = function(value) vars.Group.hideBaseUnitFrames = value; ZO_UnitFramesGroups:SetHidden(value) end,
+						},
+						{
+							type = "checkbox",
+							name = "Hide Addon Frames",
+							tooltip = "If this is enabled, the group healthbars from this addon will be hidden.",
+							getFunc = function() return vars.Group.hideUI end,
+							setFunc = function(value) vars.Group.hideUI = value; AD.Group.hideUI(value) end,
+						},
+						{
+					        type = "slider",
+					        name = "Window Scale",
+					        tooltip = "This sets the size of the window.",
+					        min = 0,
+					        max = 2,
+					        step = 0.1,	--(optional)
+					        getFunc = function() return vars.Group.scale end,
+					        setFunc = function(scale) vars.Group.scale = scale; AD.Group.scaleWindow() end,
+					       	width = "half",
+					    },
+						{
+					        type = "slider",
+					        name = "Amount of group windows",
+					        tooltip = "This sets the amount of windows to display. If set to 2, it will display 2 windows of 6 people each.",
+					        min = 1,
+					        max = 12,
+					        step = 1,	--(optional)
+					        getFunc = function() return vars.Group.amountOfWindows end,
+					        setFunc = function(amount) vars.Group.amountOfWindows = amount end,
+					        requiresReload = true,
+					       	width = "half",
+					    },
+					    {
+							type = "button",
+							name = "Unlock Window",
+							tooltip = "Click here to enable windows to move around",
+							width = "half",
+							func = AD.Group.unlockWindow,
+						},
+						{
+							type = "button",
+							name = "Lock Window",
+							tooltip = "Click here to disable windows from moving around",
+							width = "half",
+							func = AD.Group.lockWindow,
+						},
+					}
 				},
 			    {
 					type = "dropdown",

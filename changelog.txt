@@ -1,3 +1,9 @@
+Version 2.7
+----------
+Added Vanilla UI Integration
+Added Ability to see RdK Ultimates (Tinted red for now)
+* Shifted ult ID bits by 1 - Current version group share will be incompatable with the old one, please update.
+
 Version 2.6.1
 ----------
 Temporarily fixed incompatibility with rdk's networking, where the user would get kicked for spam.

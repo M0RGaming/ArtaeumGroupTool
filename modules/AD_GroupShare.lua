@@ -50,73 +50,69 @@ function group.init()
 
 	if vars.enabled then
 		
-		
+		if vars.UI == "Custom" then
 
-		--[[
-		SecurePostHook(UNIT_FRAMES, "CreateFrame", function(_, unitTag, anchors, barTextMode, style)
-			if style == "ZO_RaidUnitFrame" then --ZO_GroupUnitFrame --ZO_RaidUnitFrame
-				if frameDB[unitTag] == nil then
-					group.setupBox(unitTag)
+			--[[
+			SecurePostHook(UNIT_FRAMES, "CreateFrame", function(_, unitTag, anchors, barTextMode, style)
+				if style == "ZO_RaidUnitFrame" then --ZO_GroupUnitFrame --ZO_RaidUnitFrame
+					if frameDB[unitTag] == nil then
+						group.setupBox(unitTag)
+					end
 				end
+			end)
+			]]
+
+
+			group.createTopLevels()
+			AD.initAnchors(toplevels)
+			--[[
+			if vars.hideBaseUnitFrames then
+				ZO_UnitFramesGroups:SetHidden(true)
 			end
-		end)
-		]]
-
-
-		group.createTopLevels()
-		AD.initAnchors(toplevels)
-		--[[
-		if vars.hideBaseUnitFrames then
-			ZO_UnitFramesGroups:SetHidden(true)
-		end
-		]]
-		
-		group.fragments = {}
-		for i=1,#toplevels do
-			group.fragments[i] = ZO_HUDFadeSceneFragment:New(toplevels[i], DEFAULT_SCENE_TRANSITION_TIME, 0)
-		end
-		if vars.hideUI then
+			]]
+			
+			group.fragments = {}
 			for i=1,#toplevels do
-				group.fragments[i] = toplevels[i]:SetHidden(true)
+				group.fragments[i] = ZO_HUDFadeSceneFragment:New(toplevels[i], DEFAULT_SCENE_TRANSITION_TIME, 0)
 			end
+			if vars.hideUI then
+				for i=1,#toplevels do
+					group.fragments[i] = toplevels[i]:SetHidden(true)
+				end
+			else
+				HUD_SCENE:AddFragmentGroup(group.fragments)
+				HUD_UI_SCENE:AddFragmentGroup(group.fragments)
+			end
+
+
+			for i=1,12 do
+				local topLevelID = math.floor((i-1)*AD.vars.Group.amountOfWindows/12)+1
+				frameDB['group'..i] = AD.Frame:new('group'..i, toplevels[topLevelID])					
+			end
+
+			group.scaleWindow()
+
+			if not vars.windowLocked then
+				ZO_Alert(UI_ALERT_CATEGORY_ERROR, SOUNDS.NEGATIVE_CLICK, "|cff0000Artaeum Group Tool's group UI has not been locked.|r")
+				group.unlockWindow()
+			end
+
+			-- adapted from ZOS's Code
+	    	ZO_MostRecentPowerUpdateHandler:New("AD_UnitFrames", group.PowerUpdateHandlerFunction)
 		else
-			HUD_SCENE:AddFragmentGroup(group.fragments)
-			HUD_UI_SCENE:AddFragmentGroup(group.fragments)
+			SecurePostHook(UNIT_FRAMES, "CreateFrame", function(_, unitTag, anchors, barTextMode, style)
+				if style == "ZO_RaidUnitFrame" then --ZO_GroupUnitFrame --ZO_RaidUnitFrame
+					if frameDB[unitTag] == nil then
+						frameDB[unitTag] = AD.Frame:new(unitTag, toplevels[topLevelID])
+					end
+				end
+			end)
+			group.moveBoxes()
 		end
 
-		for i=1,12 do
-			local topLevelID = math.floor((i-1)*AD.vars.Group.amountOfWindows/12)+1
-			frameDB['group'..i] = AD.Frame:new('group'..i, toplevels[topLevelID])
-		end
-		group.scaleWindow()
-
-		if not vars.windowLocked then
-			ZO_Alert(UI_ALERT_CATEGORY_ERROR, SOUNDS.NEGATIVE_CLICK, "|cff0000Artaeum Group Tool's group UI has not been locked.|r")
-			group.unlockWindow()
-		end
-		
 		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Activated", EVENT_PLAYER_ACTIVATED, group.playerActivated)
-		--[[
-		LMP:RegisterCallback('BeforePingAdded', group.pingCallback)
-		LMP:RegisterCallback('AfterPingRemoved', group.OnAfterPingRemoved)
-		EVENT_MANAGER:RegisterForEvent("AD Group Tool Unit Created", EVENT_UNIT_CREATED, group.unitCreate)
-		EVENT_MANAGER:RegisterForEvent("AD Group Tool Unit Destroyed", EVENT_UNIT_DESTROYED, group.unitDestroy)
-		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Join", EVENT_GROUP_MEMBER_JOINED, group.groupJoinLeave)
-		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Leave", EVENT_GROUP_MEMBER_LEFT, group.groupJoinLeave)
-		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Change", EVENT_LEADER_UPDATE, group.groupLeadChange)
-		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Update", EVENT_GROUP_UPDATE, group.groupUpdate)
-		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Death", EVENT_UNIT_DEATH_STATE_CHANGED, group.updateDead)
-		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Connect", EVENT_GROUP_MEMBER_CONNECTED_STATUS, group.updateOnline)
-		--]]		
-
-
 		group.createArrow()
 		group.arrow:SetTarget(0, 0)
-
-
-
-		-- adapted from ZOS's Code
-	    ZO_MostRecentPowerUpdateHandler:New("AD_UnitFrames", group.PowerUpdateHandlerFunction)
 
 	    -- Mute all ping sounds.
 		SOUNDS.MAP_PING = nil
@@ -240,8 +236,8 @@ function group.toSend:send()
 	local stamBar = math.floor(stamCurrent/stamMax*15)
 
 	local x = group.writeStream(
-		{0,campLock,assistPing,hammerBar,0,ult.id},
-		{1,1,1,4,1,8}
+		{0,campLock,assistPing,hammerBar,ult.id,0},
+		{1,1,1,4,8,1}
 	)
 	local y = group.writeStream(
 		{ult.percent,0,magBar,stamBar},
@@ -271,7 +267,11 @@ function group.pingCallback(pingType,pingTag,x,y,isLocalPlayerOwner)
 			SetMapToMapId(group.mapID)
 			x, y = LMP:GetMapPing(pingType, pingTag)
 			if(not LMP:IsPositionOnMap(x, y)) then
-				SetMapToMapListIndex(23) -- RDK's location
+				SetMapToMapListIndex(group.rdkMap) -- RDK's location
+				x, y = LMP:GetMapPing(pingType, pingTag)
+				--d("RDK from "..GetUnitDisplayName(pingTag))
+				--d(LMP:IsPositionOnMap(x, y))
+				--d("")
 				if (LMP:IsPositionOnMap(x, y)) then
 					-- RDK is sending ping
 					LGPS:PopCurrentMap()
@@ -290,21 +290,25 @@ function group.pingCallback(pingType,pingTag,x,y,isLocalPlayerOwner)
 			
 			x = math.floor(x / group.stepSize + 0.5)
 			y = math.floor(y / group.stepSize + 0.5)
-			local outstreamX = group.readStream(x,{1,1,1,4,1,8})
+			local outstreamX = group.readStream(x,{1,1,1,4,8,1})
 			local outstreamY = group.readStream(y,{7,1,4,4})
 			-- {0,campLock,assistPing,hammerBar,0,ult.id}
 			-- {ult.percent,0,magBar,stamBar}
 
 			local campLock = (outstreamX[2] == 1) and true or false
 			if campLock then
-				frameDB[pingTag].backdrop:SetEdgeColor(1,0,0,1)
+				frameDB[pingTag]:SetEdgeColor(1,0,0,1)
 			else
-				frameDB[pingTag].backdrop:SetEdgeColor(1,1,1,1)
+				AD.last = frameDB[pingTag]
+				frameDB[pingTag]:SetEdgeColor(1,1,1,1)
 			end
 
 			-- Set Ult
-			local ultIcon = group.ultList[group.ultiIndexes[outstreamX[6]]]
-			if ultIcon then frameDB[pingTag]:setUlt(outstreamY[1],ultIcon) end
+			local ultIcon = group.ultList[group.ultiIndexes[outstreamX[5]]]
+			if ultIcon then
+				frameDB[pingTag]:setUlt(outstreamY[1],ultIcon)
+				frameDB[pingTag].image:SetColor(1,1,1)
+			end
 
 			-- Handle assist pings
 			if (outstreamX[3] == 1) then
@@ -333,7 +337,18 @@ end
 
 
 function group.readFromRDK(pingTag,x,y)
-	-- Note to self: code this in	
+	x = math.floor(x / group.rdkStep + 0.5) -- only x is needed, y contains mag + stam in a 7,1,7,1 bitstream
+	local outstreamX = group.readStream(x,{8,1,7})
+	local ultID = outstreamX[1]
+	local ultPercent = outstreamX[3]
+	--d(outstreamX)
+	if ultID > #group.rdkUlts then return end
+	local ultIcon = group.ultList[group.rdkUlts[ultID]]
+	if ultIcon then
+		frameDB[pingTag]:setUlt(ultPercent,ultIcon)
+		frameDB[pingTag].image:SetColor(0.6,0.2,0.2)
+	end
+	
 end
 
 
@@ -406,7 +421,9 @@ end
 
 function group.groupLeadChange()
 	for i=1,12 do
-		frameDB['group'..i]:setGroupLeader()
+		if frameDB['group'..i] then
+			frameDB['group'..i]:setGroupLeader()
+		end
 	end
 end
 
@@ -541,6 +558,11 @@ end
 group.stepSize = 1.333333329967e-05 -- For some reason cyro's step works, but artaeums doesnt? 
 --group.mapID = 33
 group.mapID = 1429
+
+
+group.rdkMap = 23
+group.rdkStep = 1.4285034012573e-005
+
 -- 1.1058949894505e-05 in Artaeum (ID = 33)
 -- 1.333333329967e-05 in Cyro (ID = 14)
 -- 1.4285034012573e-005 from LGS in Coldharbour
@@ -593,10 +615,13 @@ function group.updateSharing(sharing)
 		EVENT_MANAGER:UnregisterForEvent("AD Group Tool Group Death", EVENT_UNIT_DEATH_STATE_CHANGED)
 		EVENT_MANAGER:UnregisterForEvent("AD Group Tool Group Connect", EVENT_GROUP_MEMBER_CONNECTED_STATUS)
 		
-		for i=1,12 do
-			frameDB['group'..i].frame:SetHidden(true)
+
+		if vars.UI == "Custom" then
+			for i=1,12 do
+				frameDB['group'..i].frame:SetHidden(true)
+			end
+			ZO_UnitFramesGroups:SetHidden(false)
 		end
-		ZO_UnitFramesGroups:SetHidden(false)
 		group.running = false
 		
 
@@ -614,8 +639,11 @@ function group.updateSharing(sharing)
 		if IsUnitGrouped("player") then
 			EVENT_MANAGER:RegisterForUpdate("AD Group Tool Group Ping", vars.frequency, group.ping)
 		end
-		if vars.hideBaseUnitFrames then
-			ZO_UnitFramesGroups:SetHidden(true)
+
+		if vars.UI == "Custom" then
+			if vars.hideBaseUnitFrames then
+				ZO_UnitFramesGroups:SetHidden(true)
+			end
 		end
 
 		group.running = true
@@ -655,7 +683,7 @@ end
 
 
 
-function ADpopulate()
+local function ADpopulate()
 	for i=1,12 do
 		frameDB['group'..i].index = i
 		frameDB['group'..i]:setAnchors()
@@ -1094,3 +1122,46 @@ group.ultiIndexes = {
 for k,v in pairs(group.ultiIndexes) do
    group.ultiIndexes[v]=k
 end
+
+
+group.rdkUlts = {
+	[1] = 28341, -- negate
+	[32] = 28341, -- offensive negate
+	[33] = 28341, -- counter negate
+	[2] = 23634, -- atro
+	[3] = 24785, -- overload
+	[4] = 22138, -- sweep
+	[5] = 21752, -- nova
+	[6] = 22223, -- templar heal
+	[7] = 32958, -- standard
+	[8] = 29012, -- leap
+	[9] = 15957, -- magma
+	[10] = 33398, -- stroke
+	[11] = 25411, -- darkness
+	[12] = 25091, -- soul
+	[37] = 35508, -- soul siphon
+	[38] = 35460, -- soul tether
+	[13] = 86109, -- storm
+	[35] = 86113, -- northern storm
+	[36] = 86117, -- permafrost
+	[14] = 85532, -- warden heal
+	[31] = 85982, -- guardian
+	[29] = 122174, -- colo
+	[28] = 115001, -- goliath
+	[30] = 115410, -- reanimate
+	[15] = 83619, -- destro
+	[16] = 83552, -- resto
+	[17] = 83216, -- 2h
+	[18] = 83272, -- s&b
+	[19] = 83600, -- dw
+	[20] = 83465, -- bow
+	[21] = 39270, -- soul magick
+	[22] = 32455, -- ww
+	[23] = 32624, -- vamp
+	[24] = 16536, -- metor
+	[25] = 35713, -- fighters
+	[34] = 103478, -- psijic
+	[26] = 38573, -- barrier
+	[27] = 38563, -- horn
+
+}
