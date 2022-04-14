@@ -32,9 +32,10 @@ group.units = {}
 1 camp lock
 1 assist ping - if button pressed, beam of light is placed on user
 4 hammer bar (possibly able to remove, depending on demand) GetUnitPower('player',POWERTYPE_DAEDRIC)
-1 [free bit (true or false)] (previously hammer)
 
 8 ult ID
+1 [free bit (true or false)] (previously hammer)
+
 
 7 ult bar
 1 [free bit (true or false)] may implement proxy timer
@@ -215,7 +216,7 @@ end
 
 
 
-
+--AD.hammer = 0
 function group.toSend:send()
 	local assistPing = self.assistPing and 1 or 0
 	self.assistPing = false
@@ -223,6 +224,7 @@ function group.toSend:send()
 	local hammerCurrent, hammerMax = GetUnitPower('player',POWERTYPE_DAEDRIC)
 	if hammerMax == 0 then hammerMax = 1 end
 	local hammerBar = math.floor(hammerCurrent/hammerMax*15)
+	--local hammerBar = AD.hammer
 	local ult = {}
 	ult.id = group.ultiIndexes[GetSlotBoundId(8, vars.barToShare)] or 255
 	ult.current = GetUnitPower('player',POWERTYPE_ULTIMATE)
@@ -258,11 +260,12 @@ function group.toSend:send()
 end
 
 
+local hammerWeilder = ''
+
 function group.pingCallback(pingType,pingTag,x,y,isLocalPlayerOwner)
 	--d(""..x.." "..y.." "..pingTag)
 	if(pingType == MAP_PIN_TYPE_PING) then
 		if frameDB[pingTag] then
-
 			LGPS:PushCurrentMap()
 			SetMapToMapId(group.mapID)
 			x, y = LMP:GetMapPing(pingType, pingTag)
@@ -287,11 +290,14 @@ function group.pingCallback(pingType,pingTag,x,y,isLocalPlayerOwner)
 			LMP:SuppressPing(pingType, pingTag)
 
 			
-			
-			x = math.floor(x / group.stepSize + 0.5)
-			y = math.floor(y / group.stepSize + 0.5)
+			--d(""..(x / group.stepSize + 0.5).." "..(y / group.stepSize + 0.5).." "..pingTag)
+			x = zo_round(x / group.stepSize + 0.5)
+			y = zo_round(y / group.stepSize + 0.5)
+
 			local outstreamX = group.readStream(x,{1,1,1,4,8,1})
 			local outstreamY = group.readStream(y,{7,1,4,4})
+			--d(GetAbilityName(group.ultiIndexes[outstreamX[5]]))
+			AD.last = {outstreamX, outstreamY}
 			-- {0,campLock,assistPing,hammerBar,0,ult.id}
 			-- {ult.percent,0,magBar,stamBar}
 
@@ -299,7 +305,7 @@ function group.pingCallback(pingType,pingTag,x,y,isLocalPlayerOwner)
 			if campLock then
 				frameDB[pingTag]:SetEdgeColor(1,0,0,1)
 			else
-				AD.last = frameDB[pingTag]
+				--AD.last = frameDB[pingTag]
 				frameDB[pingTag]:SetEdgeColor(1,1,1,1)
 			end
 
@@ -316,6 +322,25 @@ function group.pingCallback(pingType,pingTag,x,y,isLocalPlayerOwner)
 				group.arrow:SetTarget(px, py)
 				zo_callLater(function() group.arrow:SetTarget(0, 0) end, 12500)
 			end
+
+
+			
+			if (outstreamX[4] == 0) then
+				if (hammerWeilder == pingTag) then
+					if not HUD_DAEDRIC_ENERGY_METER:IsHidden() then HUD_DAEDRIC_ENERGY_METER:UpdateVisibility() end
+					hammerWeilder = ''
+				end
+			else
+				if (hammerWeilder == pingTag) then
+					if HUD_DAEDRIC_ENERGY_METER:IsHidden() then
+						HUD_DAEDRIC_ENERGY_METER:SetHiddenForReason("daedricArtifactInactive",false,SHOULD_FADE_OUT)
+					end
+					HUD_DAEDRIC_ENERGY_METER:UpdateEnergyValues(outstreamX[4],15)
+				else
+					hammerWeilder = pingTag
+				end
+			end
+			
 
 		else
 			LMP:SuppressPing(pingType, pingTag)
@@ -553,11 +578,13 @@ end
 
 
 
---/script PingMap(182, 1, 1 / 2^16, 1 / 2^16) StartChatInput(table.concat({GetMapPlayerWaypoint()}, ","))
+--/script PingMap(MAP_PIN_TYPE_PLAYER_WAYPOINT, 1, 1 / 2^16, 1 / 2^16) StartChatInput(table.concat({GetMapPlayerWaypoint()}, ","))
 -- Adapted from RdK group tool, who adapted it from lib group socket
-group.stepSize = 1.333333329967e-05 -- For some reason cyro's step works, but artaeums doesnt? 
+-- 1.1058949894505e-05,1.1058949894505e-05
+--group.stepSize = 1.333333329967e-05 -- For some reason cyro's step works, but artaeums doesnt? 
 --group.mapID = 33
 group.mapID = 1429
+group.stepSize = 1.1058949894505e-05
 
 
 group.rdkMap = 23

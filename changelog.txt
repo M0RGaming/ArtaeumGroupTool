@@ -1,3 +1,9 @@
+Version 2.8
+----------
+Added Volendrung hammer bar to Group Ult Share
+* Changed step size to the proper artaeum step size - should fix some compatibility
+* API bump
+
 Version 2.7
 ----------
 Added Vanilla UI Integration
