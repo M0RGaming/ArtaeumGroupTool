@@ -78,7 +78,7 @@ function group.init()
 			end
 			if vars.hideUI then
 				for i=1,#toplevels do
-					group.fragments[i] = toplevels[i]:SetHidden(true)
+					toplevels[i]:SetHidden(true)
 				end
 			else
 				HUD_SCENE:AddFragmentGroup(group.fragments)
@@ -674,8 +674,12 @@ function group.updateSharing(sharing)
 		end
 
 		group.running = true
+		group.groupLeadChange()
 		group.groupUpdate()
-	end	
+	elseif group.running and sharing then
+		group.groupLeadChange()
+		group.groupUpdate()
+	end
 
 end
 

@@ -233,8 +233,8 @@ function settings.createSettings()
 					type = "submenu",
 					name = "|cCF9FFFCustom UI Options|r",
 					reference = "AD_UI_CUSTOM_DROPDOWN",
-					disabled = function() return not (vars.Group.UI == "Custom") end,
-					disabledLabel = function() return not (vars.Group.UI == "Custom") end,
+					disabled = function() return not (vars.Group.UI == "Custom" and vars.Group.enabled) end,
+					disabledLabel = function() return not (vars.Group.UI == "Custom" and vars.Group.enabled) end,
 					controls = {
 						{
 							type = "checkbox",
