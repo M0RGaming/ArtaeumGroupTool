@@ -31,17 +31,16 @@ The following are still undergoing beta testing and may not be complete, or work
 
 ### `Beta 1: Group Location Sharing`
 - Uses guild notes to transfer the position of group A's leader to members of other groups.
-- The location that is transferred shows up as a beam of light with a 3d arrow pointing towards it (Made using Lib3dArrow
+- The location that is transferred shows up as a beam of light with a 3d arrow pointing towards it (Made using Lib3dArrow)
 - Still in beta, and time is set to 10 seconds between transmissions (otherwise you will get kicked for spam)
 
 ### `Beta 2: Group Data Share`
 - This module shares data between members in a party, such as what ult they have slotted, what percent their ult is at, and more, such as if they are camp locked.
 - In addition, Volendrung's bar is also sent and so is the user's Stamina and Magicka bars.
-- Finally, an 'Assist Ping' is also sent, which allows everyone running the addon to get a beam of light where you are at the press of a keybind.
+- Finally, an 'Assist Ping' is also sent, which allows everyone running the addon to get a beam of light where you are at the press of a keybind. This will also tell you which direction you are to the crown.
 
 
 ### Coming Soon:
-- Location relative to crown
 - Visual notification if in healing range of crown
 
 ### Requirements:

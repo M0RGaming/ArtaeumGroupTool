@@ -238,14 +238,14 @@ function settings.createSettings()
 					controls = {
 						{
 							type = "checkbox",
-							name = "Hide default Unit Frames",
+							name = "Hide Base Game Healthbars",
 							tooltip = "If this is enabled, the default group healthbars will be hidden.",
 							getFunc = function() return vars.Group.hideBaseUnitFrames end,
 							setFunc = function(value) vars.Group.hideBaseUnitFrames = value; ZO_UnitFramesGroups:SetHidden(value) end,
 						},
 						{
 							type = "checkbox",
-							name = "Hide Addon Frames",
+							name = "Hide Custom Healthbars",
 							tooltip = "If this is enabled, the group healthbars from this addon will be hidden.",
 							getFunc = function() return vars.Group.hideUI end,
 							setFunc = function(value) vars.Group.hideUI = value; AD.Group.hideUI(value) end,

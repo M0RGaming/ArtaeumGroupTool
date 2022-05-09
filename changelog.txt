@@ -1,3 +1,9 @@
+Version 2.9
+----------
+* Fixed issues with the ultimate share module when leaving loadscreens
+* Fixed a bug where setting the custom healthbars to be hidden would cause a ui error
+* Renamed a couple settings to make a bit more sense to non technical players
+
 Version 2.8
 ----------
 Added Volendrung hammer bar to Group Ult Share
