@@ -226,9 +226,10 @@ function group.toSend:send()
 	local hammerBar = math.floor(hammerCurrent/hammerMax*15)
 	--local hammerBar = AD.hammer
 	local ult = {}
-	ult.id = group.ultiIndexes[GetSlotBoundId(8, vars.barToShare)] or 255
+	local ultID = GetSlotBoundId(8, vars.barToShare)
+	ult.id = group.ultiIndexes[ultID] or 255
 	ult.current = GetUnitPower('player',POWERTYPE_ULTIMATE)
-	ult.max = GetSlotAbilityCost(8, vars.barToShare)
+	ult.max = GetAbilityCost(ultID)
 	ult.percent = math.floor(ult.current/ult.max*100)
 	if ult.percent > 100 then ult.percent = 100 end
 	if ult.max <= 0 then ult.percent = 0 end

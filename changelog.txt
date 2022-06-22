@@ -1,4 +1,10 @@
-Version 2.9
+Version 2.8.2
+----------
+* Fixed a bug where addon would cause ticking sounds when bandits was installed
+* Fixed a bug where ult share would constantly display a user as offline if they logged on while the player was in a loadscreen
+* Fixed a bug where the ult cost in the ult share module would be incorrectly calcualted based on the active bar.
+
+Version 2.8.1
 ----------
 * Fixed issues with the ultimate share module when leaving loadscreens
 * Fixed a bug where setting the custom healthbars to be hidden would cause a ui error

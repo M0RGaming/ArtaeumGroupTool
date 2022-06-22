@@ -72,6 +72,7 @@ function frameObject:Update()
 		if self.unit == GetUnitDisplayName(self.unitTag) then
 			self:setAnchors()
 			self.frame:SetHidden(false)
+			self:SetOnline(IsUnitOnline(self.unitTag))
 
 		else -- Unit Changed
 			self.unit = GetUnitDisplayName(self.unitTag)
@@ -88,8 +89,8 @@ function frameObject:Update()
 				self.image:SetTexture(roles[role])
 			end
 			self.backdrop:SetEdgeColor(1,1,1,1)
+			self.bar:SetValue(0)
 			self.ultPercent:SetText("")
-
 			self:setAnchors()
 			self.frame:SetHidden(false)
 		end
