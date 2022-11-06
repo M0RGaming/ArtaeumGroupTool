@@ -267,9 +267,13 @@ function group.pingCallback(pingType,pingTag,x,y,isLocalPlayerOwner)
 	--d(""..x.." "..y.." "..pingTag)
 	if(pingType == MAP_PIN_TYPE_PING) then
 		if frameDB[pingTag] then
+			local zone = GetUnitZoneIndex(pingTag)
+			if (zone == 632 or zone ==  659) then return end
+			
 			LGPS:PushCurrentMap()
 			SetMapToMapId(group.mapID)
 			x, y = LMP:GetMapPing(pingType, pingTag)
+
 			if(not LMP:IsPositionOnMap(x, y)) then
 				SetMapToMapListIndex(group.rdkMap) -- RDK's location
 				x, y = LMP:GetMapPing(pingType, pingTag)

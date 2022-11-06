@@ -1,3 +1,9 @@
+Version 2.8.3
+----------
+* Fixed a bug where the group share module would get false information while the sender is in Artaeum or Grand Psijic Villa
+* API Bump
+
+
 Version 2.8.2
 ----------
 * Fixed a bug where addon would cause ticking sounds when bandits was installed
