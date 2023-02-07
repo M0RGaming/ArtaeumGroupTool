@@ -35,7 +35,16 @@ crown.markerTypes = {
     	depthBuffer = true
 	},
 	Crown = {
-		texture = "EsoUI/Art/Compass/groupleader.dds",
+		texture = "ArtaeumGroupTool/Textures/Crown.dds",
+		scaleX = 3,
+		scaleY = 3,
+		X = 0,
+		Y = 4,
+		Z = 0,
+		depthBuffer = false
+	},
+	Arrow = {
+		texture = "ArtaeumGroupTool/Textures/Arrow.dds",
 		scaleX = 3,
 		scaleY = 3,
 		X = 0,

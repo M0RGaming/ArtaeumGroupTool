@@ -354,7 +354,7 @@ function settings.createSettings()
 					type = "dropdown",
 					name = "Marker Type",
 					tooltip = "Allows you to choose if you prefer a beam of light or a simple crown icon above the leader.",
-					choices = {"Crown", "Beam"},
+					choices = {"Crown", "Beam", "Arrow"},
 					getFunc = function() return vars.Crown.markerType end,
 					setFunc = function(value)
 						vars.Crown.markerType = value
