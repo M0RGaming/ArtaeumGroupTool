@@ -1,3 +1,9 @@
+Version 3.0.0
+----------
+Added External Hooks for the group share - Primarily intended for use with Plague Containment
+* API Bump
+
+
 Version 2.9.0
 ----------
 Added a new high resolution crown and arrow texture, and added the arrow as a potential choice for the crown arrow module.

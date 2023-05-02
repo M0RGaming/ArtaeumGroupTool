@@ -214,6 +214,17 @@ function group.createArrow()
 	})
 end
 
+group.externalHooks = {x={},y={}}
+function group.addExternalHook(bitId, sendfunc, recievefunc, axis)
+	local reference = nil
+	if axis=="x" then
+		reference = group.externalHooks["x"]
+	elseif axis=="y" then
+		reference = group.externalHooks["y"]
+	end
+	if reference == nil then return end
+	reference[bitId] = {send=sendfunc, recieve=recievefunc}
+end
 
 
 --AD.hammer = 0
@@ -238,12 +249,23 @@ function group.toSend:send()
 	local stamCurrent, stamMax = GetUnitPower('player',POWERTYPE_STAMINA)
 	local stamBar = math.floor(stamCurrent/stamMax*15)
 
+	local xstream = {0,campLock,assistPing,hammerBar,ult.id,0}
+	local ystream = {ult.percent,0,magBar,stamBar}
+
+	for i,v in pairs(group.externalHooks["x"]) do
+		xstream[i] = v.send()
+	end
+	for i,v in pairs(group.externalHooks["y"]) do
+		ystream[i] = v.send()
+	end
+
+
 	local x = group.writeStream(
-		{0,campLock,assistPing,hammerBar,ult.id,0},
+		xstream,
 		{1,1,1,4,8,1}
 	)
 	local y = group.writeStream(
-		{ult.percent,0,magBar,stamBar},
+		ystream,
 		{7,1,4,4}
 	)
 	LGPS:PushCurrentMap()
@@ -305,6 +327,19 @@ function group.pingCallback(pingType,pingTag,x,y,isLocalPlayerOwner)
 			AD.last = {outstreamX, outstreamY}
 			-- {0,campLock,assistPing,hammerBar,0,ult.id}
 			-- {ult.percent,0,magBar,stamBar}
+
+
+			-- External Hooks
+			for i,v in pairs(group.externalHooks["x"]) do
+				v.recieve(outstreamX[i], pingTag)
+			end
+			for i,v in pairs(group.externalHooks["y"]) do
+				v.recieve(outstreamY[i], pingTag)
+			end
+
+
+
+
 
 			local campLock = (outstreamX[2] == 1) and true or false
 			if campLock then
