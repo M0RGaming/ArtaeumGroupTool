@@ -73,7 +73,7 @@ AD.Profiles.DefaultSettings = {
 				standardHealth = {0.8,26/255,26/255,0.8},
 				fullUlt = {0,0.8,0,0.8}
 			},
-	        cyrodilOnly = false,
+	        cyrodilOnly = true,
 	        hideCustomFrame = false,
 	        barToShare = 1,
 			UI = "Custom",
