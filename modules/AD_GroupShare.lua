@@ -88,7 +88,10 @@ function group.init()
 
 			for i=1,12 do
 				local topLevelID = math.floor((i-1)*AD.vars.Group.amountOfWindows/12)+1
-				frameDB['group'..i] = AD.Frame:new('group'..i, toplevels[topLevelID])					
+				frameDB['group'..i] = AD.Frame:new('group'..i, toplevels[topLevelID])
+				if vars.showMagStam then
+					frameDB['group'..i]:SetMagStamHidden(false)
+				end
 			end
 
 			group.scaleWindow()
@@ -381,6 +384,14 @@ function group.pingCallback(pingType,pingTag,x,y,isLocalPlayerOwner)
 					end
 				end
 			end
+
+			--Handle Mag + Stam
+			local magPercent = outstreamY[3]/15
+			local stamPercent = outstreamY[4]/15
+			if vars.UI == "Custom" and not frameDB[pingTag].magStamHidden then
+				frameDB[pingTag]:SetMag(magPercent,1)
+				frameDB[pingTag]:SetStam(stamPercent,1)
+			end
 			
 
 		else
@@ -457,7 +468,11 @@ function group.PowerUpdateHandlerFunction(unitTag, powerPoolIndex, powerType, po
     end
 end
 
-
+function group.setAllMagStamHidden(value)
+	for i=1,12 do
+		frameDB['group'..i]:SetMagStamHidden(value)
+	end
+end
 
 
 

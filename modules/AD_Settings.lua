@@ -251,6 +251,13 @@ function settings.createSettings()
 							setFunc = function(value) vars.Group.hideUI = value; AD.Group.hideUI(value) end,
 						},
 						{
+							type = "checkbox",
+							name = "Show Magicka and Stamina Bars",
+							tooltip = "If this is enabled, the you will be able to see your group's magicka and stamina bars on the UI.",
+							getFunc = function() return vars.Group.showMagStam end,
+							setFunc = function(value) vars.Group.showMagStam = value; AD.Group.setAllMagStamHidden(not value) end,
+						},
+						{
 					        type = "slider",
 					        name = "Window Scale",
 					        tooltip = "This sets the size of the window.",

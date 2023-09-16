@@ -35,6 +35,23 @@
 					<Dimensions x="191" y="29" />
 					<Limits min="0" max="100" />
 				</StatusBar>
+				<StatusBar name="$(parent)Stam" color="00ff00">
+					<Anchor point="BOTTOMLEFT" relativeTo="$(parent)" relativePoint="BOTTOMLEFT" />
+					<Dimensions x="191" y="4" />
+					<Limits min="0" max="100" />
+				</StatusBar>
+				<StatusBar name="$(parent)Mag" color="0252c7">
+					<Anchor point="BOTTOMLEFT" relativeTo="$(parent)Stam" relativePoint="TOPLEFT" />
+					<Dimensions x="191" y="4" />
+					<Limits min="0" max="100" />
+				</StatusBar>
+				<!--
+				<StatusBar name="$(parent)HealthResourceBreak" color="a99249">
+					<Anchor point="BOTTOMLEFT" relativeTo="$(parent)Mag" relativePoint="TOPLEFT" />
+					<Dimensions x="191" y="2" />
+				</StatusBar>
+			-->
+				
 
 
 				<Texture name="$(parent)Icon" textureFile="esoui\art\unitframes\gamepad\gp_group_leader.dds" layer='2' hidden="true">

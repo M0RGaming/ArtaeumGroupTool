@@ -1,3 +1,8 @@
+Version 3.2.0
+----------
+Added Magicka and Stamina bars to the frame UI for group share - Disabled by default
+* API Bump
+
 Version 3.1.0
 ----------
 NOTE: this update slightly breaks compatibility with older versions for group ultimate icons, please update!

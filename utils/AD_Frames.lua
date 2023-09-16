@@ -49,10 +49,14 @@ function frameObject:new(unitTag, parent)
 	frame.health = frame.frame:GetNamedChild("Health")
 	frame.backdrop = frame.frame:GetNamedChild("BG")
 	frame.groupLead = frame.frame:GetNamedChild("Icon")
+	frame.stam = frame.frame:GetNamedChild("Stam")
+	frame.mag = frame.frame:GetNamedChild("Mag")
+
 
 	frame.unitTag = unitTag
 	frame.index = nil
 	frame.unit = ""
+	frame.originalHealthHeight = frame.health:GetHeight()
 
 	frame.frame:SetHidden(true)
 
@@ -78,6 +82,10 @@ function frameObject:Update()
 			self.unit = GetUnitDisplayName(self.unitTag)
 			local rgb = AD.vars.Group.colours.standardHealth
 			self.health:SetColor(rgb[1],rgb[2],rgb[3],rgb[4])
+
+			self:SetMag(0,1)
+			self:SetStam(0,1)
+
 			self:setName()
 			self:setGroupLeader()
 			self:SetOnline(IsUnitOnline(self.unitTag))
@@ -138,6 +146,24 @@ function frameObject:SetHealth(value,max)
 	ZO_StatusBar_SmoothTransition(self.health,value,max)
 end
 
+function frameObject:SetMag(value,max)
+	ZO_StatusBar_SmoothTransition(self.mag,value,max)
+end
+
+function frameObject:SetStam(value,max)
+	ZO_StatusBar_SmoothTransition(self.stam,value,max)
+end
+
+function frameObject:SetMagStamHidden(value)
+	self.mag:SetHidden(value)
+	self.stam:SetHidden(value)
+	self.magStamHidden = value
+	if value then
+		self.health:SetHeight(self.originalHealthHeight)
+	else
+		self.health:SetHeight(self.originalHealthHeight-8)
+	end
+end
 
 function frameObject:SetDead(dead)
 	local current, max = GetUnitPower(self.unitTag, POWERTYPE_HEALTH)
