@@ -89,9 +89,9 @@ function group.init()
 			for i=1,12 do
 				local topLevelID = math.floor((i-1)*AD.vars.Group.amountOfWindows/12)+1
 				frameDB['group'..i] = AD.Frame:new('group'..i, toplevels[topLevelID])
-				if vars.showMagStam then
-					frameDB['group'..i]:SetMagStamHidden(false)
-				end
+				--if vars.showMagStam then
+				--	frameDB['group'..i]:SetMagStamHidden(false)
+				--end
 			end
 
 			group.scaleWindow()
@@ -327,7 +327,7 @@ function group.pingCallback(pingType,pingTag,x,y,isLocalPlayerOwner)
 			local outstreamX = group.readStream(x,{1,1,1,4,8,1})
 			local outstreamY = group.readStream(y,{7,1,4,4})
 			--d(GetAbilityName(group.ultiIndexes[outstreamX[5]]))
-			AD.last = {outstreamX, outstreamY}
+			--AD.last = {outstreamX, outstreamY}
 			-- {0,campLock,assistPing,hammerBar,0,ult.id}
 			-- {ult.percent,0,magBar,stamBar}
 
@@ -388,12 +388,11 @@ function group.pingCallback(pingType,pingTag,x,y,isLocalPlayerOwner)
 			--Handle Mag + Stam
 			local magPercent = outstreamY[3]/15
 			local stamPercent = outstreamY[4]/15
-			if vars.UI == "Custom" and not frameDB[pingTag].magStamHidden then
+			if vars.UI == "Custom" and vars.showMagStam then
+				if frameDB[pingTag].magStamHidden then frameDB[pingTag]:SetMagStamHidden(false) end
 				frameDB[pingTag]:SetMag(magPercent,1)
 				frameDB[pingTag]:SetStam(stamPercent,1)
 			end
-			
-
 		else
 			LMP:SuppressPing(pingType, pingTag)
 		end
@@ -425,7 +424,19 @@ function group.readFromRDK(pingTag,x,y)
 		frameDB[pingTag]:setUlt(ultPercent,ultIcon)
 		frameDB[pingTag].image:SetColor(0.6,0.2,0.2)
 	end
-	
+
+
+	y = math.floor(y / group.rdkStep + 0.5)
+	local outstreamY = group.readStream(y,{7,1,7,1})
+	local mag = outstreamY[1]
+	local stam = outstreamY[3]
+	-- max for mag + stam = 50
+	--AD.last = outstreamY
+	if vars.UI == "Custom" and vars.showMagStam then
+		if frameDB[pingTag].magStamHidden then frameDB[pingTag]:SetMagStamHidden(false) end
+		frameDB[pingTag]:SetMag(mag,50)
+		frameDB[pingTag]:SetStam(stam,50)
+	end
 end
 
 
@@ -468,9 +479,9 @@ function group.PowerUpdateHandlerFunction(unitTag, powerPoolIndex, powerType, po
     end
 end
 
-function group.setAllMagStamHidden(value)
+function group.hideAllMagStam()
 	for i=1,12 do
-		frameDB['group'..i]:SetMagStamHidden(value)
+		frameDB['group'..i]:SetMagStamHidden(true)
 	end
 end
 

@@ -57,6 +57,7 @@ function frameObject:new(unitTag, parent)
 	frame.index = nil
 	frame.unit = ""
 	frame.originalHealthHeight = frame.health:GetHeight()
+	frame.magStamHidden = true
 
 	frame.frame:SetHidden(true)
 
@@ -85,6 +86,7 @@ function frameObject:Update()
 
 			self:SetMag(0,1)
 			self:SetStam(0,1)
+			self:SetMagStamHidden(true)
 
 			self:setName()
 			self:setGroupLeader()
@@ -217,6 +219,9 @@ function frameObject:SetOnline(online)
 		self.name:SetColor(1,1,1,0.5)
 		self.frame:SetAlpha(0.7)
 		self:SetHealth(0,max)
+		self:SetMag(0,1)
+		self:SetStam(0,1)
+		self:SetMagStamHidden(true)
 
 		local alliance = GetUnitAlliance(self.unitTag)
 		self.image:SetTexture(alliances[alliance])
