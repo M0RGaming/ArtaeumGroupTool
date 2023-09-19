@@ -1,3 +1,10 @@
+Version 3.2.1
+----------
+Added support to read magicka and stamina from people running rdk group tool.
+Added grey backdrop to the magicka and stamina bars to help differentiate it from the health bar
+* Fixed Magicka and Stamina bars not showing up when you enable them in the settings menu
+
+
 Version 3.2.0
 ----------
 Added Magicka and Stamina bars to the frame UI for group share - Disabled by default
