@@ -1,6 +1,7 @@
 Version 3.2.2
 ----------
 Added ability to change scaling on the crown icon
+* Disabled the crown module from being enabled in bgs since its buggy
 * API Bump
 
 Version 3.2.1
