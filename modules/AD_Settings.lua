@@ -161,12 +161,12 @@ function settings.createSettings()
 	            {
 			        type = "slider",
 			        name = "Marker Scale",
-			        tooltip = "This sets the scale of the marker. 1 is the original size.",
+			        tooltip = "This sets the scale of the marker. 100% is the original size.",
 			        min = 0,
-			        max = 3,
-			        step = 0.1,	--(optional)
-			        getFunc = function() return vars.Crown.scale end,
-			        setFunc = function(scale) vars.Crown.scale = scale; AD.Crown.pin:setScale(scale) end,
+			        max = 300,
+			        step = 5,	--(optional)
+			        getFunc = function() return vars.Crown.scale*100 end,
+			        setFunc = function(scale) vars.Crown.scale = scale/100; AD.Crown.pin:setScale(scale/100) end,
 			        width = "full",	--or "full" (optional)
 			    },
 			    {

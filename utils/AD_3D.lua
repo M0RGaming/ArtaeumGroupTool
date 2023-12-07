@@ -10,6 +10,10 @@ AD3D.toplevel:SetDrawLayer(0)
 function AD3D.create3D(toplevel, data)
 	local beam = WINDOW_MANAGER:CreateControl(nil, toplevel, CT_TEXTURE)
 
+	function beam:updateSize()
+		self:Set3DLocalDimensions(self.size.X * self.scale, self.size.Y * self.scale)
+	end
+
 	function beam:updateMarkerData(data)
 		self.offset = {
 			X=data.X or 0,
@@ -85,9 +89,7 @@ function AD3D.create3D(toplevel, data)
 		self:updateSize()
 	end
 
-	function beam:updateSize()
-		self:Set3DLocalDimensions(self.size.X * self.scale, self.size.Y * self.scale)
-	end
+	
 
 	return beam
 end

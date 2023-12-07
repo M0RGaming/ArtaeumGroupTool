@@ -76,7 +76,7 @@ function crown.createArrow()
 	})
 	crown.arrow.marker:SetHidden(true)
 	crown.pin = AD.AD3D.create3D(toplevel, crown.markerTypes[vars.markerType])
-	crown.pin.setScale(vars.scale)
+	crown.pin:setScale(vars.scale)
 	crown.updateColours()
 end
 
