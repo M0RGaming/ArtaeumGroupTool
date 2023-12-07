@@ -76,6 +76,7 @@ function crown.createArrow()
 	})
 	crown.arrow.marker:SetHidden(true)
 	crown.pin = AD.AD3D.create3D(toplevel, crown.markerTypes[vars.markerType])
+	crown.pin.setScale(vars.scale)
 	crown.updateColours()
 end
 
@@ -92,6 +93,10 @@ function crown.updateToggle(enable)
 	local pvpCheck = true
 	if vars.cyrodilOnly then
 		pvpCheck = IsInAvAZone()
+	end
+
+	if IsActiveWorldBattleground() then
+		pvpCheck = false
 	end
 
 

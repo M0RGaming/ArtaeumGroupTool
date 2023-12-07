@@ -1,3 +1,8 @@
+Version 3.2.2
+----------
+Added ability to change scaling on the crown icon
+* API Bump
+
 Version 3.2.1
 ----------
 Added support to read magicka and stamina from people running rdk group tool.

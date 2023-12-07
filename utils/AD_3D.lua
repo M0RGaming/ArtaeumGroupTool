@@ -7,7 +7,6 @@ AD3D.toplevel:SetDrawLayer(0)
 
 
 
--- AD.AD3D.createBeam(toplevel, "Texture Path", [sizeX,sizeY], [offsetX, offsetY, offsetZ])
 function AD3D.create3D(toplevel, data)
 	local beam = WINDOW_MANAGER:CreateControl(nil, toplevel, CT_TEXTURE)
 
@@ -28,14 +27,19 @@ function AD3D.create3D(toplevel, data)
 
 		self:Set3DRenderSpaceUsesDepthBuffer(self.depthBuffer)
 		self:SetTexture(self.texture)
-		self:Set3DLocalDimensions(self.size.X, self.size.Y)
+		--self:Set3DLocalDimensions(self.size.X, self.size.Y)
+		self:updateSize()
 	end
 	
+	beam.scale = 1
+
 	beam:Create3DRenderSpace()
 	beam:SetDrawLevel(1) --3
 	beam:Set3DRenderSpaceOrigin(0, 0, 0)
 	beam:updateMarkerData(data)
 	beam:SetHidden(true)
+
+	
 
 
 	function beam:setPos(X,Y,Z)
@@ -74,6 +78,15 @@ function AD3D.create3D(toplevel, data)
 	function beam:disable()
 		self.enabled = false
 		self:SetHidden(true)
+	end
+
+	function beam:setScale(scale)
+		self.scale = scale
+		self:updateSize()
+	end
+
+	function beam:updateSize()
+		self:Set3DLocalDimensions(self.size.X * self.scale, self.size.Y * self.scale)
 	end
 
 	return beam

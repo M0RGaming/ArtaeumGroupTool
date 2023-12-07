@@ -34,7 +34,8 @@ AD.Settings.DefaultSettings = {
 		showArrow = true,
 		markerType = "Crown",
 		cyrodilOnly = false,
-		markerColour = {0,1,1,0.5}
+		markerColour = {0,1,1,0.5},
+		scale = 1,
 	},
 	Group = {
 		enabled = false,
@@ -95,6 +96,7 @@ AD.Profiles.DefaultSettings = {
 	        showArrow = true,
 	        markerColour = {0,1,1,0.5},
 	        enabled = true,
+	        scale = 1,
 	    },
 	    Guild = {
 	        transmitTo = "@M0R_Gaming",
