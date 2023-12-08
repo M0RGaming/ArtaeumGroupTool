@@ -781,21 +781,6 @@ end
 
 
 
-local function ADpopulate()
-	for i=1,12 do
-		frameDB['group'..i].index = i
-		frameDB['group'..i]:setAnchors()
-		frameDB['group'..i].frame:SetHidden(false)
-	end
-end
-
-
-
-
-
-
-
-
 ZO_CreateStringId("SI_BINDING_NAME_ARTAEUMGROUPTOOL_REQUEST_PING", "Send a assist ping.")
 SLASH_COMMANDS["/ping"] = group.ping
 

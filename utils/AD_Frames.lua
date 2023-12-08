@@ -1,8 +1,8 @@
 local AD = ArtaeumGroupTool
 AD.Frame = {}
-local frameBase = AD.Frame
-local frameObject = ZO_Object:Subclass()
-local vanillaFrame = ZO_Object:Subclass()
+local frames = AD.Frame
+--local frameObject = ZO_Object:Subclass()
+--local vanillaFrame = ZO_Object:Subclass()
 
 local alliances = {
 	"esoui/art/stats/alliancebadge_aldmeri.dds",
@@ -30,17 +30,49 @@ end
 
 
 
-function frameBase:new(unitTag, parent)
-	if AD.vars.Group.UI == "Custom" then
-		return frameObject:new(unitTag,parent)
-	else
-		return vanillaFrame:new(unitTag)
-	end
+
+
+
+
+local frameBase = ZO_Object:Subclass()
+
+
+function frameBase:Update()
+	-- To be overwritten, runs whenever the group changes to identify new unitTags
+end
+function frameBase:setGroupLeader()
+	-- (optional) runs for everyone when crown changes
+end
+function frameBase:SetOnline(online)
+	-- (optional) runs when someone changes online/offline states
+end
+function frameBase:SetEdgeColor(...)
+	-- To be overwritten, indicates Camplocked
+end
+function frameBase:setUlt(percent, icon)
+	-- To be overwritten, runs every time a data point comes in, sets the ult and percent
+end
+function frameBase:SetDead(dead)
+	-- (optional) runs when someone dies
 end
 
+frames.frameBase = frameBase
+
+
+
+
+
+
+
+
+
+
+
+
+local frameObject = frameBase:Subclass()
 
 function frameObject:new(unitTag, parent)
-	local frame = ZO_Object.New(self)
+	local frame = frameBase.New(self)
 	frame.frame = CreateControlFromVirtual("ART"..unitTag,parent,"AD_Group_Template")
 	frame.bar = frame.frame:GetNamedChild("Ult")
 	frame.image = frame.frame:GetNamedChild("UltIcon")
@@ -131,13 +163,9 @@ function frameObject:setGroupLeader()
 	local _,topl,parentframe,top,x,y,z = self.name:GetAnchor()
 	if IsUnitGroupLeader(self.unitTag) then
 		self.name:SetAnchor(topl, parentframe, top, 20, y)
-		--self.name.setAnchor(self.frame.name.anchor)
-		--self.name:SetTransformOffsetX(20*AD.vars.Group.scale)
 		self.name:SetWidth(143)
 		self.groupLead:SetHidden(false)
 	else
-		--self.name:SetTransformOffsetX(0)
-		--self.name.anchorUntabbed:Set(self.name)
 		self.name:SetAnchor(topl, parentframe, top, 0, y)
 		self.name:SetWidth(163)
 		self.groupLead:SetHidden(true)
@@ -249,11 +277,24 @@ end
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+local vanillaFrame = frameBase:Subclass()
+
 function vanillaFrame:new(unitTag)
-
 	local baseFrame = UNIT_FRAMES:GetFrame(unitTag)
+	local frame = frameBase.New(self)
 
-	local frame = ZO_Object.New(self)
 	frame.frame = baseFrame.frame
 	local width = frame.frame:GetWidth()
 	frame.frame:SetWidth(width+40)
@@ -318,18 +359,10 @@ function vanillaFrame:Update()
 
 		self.bar:SetMinMax(0,100)
 		self.bar:SetValue(0)
-		--self.status:SetText("")
-		--self.backdrop:SetEdgeColor(1,1,1,1)
-		--self.ultPercent:SetText("")
-
-		--self:setAnchors()
-		--self.frame:SetHidden(false)
 	end
 end
--- backdrop
--- health
--- frame:setHidden
-function vanillaFrame:setAnchors() end
+
+
 function vanillaFrame:setGroupLeader() end
 function vanillaFrame:SetOnline(online) end
 function vanillaFrame:SetEdgeColor(...)
@@ -354,9 +387,6 @@ function vanillaFrame:setUlt(percent, icon)
 	end
 	
 end
-
-
-
 
 function vanillaFrame:SetDead(dead)
 	self.status:SetHidden(false)
@@ -401,41 +431,16 @@ end
 
 
 
---[[
-function frameObject:Update(unitTag)
-	self.unitTag = unitTag
-	self.index = GetGroupIndexByUnitTag(unitTag)
 
-	if self.index then
 
+
+
+
+
+function frames:new(unitTag, parent)
+	if AD.vars.Group.UI == "Custom" then
+		return frameObject:new(unitTag,parent)
 	else
-
-		local rgb = AD.vars.Group.colours.standardHealth
-		self.health:SetColor(rgb[1],rgb[2],rgb[3],rgb[4])
-		--self.health:SetColor(0.8,26/255,26/255,0.8)
-		self:setName()
-		self:setGroupLeader()
-		self:SetOnline(IsUnitOnline(unitTag))
-		local role = GetGroupMemberSelectedRole(unitTag)
-		if role == 0 then
-			local alliance = GetUnitAlliance(unitTag)
-			self.image:SetTexture(alliances[alliance])
-		else
-			self.image:SetTexture(roles[role])
-		end
-		self.backdrop:SetEdgeColor(1,1,1,1)
-		self.frame:SetHidden(false)
-		self.ultPercent:SetText("")
+		return vanillaFrame:new(unitTag)
 	end
 end
-
-
-
-
-
-
-
-
-
-
---]]
