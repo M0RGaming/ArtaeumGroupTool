@@ -164,10 +164,21 @@ function settings.createSettings()
 			        tooltip = "This sets the scale of the marker. 100% is the original size.",
 			        min = 0,
 			        max = 300,
-			        step = 5,	--(optional)
+			        step = 5,
 			        getFunc = function() return vars.Crown.scale*100 end,
 			        setFunc = function(scale) vars.Crown.scale = scale/100; AD.Crown.pin:setScale(scale/100) end,
-			        width = "full",	--or "full" (optional)
+			        width = "half",
+			    },
+	            {
+			        type = "slider",
+			        name = "Marker Offset",
+			        tooltip = "This sets the vertical offset of the marker. 0 is the original offset.",
+			        min = -100,
+			        max = 100,
+			        step = 1,
+			        getFunc = function() return vars.Crown.userOffset*10 end,
+			        setFunc = function(offset) vars.Crown.userOffset = offset/10; AD.Crown.pin:setUserOffset(offset/10) end,
+			        width = "half",
 			    },
 			    {
 					type = "divider",

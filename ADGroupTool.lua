@@ -36,6 +36,7 @@ AD.Settings.DefaultSettings = {
 		cyrodilOnly = false,
 		markerColour = {0,1,1,0.5},
 		scale = 1,
+		userOffset = 0,
 	},
 	Group = {
 		enabled = false,
@@ -97,6 +98,7 @@ AD.Profiles.DefaultSettings = {
 	        markerColour = {0,1,1,0.5},
 	        enabled = true,
 	        scale = 1,
+	        userOffset = 0,
 	    },
 	    Guild = {
 	        transmitTo = "@M0R_Gaming",

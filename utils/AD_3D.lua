@@ -37,6 +37,8 @@ function AD3D.create3D(toplevel, data)
 	
 	beam.scale = 1
 
+	beam.userOffset = 0
+
 	beam:Create3DRenderSpace()
 	beam:SetDrawLevel(1) --3
 	beam:Set3DRenderSpaceOrigin(0, 0, 0)
@@ -56,13 +58,16 @@ function AD3D.create3D(toplevel, data)
 			end
 			self:Set3DRenderSpaceOrientation(0, heading, 0)
 		end
-		self:Set3DRenderSpaceOrigin(X+self.offset.X, Y+self.offset.Y, Z+self.offset.Z)
+		self:Set3DRenderSpaceOrigin(X+self.offset.X, Y+self.offset.Y+self.userOffset, Z+self.offset.Z)
 	end
 
 	function beam:setColour(r,g,b,a)
 		self:SetColor(r,g,b,a)
 	end
 
+	function beam:setUserOffset(offest)
+		self.userOffset = offset
+	end
 
 
 	function beam:show()
