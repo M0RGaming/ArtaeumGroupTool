@@ -55,6 +55,12 @@ end
 function frameBase:SetDead(dead)
 	-- (optional) runs when someone dies
 end
+function frameBase:SetMag(value, max)
+	-- (optional) tells what the current mag/stam is
+end
+function frameBase:SetStam(value, max)
+	-- (optional) tells what the current mag/stam is
+end
 
 frames.frameBase = frameBase
 
@@ -362,9 +368,6 @@ function vanillaFrame:Update()
 	end
 end
 
-
-function vanillaFrame:setGroupLeader() end
-function vanillaFrame:SetOnline(online) end
 function vanillaFrame:SetEdgeColor(...)
 	self.backdrop:SetEdgeColor(...)
 end

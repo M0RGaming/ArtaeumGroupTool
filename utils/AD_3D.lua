@@ -65,7 +65,7 @@ function AD3D.create3D(toplevel, data)
 		self:SetColor(r,g,b,a)
 	end
 
-	function beam:setUserOffset(offest)
+	function beam:setUserOffset(offset)
 		self.userOffset = offset
 	end
 
