@@ -41,7 +41,7 @@ AD.Settings.DefaultSettings = {
 	Group = {
 		enabled = false,
 		cyrodilOnly = true,
-		frequency = 1000,
+		frequency = 2500,
 		windowLocations = {},
 		windowLocked = false,
 		amountOfWindows = 1,
@@ -65,7 +65,7 @@ AD.Profiles.DefaultSettings = {
 	["M0R's Default"] = {
 		Group = {
 	        windowLocations = { {43.5,75} , {289.5,75} },
-	        frequency = 1000,
+	        frequency = 2500,
 	        hideBaseUnitFrames = true,
 	        windowLocked = true,
 	        enabled = true,
@@ -193,6 +193,8 @@ end
 function AD:Initialize()
 	-- Addon Settings Menu
 	AD.vars = ZO_SavedVars:NewAccountWide("ADVars", AD.varversion, nil, AD.Settings.DefaultSettings)
+	if AD.vars.Group.frequency < 2500 then AD.vars.Group.frequency = 2500 end -- to help cut down on ping times
+
 	AD.profiles = ZO_SavedVars:NewAccountWide("ADProfiles", 1, nil, AD.Profiles.DefaultSettings)
 	AD.Settings.createSettings()
 

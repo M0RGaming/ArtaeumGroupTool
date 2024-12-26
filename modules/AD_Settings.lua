@@ -235,9 +235,13 @@ function settings.createSettings()
 					type = "editbox",
 					name = "Frequency (ms)",
 					tooltip = "How much time should be spent between transmissions, in milliseconds.",
-					warning = "If set to below 1000, you will be kicked for spam.",
+					warning = "If set to below 2500, it will automatically become 2500.",
 					getFunc = function() return vars.Group.frequency end,
-					setFunc = function(value) vars.Group.frequency = tonumber(value) end,
+					setFunc = function(value)
+						local freq = tonumber(value)
+						if freq < 2500 then freq = 2500 end
+						vars.Group.frequency = freq
+					end,
 					isMultiline = false,
 					requiresReload = true
 				},

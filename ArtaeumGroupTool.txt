@@ -1,7 +1,7 @@
 ## Title: |cFFD700Artaeum Group Tool|r
-## APIVersion:  101040
-## Version: 3.2.3
-## AddOnVersion: 323
+## APIVersion:  101044
+## Version: 3.2.4
+## AddOnVersion: 324
 ## Description: A toolset for groups in Cyrodiil
 ## Author: |c0DC1CF@M0R_Gaming|r
 ## SavedVariables: ADVars ADProfiles
