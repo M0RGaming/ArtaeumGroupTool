@@ -22,6 +22,7 @@ group.running = false
 
 
 group.units = {}
+group.handlers = {}
 
 
 
@@ -52,25 +53,9 @@ function group.init()
 	if vars.enabled then
 		
 		if vars.UI == "Custom" then
-
-			--[[
-			SecurePostHook(UNIT_FRAMES, "CreateFrame", function(_, unitTag, anchors, barTextMode, style)
-				if style == "ZO_RaidUnitFrame" then --ZO_GroupUnitFrame --ZO_RaidUnitFrame
-					if frameDB[unitTag] == nil then
-						group.setupBox(unitTag)
-					end
-				end
-			end)
-			]]
-
-
 			group.createTopLevels()
 			AD.initAnchors(toplevels)
-			--[[
-			if vars.hideBaseUnitFrames then
-				ZO_UnitFramesGroups:SetHidden(true)
-			end
-			]]
+
 			
 			group.fragments = {}
 			for i=1,#toplevels do
@@ -113,6 +98,53 @@ function group.init()
 			end)
 			group.moveBoxes()
 		end
+
+
+
+		group.lgcs = LibGroupCombatStats.RegisterAddon("ArtaeumGroupTool", {"ULT"})
+
+		local LGB = LibGroupBroadcast
+		local handler = LGB:RegisterHandler("ArtaeumGroupToolHandler")
+		handler:SetDisplayName("Artaeum Group Tool")
+		handler:SetDescription("Group Tool for Coordination in Cyrodiil!")
+
+		-- protocols to insert: assist Ping, camp Lock, hammer bar, ult bar
+
+		group.protocols = {}
+
+		group.protocols.ping = handler:DeclareProtocol(500, "ArtaeumPing") -- only send on button press
+		group.protocols.ping:AddField(LGB.CreateFlagField("ping"))
+		group.protocols.ping:OnData(group.handlers.onPing)
+		group.protocols.ping:Finalize({isRelevantInCombat = true})
+
+		group.protocols.lock = handler:DeclareProtocol(501, "ArtaeumCampLock") -- only send when camp updates to be locked or unlocked
+		group.protocols.lock:AddField(LGB.CreateFlagField("lock"))
+		group.protocols.lock:OnData(group.handlers.onCampLock)
+		group.protocols.lock:Finalize({isRelevantInCombat = true})
+
+		group.protocols.hammerBar = handler:DeclareProtocol(502, "ArtaeumDaedricPower") -- only send when holding artifact, if not holding say 0%
+		group.protocols.hammerBar:AddField(LGB.CreatePercentageField("percent")) -- should be between 0 and 1
+		group.protocols.hammerBar:OnData(group.handlers.onHammerUpdate)
+		group.protocols.hammerBar:Finalize({isRelevantInCombat = true})
+
+		group.protocols.requestSync = handler:DeclareProtocol(503, "ArtaeumRequestSync") -- run when joining a group to obtain info
+		group.protocols.requestSync:AddField(LGB.CreateFlagField("requested"))
+		group.protocols.requestSync:OnData(group.handlers.onSyncRequested)
+		group.protocols.requestSync:Finalize()
+
+		group.protocols.sync = handler:DeclareProtocol(504, "ArtaeumSync")
+		group.protocols.sync:AddField(LGB.CreateFlagField("lock"))
+		group.protocols.sync:AddField(LGB.CreatePercentageField("percent"))
+		group.protocols.sync:AddField(LGB.CreateFlagField("shareFB")) -- share Front Bar
+		group.protocols.sync:OnData(group.handlers.onSync)
+		group.protocols.sync:Finalize()
+
+		group.protocols.sharingBar = handler:DeclareProtocol(505, "ArtaeumSharingBar") -- Might remove, idk
+		group.protocols.sharingBar:AddField(LGB.CreateFlagField("shareFB"))
+		group.protocols.sharingBar:OnData(group.handlers.onSharingBarUpdate)
+		group.protocols.sharingBar:Finalize()
+
+
 
 		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Activated", EVENT_PLAYER_ACTIVATED, group.playerActivated)
 		group.createArrow()
@@ -217,17 +249,11 @@ function group.createArrow()
 	})
 end
 
-group.externalHooks = {x={},y={}}
 function group.addExternalHook(bitId, sendfunc, recievefunc, axis)
-	local reference = nil
-	if axis=="x" then
-		reference = group.externalHooks["x"]
-	elseif axis=="y" then
-		reference = group.externalHooks["y"]
-	end
-	if reference == nil then return end
-	reference[bitId] = {send=sendfunc, recieve=recievefunc}
+	d("Note: ArtaeumGroupTool has removed externalHooks as LibGroupBroadcast is now released. Please update to using LibGroupBroadcast instead.")
 end
+
+
 
 
 --AD.hammer = 0
@@ -239,14 +265,11 @@ function group.toSend:send()
 	if hammerMax == 0 then hammerMax = 1 end
 	local hammerBar = math.floor(hammerCurrent/hammerMax*15)
 	--local hammerBar = AD.hammer
-	local ult = {}
-	local ultID = GetSlotBoundId(8, vars.barToShare)
-	ult.id = group.ultiIndexes[ultID] or 255
-	ult.current = GetUnitPower('player',POWERTYPE_ULTIMATE)
-	ult.max = GetAbilityCost(ultID)
-	ult.percent = math.floor(ult.current/ult.max*100)
-	if ult.percent > 100 then ult.percent = 100 end
-	if ult.max <= 0 then ult.percent = 0 end
+
+
+
+
+
 	local magCurrent, magMax = GetUnitPower('player',POWERTYPE_MAGICKA)
 	local magBar = math.floor(magCurrent/magMax*15)
 	local stamCurrent, stamMax = GetUnitPower('player',POWERTYPE_STAMINA)
@@ -254,13 +277,6 @@ function group.toSend:send()
 
 	local xstream = {0,campLock,assistPing,hammerBar,ult.id,0}
 	local ystream = {ult.percent,0,magBar,stamBar}
-
-	for i,v in pairs(group.externalHooks["x"]) do
-		xstream[i] = v.send()
-	end
-	for i,v in pairs(group.externalHooks["y"]) do
-		ystream[i] = v.send()
-	end
 
 
 	local x = group.writeStream(
@@ -283,6 +299,40 @@ function group.toSend:send()
 		y*group.stepSize
 	)
 	LGPS:PopCurrentMap()
+end
+
+
+
+
+
+
+
+
+-- HANDLERS
+function group.handlers.onPing(unitTag, data)
+	--data.ping
+end
+
+function group.handlers.onCampLock(unitTag, data)
+	--data.lock
+end
+
+function group.handlers.onHammerUpdate(unitTag, data)
+	--data.percent
+end
+
+function group.handlers.onSyncRequested(unitTag, data)
+	--data.requested
+end
+
+function group.handlers.onSync(unitTag, data)
+	--data.lock
+	--data.percent
+	--data.shareFB
+end
+
+function group.handlers.onSharingBarUpdate(unitTag, data)
+	--data.shareFB
 end
 
 
@@ -326,20 +376,6 @@ function group.pingCallback(pingType,pingTag,x,y,isLocalPlayerOwner)
 
 			local outstreamX = group.readStream(x,{1,1,1,4,8,1})
 			local outstreamY = group.readStream(y,{7,1,4,4})
-			--d(GetAbilityName(group.ultiIndexes[outstreamX[5]]))
-			--AD.last = {outstreamX, outstreamY}
-			-- {0,campLock,assistPing,hammerBar,0,ult.id}
-			-- {ult.percent,0,magBar,stamBar}
-
-
-			-- External Hooks
-			for i,v in pairs(group.externalHooks["x"]) do
-				v.recieve(outstreamX[i], pingTag)
-			end
-			for i,v in pairs(group.externalHooks["y"]) do
-				v.recieve(outstreamY[i], pingTag)
-			end
-
 
 
 
@@ -350,13 +386,6 @@ function group.pingCallback(pingType,pingTag,x,y,isLocalPlayerOwner)
 			else
 				--AD.last = frameDB[pingTag]
 				frameDB[pingTag]:SetEdgeColor(1,1,1,1)
-			end
-
-			-- Set Ult
-			local ultIcon = group.ultList[group.ultiIndexes[outstreamX[5]]]
-			if ultIcon then
-				frameDB[pingTag]:setUlt(outstreamY[1],ultIcon)
-				frameDB[pingTag].image:SetColor(1,1,1)
 			end
 
 			-- Handle assist pings
@@ -406,6 +435,18 @@ function group.OnAfterPingRemoved(pingType, pingTag, x, y, isPingOwner)
 	end
 end
 
+
+local ultIconLookup = {}
+function group.lgcsCallback(unitTag, data)
+	local ultId = data.ult2Id
+	local ultIcon = ultIconLookup[ultId] -- TODO: ASSUMING BACKBAR ULT FOR NOW, WILL CHANGE LATER
+	if not ultIcon then
+		ultIcon = GetAbilityIcon(ultId)
+		ultIconLookup[ultId] = ultIcon
+	end
+	frameDB[unitTag]:setUlt(ultValue/data.ult2Cost*100,ultIcon)
+	frameDB[unitTag].image:SetColor(1,1,1)
+end
 
 
 
@@ -538,26 +579,6 @@ function group.groupUpdate()
 			frameDB['group'..i]:Update()
 		end
 	end
-	--[[
-	if not IsUnitGrouped('player') then
-		for i=1,12 do
-			local frame = frameDB[i]
-			if frame then frame.frame:SetHidden(true) end
-		end
-		return
-	end
-	for i=1,12 do
-		local unitTag = GetGroupUnitTagByIndex(i)
-		local frame = frameDB[i]
-		if frame then
-			if DoesUnitExist(unitTag) then 
-				frame:Update(unitTag)
-			else 
-				frame.frame:SetHidden(true)
-			end
-		end
-	end
-	--]]
 end
 
 
@@ -643,19 +664,19 @@ end
 
 
 
-
+-- Legacy Stuff (Keeping read/write stream since I may still use it later)
 
 --/script PingMap(MAP_PIN_TYPE_PLAYER_WAYPOINT, 1, 1 / 2^16, 1 / 2^16) StartChatInput(table.concat({GetMapPlayerWaypoint()}, ","))
 -- Adapted from RdK group tool, who adapted it from lib group socket
 -- 1.1058949894505e-05,1.1058949894505e-05
 --group.stepSize = 1.333333329967e-05 -- For some reason cyro's step works, but artaeums doesnt? 
 --group.mapID = 33
-group.mapID = 1429
-group.stepSize = 1.1058949894505e-05
+--group.mapID = 1429
+--group.stepSize = 1.1058949894505e-05
 
 
-group.rdkMap = 23
-group.rdkStep = 1.4285034012573e-005
+--group.rdkMap = 23
+--group.rdkStep = 1.4285034012573e-005
 
 -- 1.1058949894505e-05 in Artaeum (ID = 33)
 -- 1.333333329967e-05 in Cyro (ID = 14)
@@ -697,9 +718,10 @@ end
 function group.updateSharing(sharing)
 
 	if group.running and not sharing then
-		EVENT_MANAGER:UnregisterForUpdate("AD Group Tool Group Ping")
-		LMP:UnregisterCallback('BeforePingAdded', group.pingCallback)
-		LMP:UnregisterCallback('AfterPingRemoved', group.OnAfterPingRemoved)
+		--EVENT_MANAGER:UnregisterForUpdate("AD Group Tool Group Ping")
+		--LMP:UnregisterCallback('BeforePingAdded', group.pingCallback)
+		--LMP:UnregisterCallback('AfterPingRemoved', group.OnAfterPingRemoved)
+		group.lgcs:UnregisterForEvent(LibGroupCombatStats.EVENT_GROUP_ULT_UPDATE, lgcsCallback)
 		EVENT_MANAGER:UnregisterForEvent("AD Group Tool Unit Created", EVENT_UNIT_CREATED)
 		EVENT_MANAGER:UnregisterForEvent("AD Group Tool Unit Destroyed", EVENT_UNIT_DESTROYED)
 		EVENT_MANAGER:UnregisterForEvent("AD Group Tool Group Join", EVENT_GROUP_MEMBER_JOINED)
@@ -720,8 +742,9 @@ function group.updateSharing(sharing)
 		
 
 	elseif not group.running and sharing then
-		LMP:RegisterCallback('BeforePingAdded', group.pingCallback)
-		LMP:RegisterCallback('AfterPingRemoved', group.OnAfterPingRemoved)
+		--LMP:RegisterCallback('BeforePingAdded', group.pingCallback)
+		--LMP:RegisterCallback('AfterPingRemoved', group.OnAfterPingRemoved)
+		group.lgcs:RegisterForEvent(LibGroupCombatStats.EVENT_GROUP_ULT_UPDATE, lgcsCallback)
 		EVENT_MANAGER:RegisterForEvent("AD Group Tool Unit Created", EVENT_UNIT_CREATED, group.unitCreate)
 		EVENT_MANAGER:RegisterForEvent("AD Group Tool Unit Destroyed", EVENT_UNIT_DESTROYED, group.unitDestroy)
 		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Join", EVENT_GROUP_MEMBER_JOINED, group.groupJoinLeave)
@@ -730,9 +753,9 @@ function group.updateSharing(sharing)
 		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Update", EVENT_GROUP_UPDATE, group.groupUpdate)
 		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Death", EVENT_UNIT_DEATH_STATE_CHANGED, group.updateDead)
 		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Connect", EVENT_GROUP_MEMBER_CONNECTED_STATUS, group.updateOnline)	
-		if IsUnitGrouped("player") then
-			EVENT_MANAGER:RegisterForUpdate("AD Group Tool Group Ping", vars.frequency, group.ping)
-		end
+		--if IsUnitGrouped("player") then
+		--	EVENT_MANAGER:RegisterForUpdate("AD Group Tool Group Ping", vars.frequency, group.ping)
+		--end
 
 		if vars.UI == "Custom" then
 			if vars.hideBaseUnitFrames then
@@ -754,28 +777,8 @@ end
 
 
 function group.playerActivated(...)
-	--d(...)
 	local active = (not vars.cyrodilOnly) or ((IsPlayerInAvAWorld() or IsActiveWorldBattleground()) and vars.cyrodilOnly) 
 	group.updateSharing(active)
-	--[[
-	if IsActiveWorldBattleground() then
-		--d("Player is in a BG")
-		--d(GetCurrentMapId())
-		group.updateSharing()
-	elseif (not vars.cyrodilOnly) or (IsPlayerInAvAWorld() and vars.cyrodilOnly) then
-		group.updateSharing()
-	else
-		EVENT_MANAGER:UnregisterForUpdate("AD Group Tool Group Ping")
-	end
-
-
-	--RDK uses the following
-	if RdKGTool.group.ro.state.registredGlobalConsumers then
-		EVENT_MANAGER:UnregisterForUpdate(RdKGroupToolResourceOverviewNetworking)
-		EVENT_MANAGER:UnregisterForUpdate(RdKGroupToolResourceOverviewMessageUpdate)
-	end
-
-	]]
 
 end
 
@@ -784,18 +787,12 @@ end
 ZO_CreateStringId("SI_BINDING_NAME_ARTAEUMGROUPTOOL_REQUEST_PING", "Send a assist ping.")
 SLASH_COMMANDS["/ping"] = group.ping
 
---[[
 
--- Code for getting this, done ingame
 
-/script
-o = {}
-for i=1,1000000 do
-	if IsAbilityUltimate(i) then o[#o+1] = {i,GetAbilityName(i)} end
-end
 
-]]--
+group.ultLookup = {
 
+}
 group.ultiIndexes = {
 	[1] = 15957, -- Magma Armor
 	[2] = 16536, -- Meteor
@@ -978,49 +975,3 @@ for k,v in pairs(group.ultiIndexes) do
 	group.ultList[v] = GetAbilityIcon(v)
 	group.ultiIndexes[v]=k
 end
-
-
-group.rdkUlts = {
-	[1] = 28341, -- negate
-	[32] = 28341, -- offensive negate
-	[33] = 28341, -- counter negate
-	[2] = 23634, -- atro
-	[3] = 24785, -- overload
-	[4] = 22138, -- sweep
-	[5] = 21752, -- nova
-	[6] = 22223, -- templar heal
-	[7] = 32958, -- standard
-	[8] = 29012, -- leap
-	[9] = 15957, -- magma
-	[10] = 33398, -- stroke
-	[11] = 25411, -- darkness
-	[12] = 25091, -- soul
-	[37] = 35508, -- soul siphon
-	[38] = 35460, -- soul tether
-	[13] = 86109, -- storm
-	[35] = 86113, -- northern storm
-	[36] = 86117, -- permafrost
-	[14] = 85532, -- warden heal
-	[31] = 85982, -- guardian
-	[29] = 122174, -- colo
-	[28] = 115001, -- goliath
-	[30] = 115410, -- reanimate
-	[15] = 83619, -- destro
-	[16] = 83552, -- resto
-	[17] = 83216, -- 2h
-	[18] = 83272, -- s&b
-	[19] = 83600, -- dw
-	[20] = 83465, -- bow
-	[21] = 39270, -- soul magick
-	[22] = 32455, -- ww
-	[23] = 32624, -- vamp
-	[24] = 16536, -- metor
-	[25] = 35713, -- fighters
-	[34] = 103478, -- psijic
-	[26] = 38573, -- barrier
-	[27] = 38563, -- horn
-	[39] = 189791, -- unblinking eye
-	[40] = 183676, -- gibbering shield
-	[41] = 183709, -- vitalizing glyphic
-
-}
