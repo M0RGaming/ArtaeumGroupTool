@@ -146,8 +146,8 @@ function group.init()
 
 
 		local GroupResources = LibGroupBroadcast:GetHandlerApi("GroupResources")
-		GroupResources:RegisterForStaminaChanges(group.protocols.onStamUpdate)
-		GroupResources:RegisterForMagickaChanges(group.protocols.onMagUpdate)
+		GroupResources:RegisterForStaminaChanges(group.handlers.onStamUpdate)
+		GroupResources:RegisterForMagickaChanges(group.handlers.onMagUpdate)
 
 
 

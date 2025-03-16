@@ -151,7 +151,7 @@ function frameObject:Update()
 			else
 				self.image:SetTexture(roles[role])
 			end
-			local class = GetUnitClass(self.unitTag)
+			local class = GetUnitClassId(self.unitTag)
 			self.image2:SetTexture(classIcons[class])
 			self.backdrop:SetEdgeColor(1,1,1,1)
 			self.bar:SetValue(0)
@@ -267,6 +267,7 @@ function frameObject:SetOnline(online)
 		self:SetHealth(current,max)
 		self.frame:SetAlpha(1)
 		self.image:SetColor(1,1,1,1)
+		self.image2:SetColor(1,1,1,1)
 	else
 		self.name:SetColor(1,1,1,0.5)
 		self.frame:SetAlpha(0.7)
@@ -281,10 +282,13 @@ function frameObject:SetOnline(online)
 		self.bar:SetMinMax(0,100)
 		self.bar:SetValue(0)
 
-		local class = GetUnitClass(self.unitTag)
+		local class = GetUnitClassId(self.unitTag)
 		self.image2:SetTexture(classIcons[class])
+		self.image2:SetColor(1,1,1,0.5)
 		self.bar2:SetMinMax(0,100)
 		self.bar2:SetValue(0)
+
+		self.ultPercent:SetText("")
 	end
 end
 
@@ -304,7 +308,7 @@ function frameObject:setUlt(ultValue, ult1Cost, icon1, ult2Cost, icon2)
 	self.bar2:SetMinMax(0,100)
 	self.bar2:SetValue(100-percent2)
 	self.image2:SetTexture(icon2)
-	
+
 	self.ultPercent:SetText(""..zo_floor(percent1).."/"..zo_floor(percent2).."%")
 
 	local maxedUlt = false
