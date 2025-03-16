@@ -338,13 +338,10 @@ function group.handlers.onMagUpdate(unitTag, unitName, current, max, percent)
 end
 
 
-
-
-
-
 --AD.hammer = 0
 function group.toSend:send()
-	return
+	if true then return end
+
 	local assistPing = self.assistPing and 1 or 0
 	self.assistPing = false
 	local campLock = (GetNextForwardCampRespawnTime() > GetGameTimeMilliseconds()) and 1 or 0
@@ -404,13 +401,16 @@ end
 
 local ultIconLookup = {}
 function group.lgcsCallback(unitTag, data)
-	local ultId = data.ult2Id
+	d("Callback")
+	local ultId = data.ult1ID
+	d(data.ult1ID)
+	d(data.ultValue)
 	local ultIcon = ultIconLookup[ultId] -- TODO: ASSUMING BACKBAR ULT FOR NOW, WILL CHANGE LATER
 	if not ultIcon then
 		ultIcon = GetAbilityIcon(ultId)
 		ultIconLookup[ultId] = ultIcon
 	end
-	frameDB[unitTag]:setUlt(ultValue/data.ult2Cost*100,ultIcon)
+	frameDB[unitTag]:setUlt( data.ultValue / data.ult1Cost *100, ultIcon)
 	frameDB[unitTag].image:SetColor(1,1,1)
 end
 
@@ -687,7 +687,7 @@ function group.updateSharing(sharing)
 		--EVENT_MANAGER:UnregisterForUpdate("AD Group Tool Group Ping")
 		--LMP:UnregisterCallback('BeforePingAdded', group.pingCallback)
 		--LMP:UnregisterCallback('AfterPingRemoved', group.OnAfterPingRemoved)
-		group.lgcs:UnregisterForEvent(LibGroupCombatStats.EVENT_GROUP_ULT_UPDATE, lgcsCallback)
+		group.lgcs:UnregisterForEvent(LibGroupCombatStats.EVENT_GROUP_ULT_UPDATE, group.lgcsCallback)
 		EVENT_MANAGER:UnregisterForEvent("AD Group Tool Unit Created", EVENT_UNIT_CREATED)
 		EVENT_MANAGER:UnregisterForEvent("AD Group Tool Unit Destroyed", EVENT_UNIT_DESTROYED)
 		EVENT_MANAGER:UnregisterForEvent("AD Group Tool Group Join", EVENT_GROUP_MEMBER_JOINED)
@@ -710,7 +710,7 @@ function group.updateSharing(sharing)
 	elseif not group.running and sharing then
 		--LMP:RegisterCallback('BeforePingAdded', group.pingCallback)
 		--LMP:RegisterCallback('AfterPingRemoved', group.OnAfterPingRemoved)
-		group.lgcs:RegisterForEvent(LibGroupCombatStats.EVENT_GROUP_ULT_UPDATE, lgcsCallback)
+		group.lgcs:RegisterForEvent(LibGroupCombatStats.EVENT_GROUP_ULT_UPDATE, group.lgcsCallback)
 		EVENT_MANAGER:RegisterForEvent("AD Group Tool Unit Created", EVENT_UNIT_CREATED, group.unitCreate)
 		EVENT_MANAGER:RegisterForEvent("AD Group Tool Unit Destroyed", EVENT_UNIT_DESTROYED, group.unitDestroy)
 		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Join", EVENT_GROUP_MEMBER_JOINED, group.groupJoinLeave)
