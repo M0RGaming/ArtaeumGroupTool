@@ -68,7 +68,16 @@ frames.frameBase = frameBase
 
 
 
+local classIcons = {
+	"esoui/art/icons/class/gamepad/gp_class_dragonknight.dds",
+	"esoui/art/icons/class/gamepad/gp_class_sorcerer.dds",
+	"esoui/art/icons/class/gamepad/gp_class_nightblade.dds",
+	"esoui/art/icons/class/gamepad/gp_class_warden.dds",
+	"esoui/art/icons/class/gamepad/gp_class_necromancer.dds",
+	"esoui/art/icons/class/gamepad/gp_class_templar.dds"
+}
 
+classIcons[117] = "esoui/art/icons/class/gamepad/gp_class_arcanist.dds"
 
 
 
@@ -81,7 +90,9 @@ function frameObject:new(unitTag, parent)
 	local frame = frameBase.New(self)
 	frame.frame = CreateControlFromVirtual("ART"..unitTag,parent,"AD_Group_Template")
 	frame.bar = frame.frame:GetNamedChild("Ult")
+	frame.bar2 = frame.frame:GetNamedChild("Ult2")
 	frame.image = frame.frame:GetNamedChild("UltIcon")
+	frame.image2 = frame.frame:GetNamedChild("Ult2Icon")
 	frame.ultPercent = frame.frame:GetNamedChild("UltPercent")
 	frame.name = frame.frame:GetNamedChild("Name")
 	frame.health = frame.frame:GetNamedChild("Health")
@@ -108,6 +119,10 @@ end
 
 function frameObject:Update()
 	self.index = GetGroupIndexByUnitTag(self.unitTag)
+	--self.index = tonumber(self.unitTag:sub(6, 7))
+	--d(self.index)
+	--d(self.unitTag:sub(5, 5))
+	--d(self.unitTag)
 	if self.index > 12 then self.index = nil end
 	if self.index then
 
@@ -136,8 +151,11 @@ function frameObject:Update()
 			else
 				self.image:SetTexture(roles[role])
 			end
+			local class = GetUnitClass(self.unitTag)
+			self.image2:SetTexture(classIcons[class])
 			self.backdrop:SetEdgeColor(1,1,1,1)
 			self.bar:SetValue(0)
+			self.bar2:SetValue(0)
 			self.ultPercent:SetText("")
 			self:setAnchors()
 			self.frame:SetHidden(false)
@@ -169,11 +187,11 @@ function frameObject:setGroupLeader()
 	local _,topl,parentframe,top,x,y,z = self.name:GetAnchor()
 	if IsUnitGroupLeader(self.unitTag) then
 		self.name:SetAnchor(topl, parentframe, top, 20, y)
-		self.name:SetWidth(143)
+		self.name:SetWidth(135) -- 143 originally
 		self.groupLead:SetHidden(false)
 	else
 		self.name:SetAnchor(topl, parentframe, top, 0, y)
-		self.name:SetWidth(163)
+		self.name:SetWidth(155) -- 163 originally
 		self.groupLead:SetHidden(true)
 	end
 end
@@ -262,15 +280,42 @@ function frameObject:SetOnline(online)
 		self.image:SetColor(1,1,1,0.5)
 		self.bar:SetMinMax(0,100)
 		self.bar:SetValue(0)
+
+		local class = GetUnitClass(self.unitTag)
+		self.image2:SetTexture(classIcons[class])
+		self.bar2:SetMinMax(0,100)
+		self.bar2:SetValue(0)
 	end
 end
 
-function frameObject:setUlt(percent, icon)
+function frameObject:setUlt(ultValue, ult1Cost, icon1, ult2Cost, icon2)
+	local percent1
+	local percent2
+	if ult1Cost == 0 then percent1 = 0 else
+		percent1 = ultValue / ult1Cost * 100
+	end
+	if ult2Cost == 0 then percent2 = 0 else
+		percent2 = ultValue / ult2Cost * 100
+	end
+
 	self.bar:SetMinMax(0,100)
-	self.bar:SetValue(100-percent)
-	self.image:SetTexture(icon)
-	self.ultPercent:SetText(""..percent.."%")
-	if percent == 100 then
+	self.bar:SetValue(100-percent1)
+	self.image:SetTexture(icon1)
+	self.bar2:SetMinMax(0,100)
+	self.bar2:SetValue(100-percent2)
+	self.image2:SetTexture(icon2)
+	
+	self.ultPercent:SetText(""..zo_floor(percent1).."/"..zo_floor(percent2).."%")
+
+	local maxedUlt = false
+	if (ult1Cost >= ult2Cost) and (percent1 >= 100) then
+		maxedUlt = true
+	elseif (ult2Cost >= ult1Cost) and (percent2 >= 100) then
+		maxedUlt = true
+	end
+
+	
+	if maxedUlt then
 		local rgb = AD.vars.Group.colours.fullUlt
 		self.health:SetColor(rgb[1],rgb[2],rgb[3],rgb[4])
 	else
@@ -293,7 +338,7 @@ end
 
 
 
-
+-- TODO: UPDATE VANILLA
 
 local vanillaFrame = frameBase:Subclass()
 

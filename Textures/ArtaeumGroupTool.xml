@@ -32,17 +32,17 @@
 				</Backdrop>
             	<StatusBar name="$(parent)Health" color="cc1a1a">
 					<Anchor point="TOPLEFT" relativeTo="$(parent)" relativePoint="TOPLEFT" />
-					<Dimensions x="191" y="29" />
+					<Dimensions x="163" y="29" />
 					<Limits min="0" max="100" />
 				</StatusBar>
 				<StatusBar name="$(parent)Stam" color="00ff00">
 					<Anchor point="BOTTOMLEFT" relativeTo="$(parent)" relativePoint="BOTTOMLEFT" />
-					<Dimensions x="191" y="4" />
+					<Dimensions x="163" y="4" />
 					<Limits min="0" max="100" />
 				</StatusBar>
 				<StatusBar name="$(parent)Mag" color="0252c7">
 					<Anchor point="BOTTOMLEFT" relativeTo="$(parent)Stam" relativePoint="TOPLEFT" />
-					<Dimensions x="191" y="4" />
+					<Dimensions x="163" y="4" />
 					<Limits min="0" max="100" />
 				</StatusBar>
 				<!--
@@ -60,13 +60,39 @@
                 </Texture>
 				<Label name="$(parent)Name" font="ZoFontGame" wrapMode="ELLIPSIS">
 					<Anchor point="TOPLEFT" />
-					<Dimensions x="163" y="29" />
+					<Dimensions x="155" y="29" />
 
 				</Label>
 				
 
-				<StatusBar name="$(parent)Ult" color="000000" orientation="0" barAlignment="1">
+
+				<StatusBar name="$(parent)Ult2" color="000000" orientation="0" barAlignment="1">
 					<Anchor point="TOPRIGHT" relativeTo="$(parent)" relativePoint="TOPRIGHT"/>
+					<Dimensions x="28" y="28" />
+					<Limits min="0" max="100" />
+					<Controls>
+						<Texture name="$(parent)Icon" textureFile="/esoui/art/icons/ability_sorcerer_crushing_monsoon.dds">
+							<AnchorFill />
+						</Texture>
+					</Controls>
+				</StatusBar>
+				<StatusBar name="$(parent)Ult" color="000000" orientation="0" barAlignment="1">
+					<Anchor point="TOPRIGHT" relativeTo="$(parent)Ult2" relativePoint="TOPLEFT"/>
+					<Dimensions x="28" y="28" />
+					<Limits min="0" max="100" />
+					<Controls>
+						<Texture name="$(parent)Icon" textureFile="/esoui/art/icons/ability_sorcerer_crushing_monsoon.dds">
+							<AnchorFill />
+						</Texture>
+						<Label name="$(parent)Percent" font="$(GAMEPAD_BOLD_FONT)|$(KB_13)|thick-outline" horizontalAlignment="2">
+							<Anchor point="BOTTOMLEFT" offsetX="-60" relativePoint="BOTTOMLEFT" relativeTo="$(parent)"/>
+							<Dimensions x="60" y="14" />
+						</Label>
+					</Controls>
+				</StatusBar>
+				<!--
+				<StatusBar name="$(parent)Ult" color="000000" orientation="0" barAlignment="1">
+					<Anchor point="TOPRIGHT" relativeTo="$(parent)Ult2" relativePoint="TOPRIGHT"/>
 					<Dimensions x="28" y="28" />
 					<Limits min="0" max="100" />
 					<Controls>
@@ -79,7 +105,7 @@
 						</Label>
 					</Controls>
 				</StatusBar>
-				
+				-->
 
 			</Controls>
 		</Control>

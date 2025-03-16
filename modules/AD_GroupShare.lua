@@ -399,52 +399,35 @@ function group.OnAfterPingRemoved(pingType, pingTag, x, y, isPingOwner)
 end
 
 
+
+function group.lgcsPlayerCallback(player, data)
+	local playerTag = GetGroupUnitTagByIndex(GetGroupIndexByUnitTag('player'))
+	if playerTag ~= nil then
+		group.lgcsCallback(playerTag, data)
+	end
+end
+
 local ultIconLookup = {}
 function group.lgcsCallback(unitTag, data)
-	d("Callback")
-	local ultId = data.ult1ID
-	d(data.ult1ID)
-	d(data.ultValue)
-	local ultIcon = ultIconLookup[ultId] -- TODO: ASSUMING BACKBAR ULT FOR NOW, WILL CHANGE LATER
-	if not ultIcon then
-		ultIcon = GetAbilityIcon(ultId)
-		ultIconLookup[ultId] = ultIcon
+	local ult1Id = data.ult1ID
+	local ult1Icon = ultIconLookup[ult1Id]
+	if ult1Icon == nil then
+		ult1Icon = GetAbilityIcon(ult1Id)
+		ultIconLookup[ult1Id] = ult1Icon
 	end
-	frameDB[unitTag]:setUlt( data.ultValue / data.ult1Cost *100, ultIcon)
+
+	local ult2Id = data.ult2ID
+	local ult2Icon = ultIconLookup[ult2Id]
+	if ult2Icon == nil then
+		ult2Icon = GetAbilityIcon(ult2Id)
+		ultIconLookup[ult2Id] = ult2Icon
+	end
+
+	frameDB[unitTag]:setUlt(data.ultValue, data.ult1Cost, ult1Icon, data.ult2Cost, ult2Icon)
 	frameDB[unitTag].image:SetColor(1,1,1)
 end
 
 
-
-
-
-
-function group.readFromRDK(pingTag,x,y)
-	x = math.floor(x / group.rdkStep + 0.5) -- only x is needed, y contains mag + stam in a 7,1,7,1 bitstream
-	local outstreamX = group.readStream(x,{8,1,7})
-	local ultID = outstreamX[1]
-	local ultPercent = outstreamX[3]
-	--d(outstreamX)
-	if ultID > #group.rdkUlts then return end
-	local ultIcon = group.ultList[group.rdkUlts[ultID]]
-	if ultIcon then
-		frameDB[pingTag]:setUlt(ultPercent,ultIcon)
-		frameDB[pingTag].image:SetColor(0.6,0.2,0.2)
-	end
-
-
-	y = math.floor(y / group.rdkStep + 0.5)
-	local outstreamY = group.readStream(y,{7,1,7,1})
-	local mag = outstreamY[1]
-	local stam = outstreamY[3]
-	-- max for mag + stam = 50
-	--AD.last = outstreamY
-	if vars.UI == "Custom" and vars.showMagStam then
-		if frameDB[pingTag].magStamHidden then frameDB[pingTag]:SetMagStamHidden(false) end
-		frameDB[pingTag]:SetMag(mag,50)
-		frameDB[pingTag]:SetStam(stam,50)
-	end
-end
 
 
 
@@ -688,6 +671,8 @@ function group.updateSharing(sharing)
 		--LMP:UnregisterCallback('BeforePingAdded', group.pingCallback)
 		--LMP:UnregisterCallback('AfterPingRemoved', group.OnAfterPingRemoved)
 		group.lgcs:UnregisterForEvent(LibGroupCombatStats.EVENT_GROUP_ULT_UPDATE, group.lgcsCallback)
+		group.lgcs:UnregisterForEvent(LibGroupCombatStats.EVENT_PLAYER_ULT_UPDATE, group.lgcsPlayerCallback)
+
 		EVENT_MANAGER:UnregisterForEvent("AD Group Tool Unit Created", EVENT_UNIT_CREATED)
 		EVENT_MANAGER:UnregisterForEvent("AD Group Tool Unit Destroyed", EVENT_UNIT_DESTROYED)
 		EVENT_MANAGER:UnregisterForEvent("AD Group Tool Group Join", EVENT_GROUP_MEMBER_JOINED)
@@ -711,6 +696,8 @@ function group.updateSharing(sharing)
 		--LMP:RegisterCallback('BeforePingAdded', group.pingCallback)
 		--LMP:RegisterCallback('AfterPingRemoved', group.OnAfterPingRemoved)
 		group.lgcs:RegisterForEvent(LibGroupCombatStats.EVENT_GROUP_ULT_UPDATE, group.lgcsCallback)
+		group.lgcs:RegisterForEvent(LibGroupCombatStats.EVENT_PLAYER_ULT_UPDATE, group.lgcsPlayerCallback)
+		
 		EVENT_MANAGER:RegisterForEvent("AD Group Tool Unit Created", EVENT_UNIT_CREATED, group.unitCreate)
 		EVENT_MANAGER:RegisterForEvent("AD Group Tool Unit Destroyed", EVENT_UNIT_DESTROYED, group.unitDestroy)
 		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Join", EVENT_GROUP_MEMBER_JOINED, group.groupJoinLeave)
