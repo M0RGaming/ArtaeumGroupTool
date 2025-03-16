@@ -145,6 +145,11 @@ function group.init()
 		group.protocols.sharingBar:Finalize()
 
 
+		local GroupResources = LibGroupBroadcast:GetHandlerApi("GroupResources")
+		GroupResources:RegisterForStaminaChanges(group.protocols.onStamUpdate)
+		GroupResources:RegisterForMagickaChanges(group.protocols.onMagUpdate)
+
+
 
 		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Activated", EVENT_PLAYER_ACTIVATED, group.playerActivated)
 		group.createArrow()
@@ -155,15 +160,7 @@ function group.init()
 		SOUNDS.MAP_PING_REMOVE = nil
 
 
-		if AD.rdk then
-			if RdKGTool.util.networking.state.isRunning then
-				EVENT_MANAGER:UnregisterForUpdate("RdKGroupToolUtilNetworking")
-				RdKGTool.util.networking.state.isRunning = false
-			else
-				LMP:RegisterCallback("BeforePingAdded", RdKGTool.util.networking.OnBeforePingAdded)
-				LMP:RegisterCallback("AfterPingRemoved", RdKGTool.util.networking.OnAfterPingRemoved)
-			end
-		end
+		
 
 
 	end
@@ -256,8 +253,98 @@ end
 
 
 
+
+
+
+
+
+
+
+
+
+-- HANDLERS
+function group.handlers.onPing(unitTag, data)
+	--data.ping
+	if data.ping == false then return end
+	local px, py = GetMapPlayerPosition(unitTag)
+	group.arrow:SetTarget(px, py)
+	zo_callLater(function() group.arrow:SetTarget(0, 0) end, 12500)
+end
+
+function group.handlers.onCampLock(unitTag, data)
+	--data.lock
+	if data.lock then
+		frameDB[unitTag]:SetEdgeColor(1,0,0,1)
+	else
+		frameDB[unitTag]:SetEdgeColor(1,1,1,1)
+	end
+end
+
+local hammerWeilder = ''
+function group.handlers.onHammerUpdate(unitTag, data)
+	--data.percent
+	-- idk if the handler comes back if the player is the one who sent. I'm assuming no, but ill put a check anyways
+	if AreUnitsEqual(unitTag,'player') then d("Artaeum: PLAYER GOT PING") end
+	if (data.percent == 0) then
+		if (hammerWeilder == unitTag) then
+			if not HUD_DAEDRIC_ENERGY_METER:IsHidden() then HUD_DAEDRIC_ENERGY_METER:UpdateVisibility() end
+			hammerWeilder = ''
+		end
+	else
+		if (hammerWeilder == unitTag) then
+			if HUD_DAEDRIC_ENERGY_METER:IsHidden() then
+				HUD_DAEDRIC_ENERGY_METER:SetHiddenForReason("daedricArtifactInactive",false,SHOULD_FADE_OUT)
+			end
+			HUD_DAEDRIC_ENERGY_METER:UpdateEnergyValues(data.percent,1)
+		else
+			hammerWeilder = unitTag
+		end
+	end
+end
+
+function group.handlers.onSyncRequested(unitTag, data)
+	--data.requested
+	if data.requested then
+		-- send Sync
+	end
+end
+
+function group.handlers.onSync(unitTag, data)
+	--data.lock
+	--data.percent
+	--data.shareFB
+	group.handlers.onCampLock(unitTag, data)
+	group.handlers.onHammerUpdate(unitTag, data)
+	group.handlers.onSharingBarUpdate(unitTag, data)
+end
+
+function group.handlers.onSharingBarUpdate(unitTag, data)
+	--data.shareFB
+	-- TODO: DO THIS ENTIRE FUNCTION
+end
+
+function group.handlers.onStamUpdate(unitTag, unitName, current, max, percent)
+	if vars.UI == "Custom" and vars.showMagStam then
+		if frameDB[unitTag].magStamHidden then frameDB[unitTag]:SetMagStamHidden(false) end
+		frameDB[unitTag]:SetStam(percent,1)
+	end
+end
+
+function group.handlers.onMagUpdate(unitTag, unitName, current, max, percent)
+	if vars.UI == "Custom" and vars.showMagStam then
+		if frameDB[unitTag].magStamHidden then frameDB[unitTag]:SetMagStamHidden(false) end
+		frameDB[unitTag]:SetMag(percent,1)
+	end
+end
+
+
+
+
+
+
 --AD.hammer = 0
 function group.toSend:send()
+	return
 	local assistPing = self.assistPing and 1 or 0
 	self.assistPing = false
 	local campLock = (GetNextForwardCampRespawnTime() > GetGameTimeMilliseconds()) and 1 or 0
@@ -268,13 +355,13 @@ function group.toSend:send()
 
 
 
-
+--[[
 
 	local magCurrent, magMax = GetUnitPower('player',POWERTYPE_MAGICKA)
 	local magBar = math.floor(magCurrent/magMax*15)
 	local stamCurrent, stamMax = GetUnitPower('player',POWERTYPE_STAMINA)
 	local stamBar = math.floor(stamCurrent/stamMax*15)
-
+--]]
 	local xstream = {0,campLock,assistPing,hammerBar,ult.id,0}
 	local ystream = {ult.percent,0,magBar,stamBar}
 
@@ -306,127 +393,6 @@ end
 
 
 
-
-
--- HANDLERS
-function group.handlers.onPing(unitTag, data)
-	--data.ping
-end
-
-function group.handlers.onCampLock(unitTag, data)
-	--data.lock
-end
-
-function group.handlers.onHammerUpdate(unitTag, data)
-	--data.percent
-end
-
-function group.handlers.onSyncRequested(unitTag, data)
-	--data.requested
-end
-
-function group.handlers.onSync(unitTag, data)
-	--data.lock
-	--data.percent
-	--data.shareFB
-end
-
-function group.handlers.onSharingBarUpdate(unitTag, data)
-	--data.shareFB
-end
-
-
-local hammerWeilder = ''
-
-function group.pingCallback(pingType,pingTag,x,y,isLocalPlayerOwner)
-	--d(""..x.." "..y.." "..pingTag)
-	if(pingType == MAP_PIN_TYPE_PING) then
-		if frameDB[pingTag] then
-			local zone = GetUnitZoneIndex(pingTag)
-			if (zone == 632 or zone ==  659) then return end
-			
-			LGPS:PushCurrentMap()
-			SetMapToMapId(group.mapID)
-			x, y = LMP:GetMapPing(pingType, pingTag)
-
-			if(not LMP:IsPositionOnMap(x, y)) then
-				SetMapToMapListIndex(group.rdkMap) -- RDK's location
-				x, y = LMP:GetMapPing(pingType, pingTag)
-				--d("RDK from "..GetUnitDisplayName(pingTag))
-				--d(LMP:IsPositionOnMap(x, y))
-				--d("")
-				if (LMP:IsPositionOnMap(x, y)) then
-					-- RDK is sending ping
-					LGPS:PopCurrentMap()
-					LMP:SuppressPing(pingType, pingTag)
-					group.readFromRDK(pingTag,x,y)
-					return
-				else
-					LGPS:PopCurrentMap()
-					return
-				end
-			end
-			LGPS:PopCurrentMap()
-			LMP:SuppressPing(pingType, pingTag)
-
-			
-			--d(""..(x / group.stepSize + 0.5).." "..(y / group.stepSize + 0.5).." "..pingTag)
-			x = zo_round(x / group.stepSize + 0.5)
-			y = zo_round(y / group.stepSize + 0.5)
-
-			local outstreamX = group.readStream(x,{1,1,1,4,8,1})
-			local outstreamY = group.readStream(y,{7,1,4,4})
-
-
-
-
-			local campLock = (outstreamX[2] == 1) and true or false
-			if campLock then
-				frameDB[pingTag]:SetEdgeColor(1,0,0,1)
-			else
-				--AD.last = frameDB[pingTag]
-				frameDB[pingTag]:SetEdgeColor(1,1,1,1)
-			end
-
-			-- Handle assist pings
-			if (outstreamX[3] == 1) then
-				local px, py = GetMapPlayerPosition(pingTag)
-				group.arrow:SetTarget(px, py)
-				zo_callLater(function() group.arrow:SetTarget(0, 0) end, 12500)
-			end
-
-
-			if not AreUnitsEqual(pingTag,'player') then
-				if (outstreamX[4] == 0) then
-					if (hammerWeilder == pingTag) then
-						if not HUD_DAEDRIC_ENERGY_METER:IsHidden() then HUD_DAEDRIC_ENERGY_METER:UpdateVisibility() end
-						hammerWeilder = ''
-					end
-				else
-					if (hammerWeilder == pingTag) then
-						if HUD_DAEDRIC_ENERGY_METER:IsHidden() then
-							HUD_DAEDRIC_ENERGY_METER:SetHiddenForReason("daedricArtifactInactive",false,SHOULD_FADE_OUT)
-						end
-						HUD_DAEDRIC_ENERGY_METER:UpdateEnergyValues(outstreamX[4],15)
-					else
-						hammerWeilder = pingTag
-					end
-				end
-			end
-
-			--Handle Mag + Stam
-			local magPercent = outstreamY[3]/15
-			local stamPercent = outstreamY[4]/15
-			if vars.UI == "Custom" and vars.showMagStam then
-				if frameDB[pingTag].magStamHidden then frameDB[pingTag]:SetMagStamHidden(false) end
-				frameDB[pingTag]:SetMag(magPercent,1)
-				frameDB[pingTag]:SetStam(stamPercent,1)
-			end
-		else
-			LMP:SuppressPing(pingType, pingTag)
-		end
-	end
-end
 
 -- Adapted from RdK Group Tool
 function group.OnAfterPingRemoved(pingType, pingTag, x, y, isPingOwner)
