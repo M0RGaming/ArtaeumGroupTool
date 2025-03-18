@@ -8,7 +8,8 @@ local LGPS = LibGPS3
 
 
 local toplevels = {}
-local frameDB = {}
+group.frameDB = {}
+local frameDB = group.frameDB
 
 
 AD.last = {} -- TESTING
@@ -407,8 +408,12 @@ function group.lgcsPlayerCallback(player, data)
 	end
 end
 
+group.lgcsCallbackDebug = {}
+
 local ultIconLookup = {}
 function group.lgcsCallback(unitTag, data)
+	group.lgcsCallbackDebug[unitTag] = data --- DEBUG STUFF
+	
 	local ult1Id = data.ult1ID
 	local ult1Icon = ultIconLookup[ult1Id]
 	if ult1Icon == nil then
@@ -448,6 +453,18 @@ function group.updateOnline(_, unitTag, isOnline)
 	end
 end
 
+
+function group.updateRange(_, unitTag, nearby)
+	if frameDB[unitTag] then
+		frameDB[unitTag]:SetInGroupRange(nearby)
+	end
+end
+
+function group.updateRole(_, unitTag, role)
+	if frameDB[unitTag] then
+		frameDB[unitTag]:SetRole(role)
+	end
+end
 
 -- Adapted from zos
 function group.PowerUpdateHandlerFunction(unitTag, powerPoolIndex, powerType, powerPool, powerPoolMax)
@@ -681,6 +698,8 @@ function group.updateSharing(sharing)
 		EVENT_MANAGER:UnregisterForEvent("AD Group Tool Group Update", EVENT_GROUP_UPDATE)
 		EVENT_MANAGER:UnregisterForEvent("AD Group Tool Group Death", EVENT_UNIT_DEATH_STATE_CHANGED)
 		EVENT_MANAGER:UnregisterForEvent("AD Group Tool Group Connect", EVENT_GROUP_MEMBER_CONNECTED_STATUS)
+		EVENT_MANAGER:UnegisterForEvent("AD Group Tool Group Range", EVENT_GROUP_SUPPORT_RANGE_UPDATE)
+		EVENT_MANAGER:UnegisterForEvent("AD Group Tool Group Role", EVENT_GROUP_MEMBER_ROLE_CHANGED)
 		
 
 		if vars.UI == "Custom" then
@@ -705,7 +724,11 @@ function group.updateSharing(sharing)
 		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Change", EVENT_LEADER_UPDATE, group.groupLeadChange)
 		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Update", EVENT_GROUP_UPDATE, group.groupUpdate)
 		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Death", EVENT_UNIT_DEATH_STATE_CHANGED, group.updateDead)
-		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Connect", EVENT_GROUP_MEMBER_CONNECTED_STATUS, group.updateOnline)	
+		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Connect", EVENT_GROUP_MEMBER_CONNECTED_STATUS, group.updateOnline)
+		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Range", EVENT_GROUP_SUPPORT_RANGE_UPDATE, group.updateRange)
+		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Role", EVENT_GROUP_MEMBER_ROLE_CHANGED, group.updateRole)
+		
+		
 		--if IsUnitGrouped("player") then
 		--	EVENT_MANAGER:RegisterForUpdate("AD Group Tool Group Ping", vars.frequency, group.ping)
 		--end

@@ -49,7 +49,7 @@ end
 function frameBase:SetEdgeColor(...)
 	-- To be overwritten, indicates Camplocked
 end
-function frameBase:setUlt(percent, icon)
+function frameBase:setUlt(value, cost1, icon1, cost2, icon2)
 	-- To be overwritten, runs every time a data point comes in, sets the ult and percent
 end
 function frameBase:SetDead(dead)
@@ -61,6 +61,13 @@ end
 function frameBase:SetStam(value, max)
 	-- (optional) tells what the current mag/stam is
 end
+function frameBase:SetInGroupRange(value)
+	-- (optional) tells when someone is out of range
+end
+function frameBase:SetRole(value)
+	-- (optional) sets the role icon of the unit
+end
+
 
 frames.frameBase = frameBase
 
@@ -78,7 +85,7 @@ local classIcons = {
 }
 
 classIcons[117] = "esoui/art/icons/class/gamepad/gp_class_arcanist.dds"
-
+classIcons[0] = "/esoui/art/icons/heraldrycrests_misc_blank_01.dds"
 
 
 
@@ -105,8 +112,11 @@ function frameObject:new(unitTag, parent)
 	frame.unitTag = unitTag
 	frame.index = nil
 	frame.unit = ""
+	frame.displayName = ""
 	frame.originalHealthHeight = frame.health:GetHeight()
 	frame.magStamHidden = true
+
+	frame.hasUlt = false
 
 	frame.frame:SetHidden(true)
 
@@ -127,15 +137,20 @@ function frameObject:Update()
 	if self.index then
 
 		-- Unit Changed index
-		if self.unit == GetUnitDisplayName(self.unitTag) then
+		if self.unit == GetUnitName(self.unitTag) then
 			self:setAnchors()
 			self.frame:SetHidden(false)
+			self:SetInGroupRange(IsUnitInGroupSupportRange(self.unitTag))
 			self:SetOnline(IsUnitOnline(self.unitTag))
 
+			-- NOTE TO SELF: RUN A FUNCTION THAT SETS TEXTURES IF ULT IS WRONG
+
 		else -- Unit Changed
-			self.unit = GetUnitDisplayName(self.unitTag)
+			self.unit = GetUnitName(self.unitTag)
+			self.displayName = GetUnitDisplayName(self.unitTag)
 			local rgb = AD.vars.Group.colours.standardHealth
 			self.health:SetColor(rgb[1],rgb[2],rgb[3],rgb[4])
+			self.hasUlt = false
 
 			self:SetMag(0,1)
 			self:SetStam(0,1)
@@ -143,7 +158,9 @@ function frameObject:Update()
 
 			self:setName()
 			self:setGroupLeader()
+			self:SetInGroupRange(IsUnitInGroupSupportRange(self.unitTag))
 			self:SetOnline(IsUnitOnline(self.unitTag))
+			--[[ -- Should already be covered in SetOnline
 			local role = GetGroupMemberSelectedRole(self.unitTag)
 			if role == 0 then
 				local alliance = GetUnitAlliance(self.unitTag)
@@ -153,6 +170,7 @@ function frameObject:Update()
 			end
 			local class = GetUnitClassId(self.unitTag)
 			self.image2:SetTexture(classIcons[class])
+			--]]
 			self.backdrop:SetEdgeColor(1,1,1,1)
 			self.bar:SetValue(0)
 			self.bar2:SetValue(0)
@@ -164,6 +182,8 @@ function frameObject:Update()
 	else -- Unit Doesnt Exist anymore
 		self.frame:SetHidden(true)
 		self.unit = ""
+		self.hasUlt = false
+		self.displayName = ""
 	end
 end
 
@@ -175,7 +195,8 @@ function frameObject:setAnchors()
 	end
 end
 function frameObject:setName()
-	self.name:SetText(self.unit)
+	--self.name:SetText(self.unit)
+	self.name:SetText(self.displayName)
 end
 
 function frameObject:SetEdgeColor(...)
@@ -187,11 +208,11 @@ function frameObject:setGroupLeader()
 	local _,topl,parentframe,top,x,y,z = self.name:GetAnchor()
 	if IsUnitGroupLeader(self.unitTag) then
 		self.name:SetAnchor(topl, parentframe, top, 20, y)
-		self.name:SetWidth(135) -- 143 originally
+		self.name:SetWidth(143) -- 143 originally
 		self.groupLead:SetHidden(false)
 	else
 		self.name:SetAnchor(topl, parentframe, top, 0, y)
-		self.name:SetWidth(155) -- 163 originally
+		self.name:SetWidth(163) -- 163 originally
 		self.groupLead:SetHidden(true)
 	end
 end
@@ -247,8 +268,6 @@ function frameObject:DeathLoop()
         else
         	self.name:SetColor(1,0,0,1)
         end
-    elseif IsUnitReincarnating(unitTag) then
-        self.name:SetColor(0,0,1,1)
     else
     	local current, max = GetUnitPower(self.unitTag, POWERTYPE_HEALTH)
     	self.name:SetColor(1,1,1,1)
@@ -268,6 +287,17 @@ function frameObject:SetOnline(online)
 		self.frame:SetAlpha(1)
 		self.image:SetColor(1,1,1,1)
 		self.image2:SetColor(1,1,1,1)
+		if not self.hasUlt then
+			local role = GetGroupMemberSelectedRole(self.unitTag)
+			if role == 0 then
+				local alliance = GetUnitAlliance(self.unitTag)
+				self.image:SetTexture(alliances[alliance])
+			else
+				self.image:SetTexture(roles[role])
+			end
+			local class = GetUnitClassId(self.unitTag)
+			self.image2:SetTexture(classIcons[class])
+		end
 	else
 		self.name:SetColor(1,1,1,0.5)
 		self.frame:SetAlpha(0.7)
@@ -288,7 +318,25 @@ function frameObject:SetOnline(online)
 		self.bar2:SetMinMax(0,100)
 		self.bar2:SetValue(0)
 
+		self.hasUlt = false
 		self.ultPercent:SetText("")
+	end
+end
+
+function frameObject:SetInGroupRange(nearby)
+	if nearby then
+		self.frame:SetAlpha(1)
+	else
+		self.frame:SetAlpha(0.6)
+	end
+end
+
+function frameObject:SetRole(role)
+	if role == 0 then
+		local alliance = GetUnitAlliance(self.unitTag)
+		self.image:SetTexture(alliances[alliance])
+	else
+		self.image:SetTexture(roles[role])
 	end
 end
 
@@ -326,6 +374,7 @@ function frameObject:setUlt(ultValue, ult1Cost, icon1, ult2Cost, icon2)
 		local rgb = AD.vars.Group.colours.standardHealth
 		self.health:SetColor(rgb[1],rgb[2],rgb[3],rgb[4])
 	end
+	self.hasUlt = true
 end
 
 
@@ -400,8 +449,9 @@ end
 
 function vanillaFrame:Update()
 	-- Unit Changed
-	if not self.unit == GetUnitDisplayName(self.unitTag) then
-		self.unit = GetUnitDisplayName(self.unitTag)
+	if not self.unit == GetUnitName(self.unitTag) then
+		self.unit = GetUnitName(self.unitTag)
+		self.displayName = GetUnitDisplayName(self.unitTag)
 		local rgb = AD.vars.Group.colours.standardHealth
 		self.health:SetColor(rgb[1],rgb[2],rgb[3],rgb[4])
 		local role = GetGroupMemberSelectedRole(self.unitTag)
