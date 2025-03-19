@@ -140,7 +140,7 @@ function frameObject:Update()
 		if self.unit == GetUnitName(self.unitTag) then
 			self:setAnchors()
 			self.frame:SetHidden(false)
-			self:SetInGroupRange(IsUnitInGroupSupportRange(self.unitTag))
+			
 			self:SetOnline(IsUnitOnline(self.unitTag))
 
 			-- NOTE TO SELF: RUN A FUNCTION THAT SETS TEXTURES IF ULT IS WRONG
@@ -158,19 +158,9 @@ function frameObject:Update()
 
 			self:setName()
 			self:setGroupLeader()
-			self:SetInGroupRange(IsUnitInGroupSupportRange(self.unitTag))
+			
 			self:SetOnline(IsUnitOnline(self.unitTag))
-			--[[ -- Should already be covered in SetOnline
-			local role = GetGroupMemberSelectedRole(self.unitTag)
-			if role == 0 then
-				local alliance = GetUnitAlliance(self.unitTag)
-				self.image:SetTexture(alliances[alliance])
-			else
-				self.image:SetTexture(roles[role])
-			end
-			local class = GetUnitClassId(self.unitTag)
-			self.image2:SetTexture(classIcons[class])
-			--]]
+
 			self.backdrop:SetEdgeColor(1,1,1,1)
 			self.bar:SetValue(0)
 			self.bar2:SetValue(0)
@@ -261,6 +251,12 @@ function frameObject:DeathLoop()
     end
 
     if IsUnitDead(unitTag) then
+
+    	if self.health:GetValue() ~= 0 then -- hypotentically fixes the bug where dead people show health bars, prob should find a better way
+    		local min, max = self.health:GetMinMax()
+    		self:SetHealth(0,max)
+    	end
+
         if IsUnitBeingResurrected(unitTag) then
             self.name:SetColor(1,1,0,1)
         elseif DoesUnitHaveResurrectPending(unitTag) then
@@ -284,7 +280,8 @@ function frameObject:SetOnline(online)
 	if online then
 		self.name:SetColor(1,1,1,1)
 		self:SetHealth(current,max)
-		self.frame:SetAlpha(1)
+		--self.frame:SetAlpha(1)
+		self:SetInGroupRange(IsUnitInGroupSupportRange(self.unitTag))
 		self.image:SetColor(1,1,1,1)
 		self.image2:SetColor(1,1,1,1)
 		if not self.hasUlt then
@@ -327,7 +324,7 @@ function frameObject:SetInGroupRange(nearby)
 	if nearby then
 		self.frame:SetAlpha(1)
 	else
-		self.frame:SetAlpha(0.6)
+		self.frame:SetAlpha(0.4)
 	end
 end
 
@@ -343,10 +340,10 @@ end
 function frameObject:setUlt(ultValue, ult1Cost, icon1, ult2Cost, icon2)
 	local percent1
 	local percent2
-	if ult1Cost == 0 then percent1 = 0 else
+	if ult1Cost == 0 then percent1 = 100 else
 		percent1 = ultValue / ult1Cost * 100
 	end
-	if ult2Cost == 0 then percent2 = 0 else
+	if ult2Cost == 0 then percent2 = 100 else
 		percent2 = ultValue / ult2Cost * 100
 	end
 

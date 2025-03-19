@@ -156,10 +156,6 @@ function group.init()
 		group.createArrow()
 		group.arrow:SetTarget(0, 0)
 
-	    -- Mute all ping sounds.
-		SOUNDS.MAP_PING = nil
-		SOUNDS.MAP_PING_REMOVE = nil
-
 
 		
 
@@ -532,9 +528,9 @@ function group.groupJoinLeave(eventCode, _, _, isLocalPlayer)
 	group.groupUpdate()
 	if isLocalPlayer then
 		if IsUnitGrouped('player') then
-			EVENT_MANAGER:RegisterForUpdate("AD Group Tool Group Ping", vars.frequency, group.ping)
+			--EVENT_MANAGER:RegisterForUpdate("AD Group Tool Group Ping", vars.frequency, group.ping)
 		else
-			EVENT_MANAGER:UnregisterForUpdate("AD Group Tool Group Ping")
+			--EVENT_MANAGER:UnregisterForUpdate("AD Group Tool Group Ping")
 		end
 	end
 end
@@ -698,8 +694,9 @@ function group.updateSharing(sharing)
 		EVENT_MANAGER:UnregisterForEvent("AD Group Tool Group Update", EVENT_GROUP_UPDATE)
 		EVENT_MANAGER:UnregisterForEvent("AD Group Tool Group Death", EVENT_UNIT_DEATH_STATE_CHANGED)
 		EVENT_MANAGER:UnregisterForEvent("AD Group Tool Group Connect", EVENT_GROUP_MEMBER_CONNECTED_STATUS)
-		EVENT_MANAGER:UnegisterForEvent("AD Group Tool Group Range", EVENT_GROUP_SUPPORT_RANGE_UPDATE)
-		EVENT_MANAGER:UnegisterForEvent("AD Group Tool Group Role", EVENT_GROUP_MEMBER_ROLE_CHANGED)
+		EVENT_MANAGER:UnregisterForEvent("AD Group Tool Group Range", EVENT_GROUP_SUPPORT_RANGE_UPDATE)
+		EVENT_MANAGER:UnregisterForEvent("AD Group Tool Group Role", EVENT_GROUP_MEMBER_ROLE_CHANGED)
+		EVENT_MANAGER:UnregisterForEvent("AD Group Tool Group Frames Activated", EVENT_PLAYER_ACTIVATED)
 		
 
 		if vars.UI == "Custom" then
@@ -727,6 +724,7 @@ function group.updateSharing(sharing)
 		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Connect", EVENT_GROUP_MEMBER_CONNECTED_STATUS, group.updateOnline)
 		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Range", EVENT_GROUP_SUPPORT_RANGE_UPDATE, group.updateRange)
 		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Role", EVENT_GROUP_MEMBER_ROLE_CHANGED, group.updateRole)
+		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Frames Activated", EVENT_PLAYER_ACTIVATED, group.groupUpdate)
 		
 		
 		--if IsUnitGrouped("player") then

@@ -1,0 +1,24 @@
+name: CreateRelease
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  hello_world_job:
+    runs-on: ubuntu-latest
+    name: Pushing
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          path: 'ArtaeumGroupTool'
+
+      - name: Zip release
+        run: 7z a ArtaeumGroupTool.zip * -xr!*.git*
+
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ArtaeumGroupTool.zip
