@@ -118,10 +118,48 @@ function frameObject:new(unitTag, parent)
 
 	frame.hasUlt = false
 
+
+	frame.health.barControls = {frame.health}
+	frame.visualizer = ZO_UnitAttributeVisualizer:New(unitTag, nil, frame.health)
+	local rgb = AD.vars.Group.colours.standardHealth
+	local grad = ZO_ColorDef:New(unpack(rgb))
+
+	local VISUALIZER_POWER_SHIELD_LAYOUT_DATA =
+	{
+		barLeftOverlayTemplate = "AD_Group_ShieldBarTemplate",
+		fakeHealthGradientOverride = {grad,grad},
+		--noHealingGradientOverride = { ZO_ColorDef:New(0,0,0,1), ZO_ColorDef:New(0,0,0,1) },
+	}
+	frame.visualizer:AddModule(ZO_UnitVisualizer_PowerShieldModule:New(VISUALIZER_POWER_SHIELD_LAYOUT_DATA))
+
+	frame.healthEffects = {}
+
 	frame.frame:SetHidden(true)
 
 
 	return frame
+end
+
+
+function frameObject:GetHealthEffects() -- might replace these conditionals with a func to get/check (or just always reassign)
+	if self.healthEffects.shield == nil then
+		self.healthEffects.shield = self.frame:GetNamedChild("PowerShieldLeftOverlay")
+	end
+	if self.healthEffects.shield ~= nil then
+		if self.healthEffects.trauma == nil then
+			self.healthEffects.trauma = self.healthEffects.shield:GetNamedChild("Trauma")
+		end
+		if self.healthEffects.fakeHealth == nil then
+			self.healthEffects.fakeHealth = self.healthEffects.shield:GetNamedChild("FakeHealth")
+		end
+		if self.healthEffects.noHealingInner == nil then
+			self.healthEffects.noHealingInner = self.healthEffects.shield:GetNamedChild("NoHealingInner")
+		end
+		if self.healthEffects.fakeNoHealingInner == nil then
+			self.healthEffects.fakeNoHealingInner = self.healthEffects.shield:GetNamedChild("FakeNoHealingInner")
+		end
+	end
+	return self.healthEffects
 end
 
 
@@ -149,7 +187,12 @@ function frameObject:Update()
 			self.unit = GetUnitName(self.unitTag)
 			self.displayName = GetUnitDisplayName(self.unitTag)
 			local rgb = AD.vars.Group.colours.standardHealth
-			self.health:SetColor(rgb[1],rgb[2],rgb[3],rgb[4])
+			self.health:SetColor(unpack(rgb))
+			local healthEffects = self:GetHealthEffects()
+			if healthEffects.fakeHealth ~= nil then
+				healthEffects.fakeHealth:SetColor(unpack(rgb))
+			end
+
 			self.hasUlt = false
 
 			self:SetMag(0,1)
@@ -223,10 +266,15 @@ function frameObject:SetMagStamHidden(value)
 	self.mag:SetHidden(value)
 	self.stam:SetHidden(value)
 	self.magStamHidden = value
-	if value then
-		self.health:SetHeight(self.originalHealthHeight)
-	else
+	local newHeight = self.originalHealthHeight
+
+	if not value then
 		self.health:SetHeight(self.originalHealthHeight-8)
+	end
+	self.health:SetHeight(newHeight)
+	local healthEffects = self:GetHealthEffects()
+	for i,v in pairs(healthEffects) do
+		v:SetHealth(newHeight)
 	end
 end
 
@@ -245,31 +293,31 @@ end
 
 function frameObject:DeathLoop()
 	local unitTag = self.unitTag
-    if not DoesUnitExist(unitTag) then
-    	EVENT_MANAGER:UnregisterForUpdate("AD Res " .. self.unitTag)
-    	return
-    end
+	if not DoesUnitExist(unitTag) then
+		EVENT_MANAGER:UnregisterForUpdate("AD Res " .. self.unitTag)
+		return
+	end
 
-    if IsUnitDead(unitTag) then
+	if IsUnitDead(unitTag) then
 
-    	if self.health:GetValue() ~= 0 then -- hypotentically fixes the bug where dead people show health bars, prob should find a better way
-    		local min, max = self.health:GetMinMax()
-    		self:SetHealth(0,max)
-    	end
+		if self.health:GetValue() ~= 0 then -- hypotentically fixes the bug where dead people show health bars, prob should find a better way
+			local min, max = self.health:GetMinMax()
+			self:SetHealth(0,max)
+		end
 
-        if IsUnitBeingResurrected(unitTag) then
-            self.name:SetColor(1,1,0,1)
-        elseif DoesUnitHaveResurrectPending(unitTag) then
-            self.name:SetColor(0,1,0,1)
-        else
-        	self.name:SetColor(1,0,0,1)
-        end
-    else
-    	local current, max = GetUnitPower(self.unitTag, POWERTYPE_HEALTH)
-    	self.name:SetColor(1,1,1,1)
-    	self:SetHealth(current,max)
-        EVENT_MANAGER:UnregisterForUpdate("AD Res " .. self.unitTag)
-    end
+		if IsUnitBeingResurrected(unitTag) then
+			self.name:SetColor(1,1,0,1)
+		elseif DoesUnitHaveResurrectPending(unitTag) then
+			self.name:SetColor(0,1,0,1)
+		else
+			self.name:SetColor(1,0,0,1)
+		end
+	else
+		local current, max = GetUnitPower(self.unitTag, POWERTYPE_HEALTH)
+		self.name:SetColor(1,1,1,1)
+		self:SetHealth(current,max)
+		EVENT_MANAGER:UnregisterForUpdate("AD Res " .. self.unitTag)
+	end
 end
 
 
@@ -363,13 +411,15 @@ function frameObject:setUlt(ultValue, ult1Cost, icon1, ult2Cost, icon2)
 		maxedUlt = true
 	end
 
-	
+
+	local rgb = AD.vars.Group.colours.standardHealth
 	if maxedUlt then
 		local rgb = AD.vars.Group.colours.fullUlt
-		self.health:SetColor(rgb[1],rgb[2],rgb[3],rgb[4])
-	else
-		local rgb = AD.vars.Group.colours.standardHealth
-		self.health:SetColor(rgb[1],rgb[2],rgb[3],rgb[4])
+	end
+	self.health:SetColor(unpack(rgb))
+	local healthEffects = self:GetHealthEffects()
+	if healthEffects.fakeHealth ~= nil then
+		healthEffects.fakeHealth:SetColor(unpack(rgb))
 	end
 	self.hasUlt = true
 end
@@ -504,27 +554,27 @@ end
 
 function vanillaFrame:DeathLoop()
 	local unitTag = self.unitTag
-    if not DoesUnitExist(unitTag) then
-    	EVENT_MANAGER:UnregisterForUpdate("AD Res " .. self.unitTag)
-    	return
-    end
+	if not DoesUnitExist(unitTag) then
+		EVENT_MANAGER:UnregisterForUpdate("AD Res " .. self.unitTag)
+		return
+	end
 
-    if IsUnitDead(unitTag) then
-        if IsUnitBeingResurrected(unitTag) then
-            self.status:SetColor(1,1,0,1)
-        elseif DoesUnitHaveResurrectPending(unitTag) then
-            self.status:SetColor(0,1,0,1)
-        else
-        	self.status:SetColor(1,0,0,1)
-        end
-    elseif IsUnitReincarnating(unitTag) then
-        self.status:SetColor(0,0,1,1)
-    else
-    	self.status:SetColor(1,1,1,1)
-    	--self.status:SetText("")
-    	self.statusLock = false
-        EVENT_MANAGER:UnregisterForUpdate("AD Res " .. self.unitTag)
-    end
+	if IsUnitDead(unitTag) then
+		if IsUnitBeingResurrected(unitTag) then
+			self.status:SetColor(1,1,0,1)
+		elseif DoesUnitHaveResurrectPending(unitTag) then
+			self.status:SetColor(0,1,0,1)
+		else
+			self.status:SetColor(1,0,0,1)
+		end
+	elseif IsUnitReincarnating(unitTag) then
+		self.status:SetColor(0,0,1,1)
+	else
+		self.status:SetColor(1,1,1,1)
+		--self.status:SetText("")
+		self.statusLock = false
+		EVENT_MANAGER:UnregisterForUpdate("AD Res " .. self.unitTag)
+	end
 end
 
 

@@ -112,5 +112,48 @@
 
 
 
+        <StatusBar name="AD_Group_ShieldBarTemplate" inherits="ZO_PowerShieldBar" virtual="true">
+            <Controls>
+                <StatusBar name="$(parent)Trauma" inherits="ZO_DefaultStatusBarBase" level="ZO_ATTRIBUTE_BAR_POWER_SHIELD_TRAUMA_LEVEL">
+                    <Anchor point="RIGHT" relativePoint="LEFT" offsetX="11" />
+                </StatusBar>
+
+                <StatusBar name="$(parent)FakeHealth" inherits="ZO_DefaultStatusBarBase" level="ZO_ATTRIBUTE_BAR_POWER_SHIELD_FAKE_HEALTH_LEVEL">
+                    <Anchor point="RIGHT" relativeTo="$(parent)Trauma" relativePoint="LEFT" offsetX="11" />
+                </StatusBar>
+
+                <StatusBar name="$(parent)NoHealingInner" inherits="ZO_DefaultStatusBarBase" level="ZO_ATTRIBUTE_BAR_POWER_SHIELD_NO_HEALING_LEVEL">
+                    <Anchor point="RIGHT" relativeTo="$(parent)Trauma" relativePoint="LEFT" offsetX="11" />
+                </StatusBar>
+
+                <StatusBar name="$(parent)FakeNoHealingInner" inherits="ZO_DefaultStatusBarBase" level="ZO_ATTRIBUTE_BAR_POWER_SHIELD_FAKE_NO_HEALING_INNER_LEVEL">
+                    <Anchor point="RIGHT" relativeTo="$(parent)Trauma" relativePoint="LEFT" offsetX="11" />
+                </StatusBar>
+            </Controls>
+        </StatusBar>
+        
+    	<StatusBar name="AD_Group_ShieldBarTemplate_Keyboard_Template" inherits="ZO_PowerShieldBar ZO_DefaultStatusBarBase" virtual="true">
+    		<Dimensions y="29" />
+            <Controls>
+                <StatusBar name="$(parent)Trauma" inherits="ZO_DefaultStatusBarBase">
+                    <Dimensions y="29" />
+                </StatusBar>
+
+                <StatusBar name="$(parent)FakeHealth" inherits="ZO_DefaultStatusBarBase">
+                	<Dimensions y="29" />
+                </StatusBar>
+
+                <StatusBar name="$(parent)NoHealingInner" inherits="ZO_DefaultStatusBarBase">
+                	<Dimensions y="29" />
+                </StatusBar>
+
+                <StatusBar name="$(parent)FakeNoHealingInner" inherits="ZO_DefaultStatusBarBase">
+                	<Dimensions y="29" />
+                </StatusBar>
+            </Controls>
+        </StatusBar>
+
+
+
 	</Controls>
 </GuiXml>
