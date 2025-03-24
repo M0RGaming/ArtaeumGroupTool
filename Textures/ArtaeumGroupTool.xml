@@ -153,6 +153,27 @@
             </Controls>
         </StatusBar>
 
+        <StatusBar name="AD_Group_ShieldBarTemplate_Gamepad_Template" inherits="ZO_PowerShieldBar ZO_DefaultStatusBarBase" virtual="true">
+    		<Dimensions y="29" />
+            <Controls>
+                <StatusBar name="$(parent)Trauma" inherits="ZO_DefaultStatusBarBase">
+                    <Dimensions y="29" />
+                </StatusBar>
+
+                <StatusBar name="$(parent)FakeHealth" inherits="ZO_DefaultStatusBarBase">
+                	<Dimensions y="29" />
+                </StatusBar>
+
+                <StatusBar name="$(parent)NoHealingInner" inherits="ZO_DefaultStatusBarBase">
+                	<Dimensions y="29" />
+                </StatusBar>
+
+                <StatusBar name="$(parent)FakeNoHealingInner" inherits="ZO_DefaultStatusBarBase">
+                	<Dimensions y="29" />
+                </StatusBar>
+            </Controls>
+        </StatusBar>
+
 
 
 	</Controls>

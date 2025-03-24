@@ -130,9 +130,25 @@ function frameObject:new(unitTag, parent)
 		fakeHealthGradientOverride = {grad,grad},
 		--noHealingGradientOverride = { ZO_ColorDef:New(0,0,0,1), ZO_ColorDef:New(0,0,0,1) },
 	}
-	frame.visualizer:AddModule(ZO_UnitVisualizer_PowerShieldModule:New(VISUALIZER_POWER_SHIELD_LAYOUT_DATA))
+
+	frame.shieldVis = ZO_UnitVisualizer_PowerShieldModule:New(VISUALIZER_POWER_SHIELD_LAYOUT_DATA)
+	frame.visualizer:AddModule(frame.shieldVis)
+
+	frame.shieldVis:InitializeBarValues()
+
+
+	-- THIS IS WEIRD, TODO: REPLACE LATER
+
+	---aaaa = frame
+	--frame.health.barControls = {}
+	--a = frame
+	--aa = ZO_ShallowTableCopy(frame.shieldVis)
+	--aaa = ZO_ShallowTableCopy(frame.shieldVis.attributeInfo)
+	--aaaa = ZO_ShallowTableCopy(frame.shieldVis.attributeBarControls)
+	frame.shieldVis:ShowOverlay(frame.shieldVis.attributeBarControls[ATTRIBUTE_HEALTH], frame.shieldVis.attributeInfo[ATTRIBUTE_HEALTH])
 
 	frame.healthEffects = {}
+	frame:GetHealthEffects()
 
 	frame.frame:SetHidden(true)
 
@@ -143,7 +159,7 @@ end
 
 function frameObject:GetHealthEffects() -- might replace these conditionals with a func to get/check (or just always reassign)
 	if self.healthEffects.shield == nil then
-		self.healthEffects.shield = self.frame:GetNamedChild("PowerShieldLeftOverlay")
+		self.healthEffects.shield = self.health:GetNamedChild("PowerShieldLeftOverlay")
 	end
 	if self.healthEffects.shield ~= nil then
 		if self.healthEffects.trauma == nil then
@@ -188,9 +204,9 @@ function frameObject:Update()
 			self.displayName = GetUnitDisplayName(self.unitTag)
 			local rgb = AD.vars.Group.colours.standardHealth
 			self.health:SetColor(unpack(rgb))
-			local healthEffects = self:GetHealthEffects()
-			if healthEffects.fakeHealth ~= nil then
-				healthEffects.fakeHealth:SetColor(unpack(rgb))
+			--local healthEffects = self:GetHealthEffects()
+			if self.healthEffects.fakeHealth ~= nil then
+				self.healthEffects.fakeHealth:SetColor(unpack(rgb))
 			end
 
 			self.hasUlt = false
@@ -272,9 +288,9 @@ function frameObject:SetMagStamHidden(value)
 		self.health:SetHeight(self.originalHealthHeight-8)
 	end
 	self.health:SetHeight(newHeight)
-	local healthEffects = self:GetHealthEffects()
-	for i,v in pairs(healthEffects) do
-		v:SetHealth(newHeight)
+	--local healthEffects = self:GetHealthEffects()
+	for i,v in pairs(self.healthEffects) do
+		v:SetHeight(newHeight)
 	end
 end
 
@@ -414,12 +430,12 @@ function frameObject:setUlt(ultValue, ult1Cost, icon1, ult2Cost, icon2)
 
 	local rgb = AD.vars.Group.colours.standardHealth
 	if maxedUlt then
-		local rgb = AD.vars.Group.colours.fullUlt
+		rgb = AD.vars.Group.colours.fullUlt
 	end
 	self.health:SetColor(unpack(rgb))
-	local healthEffects = self:GetHealthEffects()
-	if healthEffects.fakeHealth ~= nil then
-		healthEffects.fakeHealth:SetColor(unpack(rgb))
+	--local healthEffects = self:GetHealthEffects()
+	if self.healthEffects.fakeHealth ~= nil then
+		self.healthEffects.fakeHealth:SetColor(unpack(rgb))
 	end
 	self.hasUlt = true
 end
