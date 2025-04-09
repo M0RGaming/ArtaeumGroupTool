@@ -274,7 +274,7 @@ function group.handlers.onHammerUpdate(unitTag, data)
 	--data.hammer
 	-- player also gets their own messages
 	if AreUnitsEqual(unitTag,'player') then
-		lgcsUpdate()
+		lgcsUpdate(unitTag)
 		return
 	end
 
@@ -290,7 +290,7 @@ function group.handlers.onHammerUpdate(unitTag, data)
 		end
 		HUD_DAEDRIC_ENERGY_METER:UpdateEnergyValues(data.hammer,1)
 	end
-	lgcsUpdate()
+	lgcsUpdate(unitTag)
 end
 
 function group.handlers.onSync(unitTag, data)
