@@ -363,9 +363,25 @@ function group.sendHammer(_, unit, powerIndex, powerType, current, max)
 	group.send(nil, hammerBar, nil)
 end
 
-function group.sendLock()
-	-- TODO: ALL OF THIS
+
+local activeLockUpdate = false
+
+function group.updateLock()
+	-- run every 10 seconds
+	if (GetNextForwardCampRespawnTime() <= GetGameTimeMilliseconds()) then
+		group.send(false)
+		EVENT_MANAGER:UnregisterForUpdate("AD Group Tool Camp Lock Check")
+	end
 end
+
+function group.newLock()
+	-- TODO: ALL OF THIS
+	group.send(true)
+	EVENT_MANAGER:RegisterForUpdate("AD Group Tool Camp Lock Check", 10000, group.updateLock)
+	activeLockUpdate = true
+end
+
+
 
 function group.sync(requestSync)
 	local hammerCurrent, hammerMax = GetUnitPower('player',POWERTYPE_DAEDRIC)
@@ -373,6 +389,10 @@ function group.sync(requestSync)
 	local hammerBar = hammerCurrent/hammerMax
 
 	local campLock = GetNextForwardCampRespawnTime() > GetGameTimeMilliseconds()
+	if not activeLockUpdate then
+		EVENT_MANAGER:RegisterForUpdate("AD Group Tool Camp Lock Check", 10000, group.updateLock)
+		activeLockUpdate = true
+	end
 
 	group.send(campLock, hammerBar, requestSync)
 end
@@ -733,6 +753,7 @@ function group.updateSharing(sharing)
 		EVENT_MANAGER:UnregisterForEvent("AD Group Tool Group Range", EVENT_GROUP_SUPPORT_RANGE_UPDATE)
 		EVENT_MANAGER:UnregisterForEvent("AD Group Tool Group Role", EVENT_GROUP_MEMBER_ROLE_CHANGED)
 		EVENT_MANAGER:UnregisterForEvent("AD Group Tool Group Daedric Power", EVENT_POWER_UPDATE)
+		EVENT_MANAGER:UnregisterForEvent("AD Group Tool Group Camp", EVENT_FORWARD_CAMP_RESPAWN_TIMER_BEGINS)
 		
 
 		if vars.UI == "Custom" then
@@ -763,6 +784,8 @@ function group.updateSharing(sharing)
 		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Daedric Power", EVENT_POWER_UPDATE, group.sendHammer)
 		EVENT_MANAGER:AddFilterForEvent("AD Group Tool Group Daedric Power", EVENT_POWER_UPDATE, REGISTER_FILTER_POWER_TYPE, COMBAT_MECHANIC_FLAGS_DAEDRIC)
 		EVENT_MANAGER:AddFilterForEvent("AD Group Tool Group Daedric Power", EVENT_POWER_UPDATE, REGISTER_FILTER_UNIT_TAG, "player")
+		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Camp", EVENT_FORWARD_CAMP_RESPAWN_TIMER_BEGINS, group.newLock)
+		
 		
 		
 		--if IsUnitGrouped("player") then
