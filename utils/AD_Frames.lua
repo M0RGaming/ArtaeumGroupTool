@@ -181,7 +181,7 @@ end
 
 
 
-function frameObject:Update()
+function frameObject:Update(hasUlt)
 	self.index = GetGroupIndexByUnitTag(self.unitTag)
 	--self.index = tonumber(self.unitTag:sub(6, 7))
 	--d(self.index)
@@ -210,6 +210,7 @@ function frameObject:Update()
 			end
 
 			self.hasUlt = false
+			if hasUlt ~= nil then self.hasUlt = hasUlt end
 
 			self:SetMag(0,1)
 			self:SetStam(0,1)
@@ -393,11 +394,15 @@ function frameObject:SetInGroupRange(nearby)
 end
 
 function frameObject:SetRole(role)
-	if role == 0 then
-		local alliance = GetUnitAlliance(self.unitTag)
-		self.image:SetTexture(alliances[alliance])
-	else
-		self.image:SetTexture(roles[role])
+	if not self.hasUlt then
+		if role == 0 then
+			local alliance = GetUnitAlliance(self.unitTag)
+			self.image:SetTexture(alliances[alliance])
+		else
+			self.image:SetTexture(roles[role])
+		end
+		local class = GetUnitClassId(self.unitTag)
+		self.image2:SetTexture(classIcons[class])
 	end
 end
 

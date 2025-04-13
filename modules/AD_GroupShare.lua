@@ -266,7 +266,10 @@ end
 
 local function lgcsUpdate(unitTag)
 	local realData = group.lgcs:GetUnitULT(unitTag)
-	group.lgcsCallback(unitTag, realData)
+	a = realData
+	if realData and realData._data then
+		group.lgcsCallback(unitTag, realData._data)
+	end
 end
 
 local hammerWeilder = ''
@@ -546,7 +549,7 @@ end
 
 
 
-
+--[[
 --Need to find alternative
 function group.unitCreate(_, unitTag)
 	if not (unitTag:find("group") or IsUnitGrouped(unitTag)) then return end
@@ -559,10 +562,60 @@ function group.unitDestroy(_, unitTag)
 	--d("Destroyed "..unitTag)
 	group.groupUpdate()
 end
+/script a = ArtaeumGroupTool.Group.lgcs:GetUnitULT('group1')
+--]]
+
+function group.unitCreate(_, unitTag)
+	--d("Unit created "..unitTag)
+	if ZO_Group_IsGroupUnitTag(unitTag) and frameDB[unitTag] then
+		local unitUlt = group.lgcs:GetUnitULT(unitTag)
+		local hasUlt = false
+		if ((unitUlt) and (not ((unitUlt._data.ult1ID == 0) and (unitUlt._data.ult2ID == 0)))) then
+			hasUlt = true
+		end
+		frameDB[unitTag]:Update(hasUlt)
+		--d("Unit updated "..unitTag.. " with ult ".. tostring(hasUlt))
+		if hasUlt then
+			group.lgcsCallback(unitTag, unitUlt._data)
+		end
+    end
+    --d("")
+end
+
+function group.unitDestroy(_, unitTag)
+	--d("Actually, unit destroyed")
+	group.unitCreate(_, unitTag)
+end
+-- https://github.com/esoui/esoui/blob/440a96c7883305fe0001bc3ce07319efa26e42e7/esoui/ingame/unitframes/unitframes.lua#L2766
+
+-- Events that consider all possible group join/leave events and adapt the UI respectivly.
+function group.groupJoinLeave(eventCode, _, _, isLocalPlayer)
+	group.groupUpdate()
+end
 
 
 
+-- TODO: FIGURE OUT WHY THIS IS RUNNING ALOT
+function group.groupUpdate()
+	local groupStats = group.lgcs:GetGroupStats()
+	for i=1,12 do
+		local unitTag = 'group'..i
+		if frameDB[unitTag] then
 
+			local hasUlt = false
+			local unitStats = groupStats[unitTag]
+			if ((unitStats) and (not ((unitStats.ult.ult1ID == 0) and (unitStats.ult.ult2ID == 0)))) then
+				--d("Unit ".. GetUnitDisplayName(unitTag).. ' has ult')
+				hasUlt = true
+			end
+
+			frameDB[unitTag]:Update(hasUlt)
+			if hasUlt then
+				group.lgcsCallback(unitTag, unitStats.ult)
+			end
+		end
+	end
+end
 
 
 
@@ -575,28 +628,6 @@ function group.groupLeadChange()
 		end
 	end
 end
-
-
--- Events that consider all possible group join/leave events and adapt the UI respectivly.
-function group.groupJoinLeave(eventCode, _, _, isLocalPlayer)
-	group.groupUpdate()
-	if isLocalPlayer then
-		if IsUnitGrouped('player') then
-			--EVENT_MANAGER:RegisterForUpdate("AD Group Tool Group Ping", vars.frequency, group.ping)
-		else
-			--EVENT_MANAGER:UnregisterForUpdate("AD Group Tool Group Ping")
-		end
-	end
-end
-
-function group.groupUpdate()
-	for i=1,12 do
-		if frameDB['group'..i] then
-			frameDB['group'..i]:Update()
-		end
-	end
-end
-
 
 
 
@@ -770,9 +801,10 @@ function group.updateSharing(sharing)
 		--LMP:RegisterCallback('AfterPingRemoved', group.OnAfterPingRemoved)
 		group.lgcs:RegisterForEvent(LibGroupCombatStats.EVENT_GROUP_ULT_UPDATE, group.lgcsCallback)
 		group.lgcs:RegisterForEvent(LibGroupCombatStats.EVENT_PLAYER_ULT_UPDATE, group.lgcsPlayerCallback)
-		
 		EVENT_MANAGER:RegisterForEvent("AD Group Tool Unit Created", EVENT_UNIT_CREATED, group.unitCreate)
+		EVENT_MANAGER:AddFilterForEvent("AD Group Tool Unit Created", EVENT_UNIT_CREATED, REGISTER_FILTER_UNIT_TAG_PREFIX, "group")
 		EVENT_MANAGER:RegisterForEvent("AD Group Tool Unit Destroyed", EVENT_UNIT_DESTROYED, group.unitDestroy)
+		EVENT_MANAGER:AddFilterForEvent("AD Group Tool Unit Destroyed", EVENT_UNIT_DESTROYED, REGISTER_FILTER_UNIT_TAG_PREFIX, "group")
 		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Join", EVENT_GROUP_MEMBER_JOINED, group.groupJoinLeave)
 		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Leave", EVENT_GROUP_MEMBER_LEFT, group.groupJoinLeave)
 		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Change", EVENT_LEADER_UPDATE, group.groupLeadChange)
