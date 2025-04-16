@@ -29,6 +29,12 @@ function settings.createSettings()
 		"Vanilla"
 	}
 
+	local GroupFrameTextOptions = { -- Ult Number, Ult Percent, Health
+		"Ult Number",
+		"Ult Percent",
+		"Health"
+	}
+
 	local vars = AD.vars
 
 	local panelName = "ArtaeumGroupToolSettingsPanel"
@@ -282,6 +288,14 @@ function settings.createSettings()
 							tooltip = "If this is enabled, the you will be able to see your group's magicka and stamina bars on the UI.",
 							getFunc = function() return vars.Group.showMagStam end,
 							setFunc = function(value) vars.Group.showMagStam = value; if not value then AD.Group.hideAllMagStam() end end,
+						},
+
+						{
+							type = "dropdown",
+							name = "UI Mode",
+							choices = GroupFrameTextOptions,
+							getFunc = function() return vars.Group.groupFrameText end,
+							setFunc = function(value) vars.Group.groupFrameText = value end,
 						},
 						{
 					        type = "slider",

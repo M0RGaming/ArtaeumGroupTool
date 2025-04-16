@@ -6,7 +6,7 @@
 ## Author: |c0DC1CF@M0R_Gaming|r
 ## SavedVariables: ADVars ADProfiles
 ## DependsOn: LibAddonMenu-2.0>=32 LibMapPins-1.0>=10027 LibMapPing>=1200 Lib3D>=312 LibGPS>=65 Lib3DArrow>=1 LibGroupCombatStats>=20250406 LibGroupBroadcast>=88
-## OptionalDependsOn: RdKGroupTool>=47
+## OptionalDependsOn: RdKGroupTool>=47 LibFilteredChatPanel
 
 ADGroupTool.lua
 Textures/ArtaeumGroupTool.xml

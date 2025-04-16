@@ -210,7 +210,6 @@ function frameObject:Update(hasUlt)
 			end
 
 			self.hasUlt = false
-			if hasUlt ~= nil then self.hasUlt = hasUlt end
 
 			self:SetMag(0,1)
 			self:SetStam(0,1)
@@ -269,6 +268,9 @@ end
 
 function frameObject:SetHealth(value,max)
 	ZO_StatusBar_SmoothTransition(self.health,value,max)
+	if AD.vars.Group.groupFrameText == "Health" then
+		self.ultPercent:SetText(ZO_FormatResourceBarCurrentAndMax(value, max))
+	end
 end
 
 function frameObject:SetMag(value,max)
@@ -406,7 +408,19 @@ function frameObject:SetRole(role)
 	end
 end
 
-function frameObject:setUlt(ultValue, ult1Cost, icon1, ult2Cost, icon2)
+function frameObject:setUlt(ultValue, ult1Cost, icon1, ult2Cost, icon2, noUlt)
+
+	if noUlt then -- libgroupcombatstats sometimes sends ult a couple ms after actual changes so this maybe might fix it
+		self.hasUlt = false
+		self.bar:SetValue(0)
+		self.bar2:SetValue(0)
+		if AD.vars.Group.groupFrameText ~= "Health" then
+			self.ultPercent:SetText("")
+		end
+		self:SetOnline(IsUnitOnline(self.unitTag))
+		return
+	end
+
 	local percent1
 	local percent2
 	if ult1Cost == 0 then percent1 = 100 else
@@ -423,7 +437,11 @@ function frameObject:setUlt(ultValue, ult1Cost, icon1, ult2Cost, icon2)
 	self.bar2:SetValue(100-percent2)
 	self.image2:SetTexture(icon2)
 
-	self.ultPercent:SetText(""..zo_floor(percent1).."/"..zo_floor(percent2).."%")
+	if AD.vars.Group.groupFrameText == "Ult Number" then
+		self.ultPercent:SetText(""..ultValue.." ") -- add   to add padding
+	elseif AD.vars.Group.groupFrameText == "Ult Percent" then
+		self.ultPercent:SetText(""..zo_floor(percent1).."/"..zo_floor(percent2).."%")
+	end
 
 	local maxedUlt = false
 	if (ult1Cost >= ult2Cost) and (percent1 >= 100) then

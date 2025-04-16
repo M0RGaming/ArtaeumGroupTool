@@ -55,7 +55,8 @@ AD.Settings.DefaultSettings = {
 			fullUlt = {0,0.8,0,0.8}
 		},
 		showMagStam = false,
-		UI = "Custom" -- Vanilla, Custom, AUI, Bandits
+		UI = "Custom", -- Vanilla, Custom, AUI, Bandits
+		groupFrameText = "Ult Number", -- Ult Number, Ult Percent, Health
 	}
 }
 
@@ -173,6 +174,15 @@ function AD.Profiles.delete(name)
 end
 
 
+function AD.print(...) 
+	if AD.filter then
+		AD.filter:AddMessage(...)
+	end
+end
+
+
+
+
 
 -- The following was adapted from https://wiki.esoui.com/Circonians_Stamina_Bar_Tutorial#lua_Structure
 
@@ -194,6 +204,11 @@ function AD:Initialize()
 	-- Addon Settings Menu
 	AD.vars = ZO_SavedVars:NewAccountWide("ADVars", AD.varversion, nil, AD.Settings.DefaultSettings)
 	if AD.vars.Group.frequency < 2500 then AD.vars.Group.frequency = 2500 end -- to help cut down on ping times
+
+	if LibFilteredChatPanel then
+		AD.filter = LibFilteredChatPanel:CreateFilter("ArtaeumGroupTool", "/esoui/art/crowncrates/psijic/crowncrate_psijic_back.dds", {0, 0.8, 0.8}, false)
+	end
+
 
 	AD.profiles = ZO_SavedVars:NewAccountWide("ADProfiles", 1, nil, AD.Profiles.DefaultSettings)
 	AD.Settings.createSettings()

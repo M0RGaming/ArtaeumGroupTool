@@ -6,6 +6,8 @@ local vars = {}
 local LMP = LibMapPing
 local LGPS = LibGPS3
 
+local print = AD.print
+
 
 local toplevels = {}
 group.frameDB = {}
@@ -24,6 +26,8 @@ group.running = false
 
 group.units = {}
 group.handlers = {}
+
+
 
 
 
@@ -49,6 +53,8 @@ group.handlers = {}
 
 
 function group.init()
+	print("AD Initialized")
+
 	vars = AD.vars.Group
 
 	if vars.enabled then
@@ -238,7 +244,7 @@ end
 
 
 
-
+local playerUltLookup = {}
 
 
 
@@ -265,11 +271,15 @@ end
 
 
 local function lgcsUpdate(unitTag)
-	local realData = group.lgcs:GetUnitULT(unitTag)
-	a = realData
-	if realData and realData._data then
-		group.lgcsCallback(unitTag, realData._data)
+	local playerName = GetUnitName(unitTag)
+	if playerName and playerUltLookup[playerName] then
+		group.lgcsCallback(unitTag, playerUltLookup[playerName])
 	end
+	--local realData = group.lgcs:GetUnitULT(unitTag)
+	--a = realData
+	--if realData and realData._data then
+		--group.lgcsCallback(unitTag, realData._data)
+	--end
 end
 
 local hammerWeilder = ''
@@ -454,8 +464,16 @@ local ultIconLookup = {
 	[0] = "/esoui/art/icons/heraldrycrests_misc_blank_01.dds", -- no ult
 	[116096] = "/esoui/art/icons/ability_artifact_volendrung_006.dds", -- hammer ult
 }
+
+
 function group.lgcsCallback(unitTag, data)
+	print("Unit "..tostring(GetUnitDisplayName(unitTag)).."("..unitTag..") has ults "..data.ult1ID.." and "..data.ult2ID)
 	group.lgcsCallbackDebug[unitTag] = data --- DEBUG STUFF
+
+
+
+	local noUlt = false
+	if data.ult1ID == 0 and data.ult2ID == 0 then noUlt = true end
 	
 	if hammerWeilder == unitTag then -- if unit has hammer
 		data.ult1Cost = 250
@@ -463,6 +481,15 @@ function group.lgcsCallback(unitTag, data)
 		data.ult1ID = 116096
 		data.ult2ID = 116096
 	end
+
+
+	local playerName = GetUnitName(unitTag)
+	if playerName then
+		playerUltLookup[playerName] = data
+	end
+
+
+
 
 	local ult1Id = data.ult1ID
 	local ult1Icon = ultIconLookup[ult1Id]
@@ -481,7 +508,7 @@ function group.lgcsCallback(unitTag, data)
 
 
 
-	frameDB[unitTag]:setUlt(data.ultValue, data.ult1Cost, ult1Icon, data.ult2Cost, ult2Icon)
+	frameDB[unitTag]:setUlt(data.ultValue, data.ult1Cost, ult1Icon, data.ult2Cost, ult2Icon, noUlt)
 	frameDB[unitTag].image:SetColor(1,1,1)
 end
 
@@ -565,56 +592,49 @@ end
 /script a = ArtaeumGroupTool.Group.lgcs:GetUnitULT('group1')
 --]]
 
+latest = {}
+
 function group.unitCreate(_, unitTag)
 	--d("Unit created "..unitTag)
+	--if true then return end
+
 	if ZO_Group_IsGroupUnitTag(unitTag) and frameDB[unitTag] then
-		local unitUlt = group.lgcs:GetUnitULT(unitTag)
-		local hasUlt = false
-		if ((unitUlt) and (not ((unitUlt._data.ult1ID == 0) and (unitUlt._data.ult2ID == 0)))) then
-			hasUlt = true
-		end
-		frameDB[unitTag]:Update(hasUlt)
-		--d("Unit updated "..unitTag.. " with ult ".. tostring(hasUlt))
-		if hasUlt then
-			group.lgcsCallback(unitTag, unitUlt._data)
-		end
+		print("Unit created with tag "..unitTag)
+		frameDB[unitTag]:Update()
+		lgcsUpdate(unitTag)
+		print("")
     end
     --d("")
 end
 
 function group.unitDestroy(_, unitTag)
 	--d("Actually, unit destroyed")
-	group.unitCreate(_, unitTag)
+	if frameDB[unitTag] then
+		frameDB[unitTag]:Update()
+	end
+	--group.unitCreate(_, unitTag)
 end
 -- https://github.com/esoui/esoui/blob/440a96c7883305fe0001bc3ce07319efa26e42e7/esoui/ingame/unitframes/unitframes.lua#L2766
 
 -- Events that consider all possible group join/leave events and adapt the UI respectivly.
 function group.groupJoinLeave(eventCode, _, _, isLocalPlayer)
-	group.groupUpdate()
+    group.groupUpdate()
 end
 
-
+-- RUN THIS AFTER LIKE 100 MS
 
 -- TODO: FIGURE OUT WHY THIS IS RUNNING ALOT
 function group.groupUpdate()
+	print("STARTING GROUP UPDATE")
 	local groupStats = group.lgcs:GetGroupStats()
 	for i=1,12 do
 		local unitTag = 'group'..i
 		if frameDB[unitTag] then
-
-			local hasUlt = false
-			local unitStats = groupStats[unitTag]
-			if ((unitStats) and (not ((unitStats.ult.ult1ID == 0) and (unitStats.ult.ult2ID == 0)))) then
-				--d("Unit ".. GetUnitDisplayName(unitTag).. ' has ult')
-				hasUlt = true
-			end
-
-			frameDB[unitTag]:Update(hasUlt)
-			if hasUlt then
-				group.lgcsCallback(unitTag, unitStats.ult)
-			end
+			frameDB[unitTag]:Update()
+			lgcsUpdate(unitTag)
 		end
 	end
+	print("ENDED")
 end
 
 
