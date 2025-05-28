@@ -66,13 +66,7 @@ function group.init()
 
 
 
-		--group.lgcs = LibGroupCombatStats.RegisterAddon("ArtaeumGroupTool", {"ULT"})
-		-- TODO: GET RID OF LGCS
-
-
-
-
-
+		group.lgcs = LibGroupCombatStats.RegisterAddon("ArtaeumGroupTool", {"ULT"})
 
 		local LGB = LibGroupBroadcast
 		local handler = LGB:RegisterHandler("ArtaeumGroupToolHandler")
@@ -93,13 +87,6 @@ function group.init()
 		group.protocols.sync:AddField(LGB.CreateOptionalField(LGB.CreateFlagField("lock"))) -- ArtaeumCampLock (501), only when lock updates on/off
 		group.protocols.sync:AddField(LGB.CreateOptionalField(LGB.CreatePercentageField("hammer", {numBits=5}))) -- ArtaeumDaedricPower (502), only when holding
 		group.protocols.sync:AddField(LGB.CreateOptionalField(LGB.CreateFlagField("requestSync"))) -- ArtaeumRequestSync (503), request resend
-
-		group.protocols.sync:AddField(LGB.CreateOptionalField(LGB.CreateNumericField("ult1Cost", {minValue=0, maxValue=500, trimValues=true}))) -- LGCS emulation until it is updated for console
-		group.protocols.sync:AddField(LGB.CreateOptionalField(LGB.CreateNumericField("ult2Cost", {minValue=0, maxValue=500, trimValues=true})))
-		group.protocols.sync:AddField(LGB.CreateOptionalField(LGB.CreateNumericField("ult1ID", {minValue=0, maxValue=237, trimValues=true})))
-		group.protocols.sync:AddField(LGB.CreateOptionalField(LGB.CreateNumericField("ult2ID", {minValue=0, maxValue=237, trimValues=true})))
-		group.protocols.sync:AddField(LGB.CreateOptionalField(LGB.CreateNumericField("ultValue", {minValue=0, maxValue=500, trimValues=true})))
-
 		group.protocols.sync:OnData(group.handlers.onSync)
 		group.protocols.sync:Finalize({isRelevantInCombat = false, replaceQueuedMessages = false})
 
@@ -108,36 +95,6 @@ function group.init()
 		group.protocols.hammer:OnData(group.handlers.onHammerUpdate)
 		group.protocols.hammer:Finalize({isRelevantInCombat = true, replaceQueuedMessages = true})
 
-
-		group.protocols.ult = handler:DeclareProtocol(93, "ArtaeumUlt")
-		group.protocols.ult:AddField(LGB.CreateNumericField("ultValue"))
-		group.protocols.ult:OnData(group.handlers.onUlt)
-		group.protocols.ult:Finalize({isRelevantInCombat = true, replaceQueuedMessages = true})
-
-
-
-
-		--[[
-		-- 3 to 7 bytes
-		local firstsync = handler:DeclareProtocol(94, "ArtaeumDataSyncTestFirst")
-		firstsync:AddField(LGB.CreateOptionalField(LGB.CreateFlagField("lock"))) -- ArtaeumCampLock (501), only when lock updates on/off
-		firstsync:AddField(LGB.CreateOptionalField(LGB.CreatePercentageField("hammer", {numBits=5}))) -- ArtaeumDaedricPower (502), only when holding
-		firstsync:AddField(LGB.CreateOptionalField(LGB.CreateFlagField("requestSync"))) -- ArtaeumRequestSync (503), request resend
-		firstsync:AddField(LGB.CreateOptionalField(LGB.CreateNumericField("ult1Cost", {minValue=0, maxValue=500, trimValues=true}))) -- LGCS emulation until it is updated for console
-		firstsync:AddField(LGB.CreateOptionalField(LGB.CreateNumericField("ult2Cost", {minValue=0, maxValue=500, trimValues=true})))
-		firstsync:AddField(LGB.CreateOptionalField(LGB.CreateNumericField("ultValue", {minValue=0, maxValue=500, trimValues=true})))
-		firstsync:OnData(function() d("Data recieved sync 1") end)
-		firstsync:Finalize({isRelevantInCombat = false, replaceQueuedMessages = false})
-
-	
-		-- 3 to 8 bytes
-		local secondsync = handler:DeclareProtocol(95, "ArtaeumDataSyncTestSecond")
-		secondsync:AddField(LGB.CreateOptionalField(LGB.CreateNumericField("ult1ID", {numBits=20})))
-		secondsync:AddField(LGB.CreateOptionalField(LGB.CreateNumericField("ult2ID", {numBits=20})))
-		secondsync:OnData(function() d("Data recieved sync 1") end)
-		secondsync:Finalize({isRelevantInCombat = false, replaceQueuedMessages = false})
-		--]]
-		
 
 
 		local GroupResources = LibGroupBroadcast:GetHandlerApi("GroupResources")
@@ -321,17 +278,6 @@ local syncQueued = false
 
 
 function group.handlers.onSync(unitTag, data)
-
-	--[[
-	local syncData = ""
-	for i,v in pairs(data) do
-		syncData = syncData..i..", "
-	end
-	print("Recieved data from "..GetUnitDisplayName(unitTag)..": "..syncData)
-	
-	--]]
-
-
 	--a = data
 	--data.lock
 	--data.hammer
@@ -361,30 +307,6 @@ function group.handlers.onSync(unitTag, data)
 			syncQueued = false
 		end
 	end
-
-
-
-	if data.ult1Cost or data.ult2Cost or data.ult1ID or data.ult2ID then
-		local playerName = GetUnitName(unitTag)
-
-		if playerName and playerUltLookup[playerName] then
-			if data.ult1Cost ~= nil then playerUltLookup[playerName].ult1Cost = data.ult1Cost end
-			if data.ult2Cost ~= nil then playerUltLookup[playerName].ult2Cost = data.ult2Cost end
-			if data.ult1ID ~= nil then playerUltLookup[playerName].ult1ID = group.ultiIndexes[data.ult1ID] or 0 end
-			if data.ult2ID ~= nil then playerUltLookup[playerName].ult2ID = group.ultiIndexes[data.ult2ID] or 0 end
-			if data.ultValue ~= nil then playerUltLookup[playerName].ultValue = data.ultValue end
-		else
-			playerUltLookup[playerName] = {
-				ult1Cost=data.ult1Cost or 0,
-				ult2Cost=data.ult2Cost or 0,
-				ult1ID=group.ultiIndexes[data.ult1ID or 0] or 0,
-				ult2ID=group.ultiIndexes[data.ult2ID or 0] or 0,
-				ultValue=data.ultValue or 0
-			}
-		end
-		group.lgcsCallback(unitTag, playerUltLookup[playerName])
-	end
-
 end
 
 function group.handlers.onStamUpdate(unitTag, unitName, current, max, percent)
@@ -402,31 +324,31 @@ function group.handlers.onMagUpdate(unitTag, unitName, current, max, percent)
 end
 
 
-function group.handlers.onUlt(unitTag, data)
-	--data.ultValue
-	local playerName = GetUnitName(unitTag)
-	--print("Got data from "..playerName.." to have ult of "..data.ultValue)
-	if playerName and playerUltLookup[playerName] then
-		playerUltLookup[playerName].ultValue = data.ultValue
-
-		group.lgcsCallback(unitTag, playerUltLookup[playerName])
-	end
-end
 
 
 
 
+-- on player activated:
+--[[
+update locally:
+current camp lock (GetNextForwardCampRespawnTime() > GetGameTimeMilliseconds())
 
-function group.send(campLock, hammerBar, requestSync, ult1Cost, ult2Cost, ult1ID, ult2ID, ultValue)
+send:
+current camp lock (GetNextForwardCampRespawnTime() > GetGameTimeMilliseconds())
+hammer bar (GetUnitPower('player',POWERTYPE_DAEDRIC))
+requestSync = true
+
+
+/script ArtaeumGroupTool.Group.send(true,1,false)
+/script ArtaeumGroupTool.Group.send(nil,nil,true)
+]]
+
+
+function group.send(campLock, hammerBar, requestSync)
 	group.protocols.sync:Send({
 		lock = campLock,
 		hammer = hammerBar,
-		requestSync = requestSync,
-		ult1Cost = ult1Cost,
-		ult2Cost = ult2Cost,
-		ult1ID = ult1ID,
-		ult2ID = ult2ID,
-		ultValue = ultValue
+		requestSync = requestSync
 	})
 end
 
@@ -437,43 +359,6 @@ function group.sendHammer(_, unit, powerIndex, powerType, current, max)
 		hammer = hammerBar
 	})
 end
-
-
-
-function group.sendUlt(_, unit, powerIndex, powerType, current)
-	group.protocols.ult:Send({
-		ultValue = current
-	})
-end
-
-local playerUlt1ID = 0
-local playerUlt2ID = 0
-local playerUlt1Cost = 0
-local playerUlt2Cost = 0
-
-
-function group.hotbarChanged(onlyUpdate)
-	local ult1ID = GetSlotBoundId(ACTION_BAR_ULTIMATE_SLOT_INDEX + 1, HOTBAR_CATEGORY_PRIMARY)
-	local ult2ID = GetSlotBoundId(ACTION_BAR_ULTIMATE_SLOT_INDEX + 1, HOTBAR_CATEGORY_BACKUP)
-	local ult1Cost = GetAbilityCost(ult1ID, COMBAT_MECHANIC_FLAGS_ULTIMATE, nil, localPlayer)
-	local ult2Cost = GetAbilityCost(ult2ID, COMBAT_MECHANIC_FLAGS_ULTIMATE, nil, localPlayer)
-
-	if ult1ID == playerUlt1ID then ult1ID = nil else playerUlt1ID = ult1ID end
-	if ult2ID == playerUlt2ID then ult2ID = nil else playerUlt2ID = ult2ID end
-	if ult1Cost == playerUlt1Cost then ult1Cost = nil else playerUlt1Cost = ult1Cost end
-	if ult2Cost == playerUlt2Cost then ult2Cost = nil else playerUlt2Cost = ult2Cost end
-
-	if onlyUpdate == true then return end
-
-	if ult1Cost or ult2Cost or ult1ID or ult2ID then
-		--group.send(nil, nil, nil, ult1Cost, ult2Cost, ult1ID, ult2ID, ultValue)
-		group.send(nil, nil, nil, ult1Cost, ult2Cost, nil, nil, ultValue)
-		group.send(nil, nil, nil, nil, nil, group.ultiIndexes[ult1ID or -1], group.ultiIndexes[ult2ID or -1], nil) -- intentionally send nils
-	end
-	
-end
-
-
 
 
 local activeLockUpdate = false
@@ -506,16 +391,10 @@ function group.sync(requestSync)
 		activeLockUpdate = true
 	end
 
-
-	group.hotbarChanged(true)
-	local ultValue = GetUnitPower('player',COMBAT_MECHANIC_FLAGS_ULTIMATE)
-
-	--group.send(campLock, hammerBar, requestSync, playerUlt1Cost, playerUlt2Cost, playerUlt1ID, playerUlt2ID, ultValue)
-	group.send(campLock, hammerBar, nil, playerUlt1Cost, playerUlt2Cost, nil, nil, nil)
-	group.send(nil, nil, nil, nil, nil, group.ultiIndexes[playerUlt1ID or 0] or 0, group.ultiIndexes[playerUlt2ID or 0] or 0, nil)
-	group.sendUlt(nil, nil, nil, nil, ultValue)
-	group.send(nil, nil, requestSync)
+	group.send(campLock, hammerBar, requestSync)
 end
+
+
 
 
 
@@ -648,8 +527,10 @@ function group.unitCreate(_, unitTag)
 	--if true then return end
 
 	if ZO_Group_IsGroupUnitTag(unitTag) and frameDB[unitTag] then
+		print("Unit created with tag "..unitTag)
 		frameDB[unitTag]:Update()
 		lgcsUpdate(unitTag)
+		print("")
     end
     --d("")
 end
@@ -672,7 +553,8 @@ end
 
 -- TODO: FIGURE OUT WHY THIS IS RUNNING ALOT
 function group.groupUpdate()
-	--local groupStats = group.lgcs:GetGroupStats()
+	print("STARTING GROUP UPDATE")
+	local groupStats = group.lgcs:GetGroupStats()
 	for i=1,12 do
 		local unitTag = 'group'..i
 		if frameDB[unitTag] then
@@ -680,6 +562,7 @@ function group.groupUpdate()
 			lgcsUpdate(unitTag)
 		end
 	end
+	print("ENDED")
 end
 
 
@@ -791,6 +674,11 @@ local lastZone = 0
 function group.updateSharing(sharing)
 
 	if group.running and not sharing then
+		--EVENT_MANAGER:UnregisterForUpdate("AD Group Tool Group Ping")
+		--LMP:UnregisterCallback('BeforePingAdded', group.pingCallback)
+		--LMP:UnregisterCallback('AfterPingRemoved', group.OnAfterPingRemoved)
+		group.lgcs:UnregisterForEvent(LibGroupCombatStats.EVENT_GROUP_ULT_UPDATE, group.lgcsCallback)
+		group.lgcs:UnregisterForEvent(LibGroupCombatStats.EVENT_PLAYER_ULT_UPDATE, group.lgcsPlayerCallback)
 
 		EVENT_MANAGER:UnregisterForEvent("AD Group Tool Unit Created", EVENT_UNIT_CREATED)
 		EVENT_MANAGER:UnregisterForEvent("AD Group Tool Unit Destroyed", EVENT_UNIT_DESTROYED)
@@ -803,10 +691,7 @@ function group.updateSharing(sharing)
 		EVENT_MANAGER:UnregisterForEvent("AD Group Tool Group Range", EVENT_GROUP_SUPPORT_RANGE_UPDATE)
 		EVENT_MANAGER:UnregisterForEvent("AD Group Tool Group Role", EVENT_GROUP_MEMBER_ROLE_CHANGED)
 		EVENT_MANAGER:UnregisterForEvent("AD Group Tool Group Daedric Power", EVENT_POWER_UPDATE)
-		EVENT_MANAGER:UnregisterForEvent("AD Group Tool Group Ult Power", EVENT_POWER_UPDATE)
 		EVENT_MANAGER:UnregisterForEvent("AD Group Tool Group Camp", EVENT_FORWARD_CAMP_RESPAWN_TIMER_BEGINS)
-
-		EVENT_MANAGER:UnregisterForEvent("AD Group Tool Group Hotbars Changed", EVENT_ACTION_SLOTS_ALL_HOTBARS_UPDATED)
 		
 
 		for i=1,12 do
@@ -817,6 +702,10 @@ function group.updateSharing(sharing)
 		
 
 	elseif not group.running and sharing then
+		--LMP:RegisterCallback('BeforePingAdded', group.pingCallback)
+		--LMP:RegisterCallback('AfterPingRemoved', group.OnAfterPingRemoved)
+		group.lgcs:RegisterForEvent(LibGroupCombatStats.EVENT_GROUP_ULT_UPDATE, group.lgcsCallback)
+		group.lgcs:RegisterForEvent(LibGroupCombatStats.EVENT_PLAYER_ULT_UPDATE, group.lgcsPlayerCallback)
 		EVENT_MANAGER:RegisterForEvent("AD Group Tool Unit Created", EVENT_UNIT_CREATED, group.unitCreate)
 		EVENT_MANAGER:AddFilterForEvent("AD Group Tool Unit Created", EVENT_UNIT_CREATED, REGISTER_FILTER_UNIT_TAG_PREFIX, "group")
 		EVENT_MANAGER:RegisterForEvent("AD Group Tool Unit Destroyed", EVENT_UNIT_DESTROYED, group.unitDestroy)
@@ -832,15 +721,8 @@ function group.updateSharing(sharing)
 		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Daedric Power", EVENT_POWER_UPDATE, group.sendHammer)
 		EVENT_MANAGER:AddFilterForEvent("AD Group Tool Group Daedric Power", EVENT_POWER_UPDATE, REGISTER_FILTER_POWER_TYPE, COMBAT_MECHANIC_FLAGS_DAEDRIC)
 		EVENT_MANAGER:AddFilterForEvent("AD Group Tool Group Daedric Power", EVENT_POWER_UPDATE, REGISTER_FILTER_UNIT_TAG, "player")
-
-		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Ult Power", EVENT_POWER_UPDATE, group.sendUlt)
-		EVENT_MANAGER:AddFilterForEvent("AD Group Tool Group Ult Power", EVENT_POWER_UPDATE, REGISTER_FILTER_POWER_TYPE, COMBAT_MECHANIC_FLAGS_ULTIMATE)
-		EVENT_MANAGER:AddFilterForEvent("AD Group Tool Group Ult Power", EVENT_POWER_UPDATE, REGISTER_FILTER_UNIT_TAG, "player")
-
 		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Camp", EVENT_FORWARD_CAMP_RESPAWN_TIMER_BEGINS, group.newLock)
 		
-
-		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Hotbars Changed", EVENT_ACTION_SLOTS_ALL_HOTBARS_UPDATED, group.hotbarChanged)
 		
 		
 
@@ -880,288 +762,3 @@ end
 
 ZO_CreateStringId("SI_BINDING_NAME_ARTAEUMGROUPTOOL_REQUEST_PING", "Send a assist ping.")
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
---[[
-
--- Code for getting this, done ingame
-
-/script
-o = {}
-for i=1,1000000 do
-	if IsAbilityUltimate(i) then o[#o+1] = {i,GetAbilityName(i)} end
-end
-
-]]--
-
-
-
-group.ultiIndexes = {
-	[0] = 0, -- no ult
-	[1] = 15957, -- Magma Armor
-	[2] = 16536, -- Meteor
-	[3] = 17874, -- Magma Shell
-	[4] = 17878, -- Corrosive Armor
-	[5] = 20671, -- Molten Fury
-	[6] = 20679, -- Blood Fury
-	[7] = 20689, -- Controlled Fury
-	[8] = 21752, -- Nova
-	[9] = 21755, -- Solar Prison
-	[10] = 21758, -- Solar Disturbance
-	[11] = 22138, -- Radial Sweep
-	[12] = 22139, -- Crescent Sweep
-	[13] = 22144, -- Everlasting Sweep
-	[14] = 22223, -- Rite of Passage
-	[15] = 22226, -- Practiced Incantation
-	[16] = 22229, -- Remembrance
-	[17] = 23492, -- Greater Storm Atronach
-	[18] = 23495, -- Summon Charged Atronach
-	[19] = 23634, -- Summon Storm Atronach
-	[20] = 24785, -- Overload
-	[21] = 24799, -- Overload
-	[22] = 24804, -- Energy Overload
-	[23] = 24805, -- Energy Overload
-	[24] = 24806, -- Power Overload
-	[25] = 24808, -- Power Overload
-	[26] = 25091, -- Soul Shred
-	[27] = 25411, -- Consuming Darkness
-	[28] = 26598, -- Arm Wabbajack
-	[29] = 27706, -- Negate Magic
-	[30] = 28341, -- Suppression Field
-	[31] = 28348, -- Absorption Field
-	[32] = 28434, -- Heavy Attack (Power Overload)
-	[33] = 28988, -- Dragonknight Standard
-	[34] = 29012, -- Dragon Leap
-	[35] = 29740, -- Energy Overload
-	[36] = 32455, -- Werewolf Transformation
-	[37] = 32624, -- Blood Scion
-	[38] = 32715, -- Ferocious Leap
-	[39] = 32719, -- Take Flight
-	[40] = 32947, -- Standard of Might
-	[41] = 32958, -- Shifting Standard
-	[42] = 32963, -- Shifting Standard
-	[43] = 33398, -- Death Stroke
-	[44] = 35460, -- Soul Tether
-	[45] = 35508, -- Soul Siphon
-	[46] = 35713, -- Dawnbreaker
-	[47] = 36485, -- Veil of Blades
-	[48] = 36493, -- Bolstering Darkness
-	[49] = 36508, -- Incapacitating Strike
-	[50] = 36514, -- Soul Harvest
-	[51] = 38563, -- War Horn
-	[52] = 38573, -- Barrier
-	[53] = 38931, -- Perfect Scion
-	[54] = 38932, -- Swarming Scion
-	[55] = 39075, -- Pack Leader
-	[56] = 39076, -- Werewolf Berserker
-	[57] = 39270, -- Soul Strike
-	[58] = 40158, -- Dawnbreaker of Smiting
-	[59] = 40161, -- Flawless Dawnbreaker
-	[60] = 40220, -- Sturdy Horn
-	[61] = 40223, -- Aggressive Horn
-	[62] = 40237, -- Reviving Barrier
-	[63] = 40239, -- Replenishing Barrier
-	[64] = 40414, -- Shatter Soul
-	[65] = 40420, -- Soul Assault
-	[66] = 40489, -- Ice Comet
-	[67] = 40493, -- Shooting Star
-	[68] = 49886, -- Impenetrable Ward
-	[69] = 49899, -- Lightning Assault
-	[70] = 50303, -- Legendary Heal Other
-	[71] = 50385, -- Rapid Recovery
-	[72] = 50468, -- Drain Soul
-	[73] = 50501, -- Cataclysm
-	[74] = 50544, -- Ice Armor
-	[75] = 50570, -- Hypothermia
-	[76] = 50663, -- Ultimate Flame Atronach
-	[77] = 50790, -- Conjure Dremora Ruler
-	[78] = 50872, -- Ebonyflesh
-	[79] = 50898, -- Magicka Invulnerability
-	[80] = 50961, -- Mass Paralysis
-	[81] = 50981, -- Encumber
-	[82] = 51016, -- Heroic Courage
-	[83] = 51153, -- Hushed Feet
-	[84] = 51248, -- Incite Frenzy
-	[85] = 52897, -- Standard of Might
-	[86] = 53875, -- Heroic Courage
-	[87] = 54118, -- Remembrance
-	[88] = 55090, -- Devouring Swarm
-	[89] = 61090, -- Standard of Might
-	[90] = 79064, -- Veil of Blades
-	[91] = 83216, -- Berserker Strike
-	[92] = 83229, -- Onslaught
-	[93] = 83238, -- Berserker Rage
-	[94] = 83272, -- Shield Wall
-	[95] = 83292, -- Spell Wall
-	[96] = 83310, -- Shield Discipline
-	[97] = 83465, -- Rapid Fire
-	[98] = 83552, -- Panacea
-	[99] = 83600, -- Lacerate
-	[100] = 83619, -- Elemental Storm
-	[101] = 83625, -- Fire Storm
-	[102] = 83628, -- Ice Storm
-	[103] = 83630, -- Thunder Storm
-	[104] = 83642, -- Eye of the Storm
-	[105] = 83682, -- Eye of Flame
-	[106] = 83684, -- Eye of Frost
-	[107] = 83686, -- Eye of Lightning
-	[108] = 83850, -- Life Giver
-	[109] = 83867, -- Live Giver
-	[110] = 84434, -- Elemental Rage
-	[111] = 85126, -- Fiery Rage
-	[112] = 85128, -- Icy Rage
-	[113] = 85130, -- Thunderous Rage
-	[114] = 85132, -- Light's Champion
-	[115] = 85156, -- Lacerate
-	[116] = 85179, -- Thrive in Chaos
-	[117] = 85187, -- Rend
-	[118] = 85257, -- Toxic Barrage
-	[119] = 85451, -- Ballista
-	[120] = 85532, -- Secluded Grove
-	[121] = 85804, -- Enchanted Forest
-	[122] = 85807, -- Healing Thicket
-	[123] = 85982, -- Feral Guardian
-	[124] = 85986, -- Eternal Guardian
-	[125] = 85990, -- Wild Guardian
-	[126] = 86109, -- Sleet Storm
-	[127] = 86113, -- Northern Storm
-	[128] = 86117, -- Permafrost
-	[129] = 88158, -- Materialize
-	[130] = 90284, -- Guardian's Wrath
-	[131] = 92163, -- Guardian's Savagery
-	[132] = 94625, -- Guardian's Wrath
-	[133] = 103478, -- Undo
-	[134] = 103557, -- Precognition
-	[135] = 103564, -- Temporal Guard
-	[136] = 113105, -- Incapacitating Strike
-	[137] = 113505, -- Discharge Energy
-	[138] = 114759, -- Overload
-	[139] = 114760, -- Power Overload
-	[140] = 114761, -- Energy Overload
-	[141] = 114985, -- Overload
-	[142] = 114986, -- Power Overload
-	[143] = 114987, -- Energy Overload
-	[144] = 115001, -- Bone Goliath Transformation
-	[145] = 115361, -- Shock Field
-	[146] = 115410, -- Reanimate
-	[147] = 116096, -- Ruinous Cyclone
-	[148] = 118279, -- Ravenous Goliath
-	[149] = 118367, -- Renewing Animation
-	[150] = 118379, -- Animate Blastbones
-	[151] = 118664, -- Pummeling Goliath
-	[152] = 122174, -- Frozen Colossus
-	[153] = 122388, -- Glacial Colossus
-	[154] = 122395, -- Pestilent Colossus
-	[155] = 126489, -- Berserker Strike
-	[156] = 126492, -- Berserker Rage
-	[157] = 126497, -- Onslaught
-	[158] = 129375, -- Vampire Lord
-	[159] = 132866, -- Heavy Attack (Power Overload)
-	[160] = 133507, -- Lead the Pack
-	[161] = 140517, -- Overload
-	[162] = 140518, -- Energy Overload
-	[163] = 140519, -- Power Overload
-	[164] = 157016, -- Unleashed Rage
-	[165] = 157259, -- Impeccable Shot
-	[166] = 160715, -- Scurry
-	[167] = 163763, -- Baneslayer
-	[168] = 164191, -- Raging Storm
-	[169] = 164413, -- Channel the Storm
-	[170] = 164881, -- Overcharge
-	[171] = 165208, -- Unstable Shield
-	[172] = 165281, -- Arcane Wards
-	[173] = 165412, -- Cyclone
-	[174] = 165810, -- Spell Conversion
-	[175] = 165875, -- Forced Sacrifice
-	[176] = 166037, -- Time Tear
-	[177] = 175666, -- Energy Overload
-	[178] = 180983, -- Light Attack (Overload)
-	[179] = 183676, -- Gibbering Shield
-	[180] = 183709, -- Vitalizing Glyphic
-	[181] = 186488, -- Gore
-	[182] = 189182, -- Overload
-	[183] = 189791, -- The Unblinking Eye
-	[184] = 189837, -- The Tide King's Gaze
-	[185] = 189867, -- The Languid Eye
-	[186] = 192372, -- Sanctum of the Abyssal Sea
-	[187] = 192380, -- Gibbering Shelter
-	[188] = 192927, -- Headbutt
-	[189] = 193558, -- Resonating Glyphic
-	[190] = 193794, -- Glyphic of the Tides
-	[191] = 195103, -- Vigorous Tentacular Eruption
-	[192] = 196782, -- Rite of Passage
-	[193] = 212005, -- Lead the Pack
-	[194] = 213168, -- Azura's Champion
-	[195] = 213169, -- Blade of the Crossing
-	[196] = 215215, -- Ruinous Outburst
-	[197] = 215668, -- Tanlorin Avatar Form
-	[198] = 217049, -- Waves of Power
-	[199] = 230457, -- Vampire's Leap
-	[200] = 230523, -- Lead the Pack
-	[201] = 237017, -- DPS Ultimate
-	[202] = 237025, -- Tank Damage Limit Cyrodiil Champions
-	[203] = 237060, -- Resurrect
-	[204] = 237619, -- Vengeance Death Stroke
-	[205] = 237627, -- Vengeance Dragonknight Standard
-	[206] = 237648, -- Vengeance Dragon Leap
-	[207] = 237702, -- Vengeance Bolstering Darkness
-	[208] = 237722, -- Vengeance Soul Shred
-	[209] = 237790, -- Vengeance Magma Armor
-	[210] = 237811, -- Vengeance Radial Sweep
-	[211] = 237856, -- Vengeance Negate Magic
-	[212] = 237933, -- Vengeance Storm Atronach
-	[213] = 237942, -- Vengeance Nova
-	[214] = 237994, -- Vengeance Rite of Passage
-	[215] = 237998, -- Vengeance Overload
-	[216] = 238043, -- Vengeance Feral Guardian
-	[217] = 238074, -- Vengeance Secluded Grove
-	[218] = 238098, -- Vengeance Sleet Storm
-	[219] = 238129, -- Vengeance Frozen Colossus
-	[220] = 238228, -- Vengeance The Unblinking Eye
-	[221] = 238236, -- Vengeance Bone Goliath Transformation
-	[222] = 238274, -- Vengeance Gibbering Shield
-	[223] = 238316, -- Reanimate
-	[224] = 238549, -- Vengeance Vitalizing Glyphic
-	[225] = 240494, -- Vengeance Berserker Strike
-	[226] = 240572, -- Vengeance Shield Wall
-	[227] = 241236, -- Vengeance Lacerate
-	[228] = 241278, -- Vengeance Rapid Fire
-	[229] = 241485, -- Vengeance Elemental Storm
-	[230] = 241487, -- Vengeance Fire Storm
-	[231] = 241489, -- Vengeance Ice Storm
-	[232] = 241491, -- Vengeance Thunder Storm
-	[233] = 241586, -- Vengeance Panacea
-	[234] = 244644, -- Vengeance War Horn
-	[235] = 244725, -- Vengeance Barrier
-}
-
-group.ultiIndexes[236] = 195031 -- Crypt Transfer
-group.ultiIndexes[237] = 0 -- assume no ult if something fucked up
-
-
-for k,v in pairs(group.ultiIndexes) do
-	group.ultiIndexes[v]=k
-end
