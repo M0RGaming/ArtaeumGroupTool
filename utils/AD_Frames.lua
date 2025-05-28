@@ -440,7 +440,11 @@ function frameObject:setUlt(ultValue, ult1Cost, icon1, ult2Cost, icon2, noUlt)
 	if AD.vars.Group.groupFrameText == "Ult Number" then
 		self.ultPercent:SetText(""..ultValue.." ") -- add   to add padding
 	elseif AD.vars.Group.groupFrameText == "Ult Percent" then
-		self.ultPercent:SetText(""..zo_floor(percent1).."/"..zo_floor(percent2).."%")
+		if ultValue == 500 then
+			self.ultPercent:SetText("|cE0B0FFMaxed |r")
+		else
+			self.ultPercent:SetText(""..zo_floor(percent1).."/"..zo_floor(percent2).."%")
+		end
 	end
 
 	local maxedUlt = false
@@ -477,145 +481,8 @@ end
 
 
 
--- TODO: UPDATE VANILLA
-
-local vanillaFrame = frameBase:Subclass()
-
-function vanillaFrame:new(unitTag)
-	local baseFrame = UNIT_FRAMES:GetFrame(unitTag)
-	local frame = frameBase.New(self)
-
-	frame.frame = baseFrame.frame
-	local width = frame.frame:GetWidth()
-	frame.frame:SetWidth(width+40)
-
-
-	frame.bar = CreateControl("ART"..unitTag.."Ult",frame.frame,CT_STATUSBAR)
-	local ult = frame.bar
-	ult:SetDimensions(40,40)
-	ult:SetMinMax(0,20)
-	ult:SetValue(0)
-	ult:SetColor(0)
-	ult:SetAlpha(0.8)
-	ult:SetOrientation(0)
-	ult:SetBarAlignment(1)
-	ult:SetAnchor(8,nil,8,-4,0,0)
-	ult:SetDrawLevel(6)
-
-
-	frame.image = CreateControl("ART"..unitTag.."UltImage",frame.frame,CT_TEXTURE)
-	local ulti = frame.image
-	ulti:SetDimensions(40,40)
-	ulti:SetDrawLevel(5)
-	ulti:SetAnchor(8,nil,8,-4,0,0)
-
-	local role = GetGroupMemberSelectedRole(unitTag)
-	if role == 0 then
-		local alliance = GetUnitAlliance(unitTag)
-		ulti:SetTexture(alliances[alliance])
-	else
-		ulti:SetTexture(roles[role])
-	end
-
-
-	frame.health = baseFrame['healthBar']['barControls'][1]
-	frame.backdrop = baseFrame.frame:GetNamedChild("BG")
-	frame.status = baseFrame.frame:GetNamedChild("Status")
-	frame.unitTag = unitTag
-	frame.unit = ""
-
-	frame.statusLock = false
-
-	frame:Update()
-
-	return frame
-	
-end
-
-
-function vanillaFrame:Update()
-	-- Unit Changed
-	if not self.unit == GetUnitName(self.unitTag) then
-		self.unit = GetUnitName(self.unitTag)
-		self.displayName = GetUnitDisplayName(self.unitTag)
-		local rgb = AD.vars.Group.colours.standardHealth
-		self.health:SetColor(rgb[1],rgb[2],rgb[3],rgb[4])
-		local role = GetGroupMemberSelectedRole(self.unitTag)
-		if role == 0 then
-			local alliance = GetUnitAlliance(self.unitTag)
-			self.image:SetTexture(alliances[alliance])
-		else
-			self.image:SetTexture(roles[role])
-		end
-
-		self.bar:SetMinMax(0,100)
-		self.bar:SetValue(0)
-	end
-end
-
-function vanillaFrame:SetEdgeColor(...)
-	self.backdrop:SetEdgeColor(...)
-end
-
-
-function vanillaFrame:setUlt(percent, icon)
-	self.bar:SetMinMax(0,100)
-	self.bar:SetValue(100-percent)
-	self.image:SetTexture(icon)
-	if not self.statusLock then
-		self.status:SetText(""..percent.."%")
-	end
-	
-	if percent == 100 then
-		local rgb = AD.vars.Group.colours.fullUlt
-		self.health:SetColor(rgb[1],rgb[2],rgb[3],rgb[4])
-	else
-		local rgb = AD.vars.Group.colours.standardHealth
-		self.health:SetColor(rgb[1],rgb[2],rgb[3],rgb[4])
-	end
-	
-end
-
-function vanillaFrame:SetDead(dead)
-	self.status:SetHidden(false)
-	if dead then
-		self.statusLock = true
-		self.status:SetText(GetString(SI_UNIT_FRAME_STATUS_DEAD))
-		self.status:SetColor(1,0,0,1)
-		EVENT_MANAGER:RegisterForUpdate("AD Res "..self.unitTag, 100, function() self:DeathLoop() end)
-	else
-		self.statusLock = false
-		--self.status:SetText("")
-		self.status:SetColor(1,1,1,1)
-		EVENT_MANAGER:UnregisterForUpdate("AD Res " .. self.unitTag)
-	end
-end
-
-function vanillaFrame:DeathLoop()
-	local unitTag = self.unitTag
-	if not DoesUnitExist(unitTag) then
-		EVENT_MANAGER:UnregisterForUpdate("AD Res " .. self.unitTag)
-		return
-	end
-
-	if IsUnitDead(unitTag) then
-		if IsUnitBeingResurrected(unitTag) then
-			self.status:SetColor(1,1,0,1)
-		elseif DoesUnitHaveResurrectPending(unitTag) then
-			self.status:SetColor(0,1,0,1)
-		else
-			self.status:SetColor(1,0,0,1)
-		end
-	elseif IsUnitReincarnating(unitTag) then
-		self.status:SetColor(0,0,1,1)
-	else
-		self.status:SetColor(1,1,1,1)
-		--self.status:SetText("")
-		self.statusLock = false
-		EVENT_MANAGER:UnregisterForUpdate("AD Res " .. self.unitTag)
-	end
-end
-
+-- removing vanilla frames since it is a pain to work with and just isnt supported really.
+-- for future note to revert, go back and look at artaeum group tool v2
 
 
 
@@ -626,9 +493,5 @@ end
 
 
 function frames:new(unitTag, parent)
-	if AD.vars.Group.UI == "Custom" then
-		return frameObject:new(unitTag,parent)
-	else
-		return vanillaFrame:new(unitTag)
-	end
+	return frameObject:new(unitTag,parent)
 end

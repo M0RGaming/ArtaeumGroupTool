@@ -24,11 +24,6 @@ function settings.createSettings()
 	end
 
 
-	local UI_Options = {
-		"Custom",
-		"Vanilla"
-	}
-
 	local GroupFrameTextOptions = { -- Ult Number, Ult Percent, Health
 		"Ult Number",
 		"Ult Percent",
@@ -237,128 +232,75 @@ function settings.createSettings()
 					getFunc = function() return vars.Group.cyrodilOnly end,
 					setFunc = function(value) vars.Group.cyrodilOnly = value end,
 				},
+
+
+
+
 				{
-					type = "editbox",
-					name = "Frequency (ms)",
-					tooltip = "How much time should be spent between transmissions, in milliseconds.",
-					warning = "If set to below 2500, it will automatically become 2500.",
-					getFunc = function() return vars.Group.frequency end,
-					setFunc = function(value)
-						local freq = tonumber(value)
-						if freq < 2500 then freq = 2500 end
-						vars.Group.frequency = freq
-					end,
-					isMultiline = false,
-					requiresReload = true
+					type = "checkbox",
+					name = "Hide Base Game Healthbars",
+					tooltip = "If this is enabled, the default group healthbars will be hidden.",
+					getFunc = function() return vars.Group.hideBaseUnitFrames end,
+					setFunc = function(value) vars.Group.hideBaseUnitFrames = value; ZO_UnitFramesGroups:SetHidden(value) end,
 				},
+				{
+					type = "checkbox",
+					name = "Hide Custom Healthbars",
+					tooltip = "If this is enabled, the group healthbars from this addon will be hidden.",
+					getFunc = function() return vars.Group.hideUI end,
+					setFunc = function(value) vars.Group.hideUI = value; AD.Group.hideUI(value) end,
+				},
+				{
+					type = "checkbox",
+					name = "Show Magicka and Stamina Bars",
+					tooltip = "If this is enabled, the you will be able to see your group's magicka and stamina bars on the UI.",
+					getFunc = function() return vars.Group.showMagStam end,
+					setFunc = function(value) vars.Group.showMagStam = value; if not value then AD.Group.hideAllMagStam() end end,
+				},
+
 				{
 					type = "dropdown",
 					name = "UI Mode",
-					choices = UI_Options,
-					getFunc = function() return vars.Group.UI end,
-					setFunc = function(value) vars.Group.UI = value end,
-					width = "full",
-					reference = "AD_UI_LIST",
-					requiresReload = true
+					choices = GroupFrameTextOptions,
+					getFunc = function() return vars.Group.groupFrameText end,
+					setFunc = function(value) vars.Group.groupFrameText = value end,
 				},
 				{
-					type = "submenu",
-					name = "|cCF9FFFCustom UI Options|r",
-					reference = "AD_UI_CUSTOM_DROPDOWN",
-					disabled = function() return not (vars.Group.UI == "Custom" and vars.Group.enabled) end,
-					disabledLabel = function() return not (vars.Group.UI == "Custom" and vars.Group.enabled) end,
-					controls = {
-						{
-							type = "checkbox",
-							name = "Hide Base Game Healthbars",
-							tooltip = "If this is enabled, the default group healthbars will be hidden.",
-							getFunc = function() return vars.Group.hideBaseUnitFrames end,
-							setFunc = function(value) vars.Group.hideBaseUnitFrames = value; ZO_UnitFramesGroups:SetHidden(value) end,
-						},
-						{
-							type = "checkbox",
-							name = "Hide Custom Healthbars",
-							tooltip = "If this is enabled, the group healthbars from this addon will be hidden.",
-							getFunc = function() return vars.Group.hideUI end,
-							setFunc = function(value) vars.Group.hideUI = value; AD.Group.hideUI(value) end,
-						},
-						{
-							type = "checkbox",
-							name = "Show Magicka and Stamina Bars",
-							tooltip = "If this is enabled, the you will be able to see your group's magicka and stamina bars on the UI.",
-							getFunc = function() return vars.Group.showMagStam end,
-							setFunc = function(value) vars.Group.showMagStam = value; if not value then AD.Group.hideAllMagStam() end end,
-						},
-
-						{
-							type = "dropdown",
-							name = "UI Mode",
-							choices = GroupFrameTextOptions,
-							getFunc = function() return vars.Group.groupFrameText end,
-							setFunc = function(value) vars.Group.groupFrameText = value end,
-						},
-						{
-					        type = "slider",
-					        name = "Window Scale",
-					        tooltip = "This sets the size of the window.",
-					        min = 0,
-					        max = 2,
-					        step = 0.1,	--(optional)
-					        getFunc = function() return vars.Group.scale end,
-					        setFunc = function(scale) vars.Group.scale = scale; AD.Group.scaleWindow() end,
-					       	width = "half",
-					    },
-						{
-					        type = "slider",
-					        name = "Amount of group windows",
-					        tooltip = "This sets the amount of windows to display. If set to 2, it will display 2 windows of 6 people each.",
-					        min = 1,
-					        max = 12,
-					        step = 1,	--(optional)
-					        getFunc = function() return vars.Group.amountOfWindows end,
-					        setFunc = function(amount) vars.Group.amountOfWindows = amount end,
-					        requiresReload = true,
-					       	width = "half",
-					    },
-					    {
-							type = "button",
-							name = "Unlock Window",
-							tooltip = "Click here to enable windows to move around",
-							width = "half",
-							func = AD.Group.unlockWindow,
-						},
-						{
-							type = "button",
-							name = "Lock Window",
-							tooltip = "Click here to disable windows from moving around",
-							width = "half",
-							func = AD.Group.lockWindow,
-						},
-					}
-				},
+			        type = "slider",
+			        name = "Window Scale",
+			        tooltip = "This sets the size of the window.",
+			        min = 0,
+			        max = 2,
+			        step = 0.1,	--(optional)
+			        getFunc = function() return vars.Group.scale end,
+			        setFunc = function(scale) vars.Group.scale = scale; AD.Group.scaleWindow() end,
+			       	width = "half",
+			    },
+				{
+			        type = "slider",
+			        name = "Amount of group windows",
+			        tooltip = "This sets the amount of windows to display. If set to 2, it will display 2 windows of 6 people each.",
+			        min = 1,
+			        max = 12,
+			        step = 1,	--(optional)
+			        getFunc = function() return vars.Group.amountOfWindows end,
+			        setFunc = function(amount) vars.Group.amountOfWindows = amount end,
+			        requiresReload = true,
+			       	width = "half",
+			    },
 			    {
-					type = "dropdown",
-					name = "Ultimate Share Bar",
-					tooltip = "Which ultimate should be shared.",
-					choices = {"Active Bar", "Front Bar", "Back Bar"},
-					getFunc = function()
-						if vars.Group.barToShare == nil then
-							return "Active Bar"
-						elseif vars.Group.barToShare == HOTBAR_CATEGORY_PRIMARY then
-							return "Front Bar"
-						elseif vars.Group.barToShare == HOTBAR_CATEGORY_BACKUP then
-							return "Back Bar"
-						end
-					end,
-					setFunc = function(value)
-						if value == "Active Bar" then
-							vars.Group.barToShare = nil
-						elseif value == "Front Bar" then
-							vars.Group.barToShare = HOTBAR_CATEGORY_PRIMARY
-						elseif value == "Back Bar" then
-							vars.Group.barToShare = HOTBAR_CATEGORY_BACKUP
-						end
-					end
+					type = "button",
+					name = "Unlock Window",
+					tooltip = "Click here to enable windows to move around",
+					width = "half",
+					func = AD.Group.unlockWindow,
+				},
+				{
+					type = "button",
+					name = "Lock Window",
+					tooltip = "Click here to disable windows from moving around",
+					width = "half",
+					func = AD.Group.lockWindow,
 				},
 				{
 					type = "button",

@@ -3,6 +3,8 @@ local AD = ArtaeumGroupTool
 
 -- Written by M0R_Gaming
 
+local debugMode = false
+
 AD.name = "ArtaeumGroupTool"
 AD.varversion = 1
 
@@ -40,14 +42,12 @@ AD.Settings.DefaultSettings = {
 	},
 	Group = {
 		enabled = false,
-		cyrodilOnly = true,
-		frequency = 2500,
+		cyrodilOnly = false,
 		windowLocations = {},
 		windowLocked = false,
 		amountOfWindows = 1,
 		hideUI = false,
-		hideBaseUnitFrames = false,
-		barToShare = nil,
+		hideBaseUnitFrames = true,
 		scale = 1,
 		colours = {
 			marker = {1,0,0,0.5},
@@ -55,7 +55,6 @@ AD.Settings.DefaultSettings = {
 			fullUlt = {0,0.8,0,0.8}
 		},
 		showMagStam = false,
-		UI = "Custom", -- Vanilla, Custom, AUI, Bandits
 		groupFrameText = "Ult Number", -- Ult Number, Ult Percent, Health
 	}
 }
@@ -66,7 +65,6 @@ AD.Profiles.DefaultSettings = {
 	["M0R's Default"] = {
 		Group = {
 	        windowLocations = { {43.5,75} , {289.5,75} },
-	        frequency = 2500,
 	        hideBaseUnitFrames = true,
 	        windowLocked = true,
 	        enabled = true,
@@ -77,10 +75,8 @@ AD.Profiles.DefaultSettings = {
 				standardHealth = {0.8,26/255,26/255,0.8},
 				fullUlt = {0,0.8,0,0.8}
 			},
-	        cyrodilOnly = true,
+	        cyrodilOnly = false,
 	        hideCustomFrame = false,
-	        barToShare = 1,
-			UI = "Custom",
 			showMagStam = false,
 	    },
 	    FD = {
@@ -180,6 +176,10 @@ function AD.print(...)
 	end
 end
 
+if not debugMode then
+	AD.print = function(...) end
+end
+
 
 
 
@@ -191,7 +191,6 @@ end
 -------------------------------------------------------------------------------------------------
 function AD.OnAddOnLoaded(event, addonName)
 
-	if addonName == "RdKGroupTool" then AD.rdk = true end
 	if addonName ~= AD.name then return end
 
 	AD:Initialize()
@@ -203,7 +202,6 @@ end
 function AD:Initialize()
 	-- Addon Settings Menu
 	AD.vars = ZO_SavedVars:NewAccountWide("ADVars", AD.varversion, nil, AD.Settings.DefaultSettings)
-	if AD.vars.Group.frequency < 2500 then AD.vars.Group.frequency = 2500 end -- to help cut down on ping times
 
 	if LibFilteredChatPanel then
 		AD.filter = LibFilteredChatPanel:CreateFilter("ArtaeumGroupTool", "/esoui/art/crowncrates/psijic/crowncrate_psijic_back.dds", {0, 0.8, 0.8}, false)

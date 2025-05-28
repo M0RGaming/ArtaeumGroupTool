@@ -1,13 +1,15 @@
 # `Artaeum Group Tool 2.0`
 
-This is an addon meant to provide Cyrodiil based PvP groups with tools to help them out. All features except for the Front Door markers are disabled by default.
+This is an addon which provides utility to players both in Cyrodiil and PvE content where ultimate share addons are used. All features except for the Front Door markers are disabled by default, and more details about each feature can be found below.
 
 ## Features
 
-### `Group Data Share`
-- This module shares data between members in a party, such as what ult they have slotted, what percent their ult is at, and more, such as if they are camp locked.
-- In addition, Volendrung's bar is also sent and so is the user's Stamina and Magicka bars.
-- Finally, an 'Assist Ping' is also sent, which allows everyone running the addon to get a beam of light where you are at the press of a keybind. This will also tell you which direction you are to the crown.
+### `Custom Group Frames: Group Data Share`
+- This feature is a custom Group Frame UI with support for showing all player's ultimates as well as providing clear visual feedback as to when people can cast ultimates.
+- The Group Frames will also show if a player has a shield, trauma, or is running a no healing item/skill similar to base game.
+- If a player is camp locked in Cyrodiil, their group frame outline will turn red until they are no longer camp locked.
+- If a player in the gorup is holding Volendrung, its current value will be shared with everyone in the group. In addition, players' Stamina and Magicka bars will be shared and have a visual effect on the group frames if enabled.
+- On the press of a keybind an 'Assist Ping' is sent, allowing everyone running the addon to get a beam of light where you are. This will also tell you which direction you are respective to the group leader in chat.
 
 ### `Crown Arrow`
 - A beam of light, crown icon, or downwards arrow will be placed above the group leader, with a blue arrow pointing towards them.
@@ -32,8 +34,8 @@ This is an addon meant to provide Cyrodiil based PvP groups with tools to help t
 - Both the message and the link itself, can be configured in the addon settings page.
 - To activate, type in /addiscord, use the keybind, or use the button in the addon settings page
 
-### Coming Soon:
+### Planned:
 - Visual notification if in healing range of crown
 
 ### Requirements:
-- LibAddonMenu2, LibMapPins, LibMapPing, Lib3D, LibGPS, Lib3DArrow
+- LibAddonMenu2, LibMapPins, LibMapPing, Lib3D, LibGPS, Lib3DArrow, LibGroupCombatStats, LibGroupBroadcast

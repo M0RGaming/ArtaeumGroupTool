@@ -59,52 +59,41 @@ function group.init()
 
 	if vars.enabled then
 		
-		if vars.UI == "Custom" then
-			group.createTopLevels()
-			AD.initAnchors(toplevels)
+		group.createTopLevels()
+		AD.initAnchors(toplevels)
 
-			
-			group.fragments = {}
-			for i=1,#toplevels do
-				group.fragments[i] = ZO_HUDFadeSceneFragment:New(toplevels[i], DEFAULT_SCENE_TRANSITION_TIME, 0)
-			end
-			if vars.hideUI then
-				for i=1,#toplevels do
-					toplevels[i]:SetHidden(true)
-				end
-			else
-				HUD_SCENE:AddFragmentGroup(group.fragments)
-				HUD_UI_SCENE:AddFragmentGroup(group.fragments)
-			end
-
-
-			for i=1,12 do
-				local topLevelID = math.floor((i-1)*AD.vars.Group.amountOfWindows/12)+1
-				frameDB['group'..i] = AD.Frame:new('group'..i, toplevels[topLevelID])
-				--if vars.showMagStam then
-				--	frameDB['group'..i]:SetMagStamHidden(false)
-				--end
-			end
-
-			group.scaleWindow()
-
-			if not vars.windowLocked then
-				ZO_Alert(UI_ALERT_CATEGORY_ERROR, SOUNDS.NEGATIVE_CLICK, "|cff0000Artaeum Group Tool's group UI has not been locked.|r")
-				group.unlockWindow()
-			end
-
-			-- adapted from ZOS's Code
-	    	ZO_MostRecentPowerUpdateHandler:New("AD_UnitFrames", group.PowerUpdateHandlerFunction)
-		else
-			SecurePostHook(UNIT_FRAMES, "CreateFrame", function(_, unitTag, anchors, barTextMode, style)
-				if style == "ZO_RaidUnitFrame" then --ZO_GroupUnitFrame --ZO_RaidUnitFrame
-					if frameDB[unitTag] == nil then
-						frameDB[unitTag] = AD.Frame:new(unitTag, toplevels[topLevelID])
-					end
-				end
-			end)
-			group.moveBoxes()
+		
+		group.fragments = {}
+		for i=1,#toplevels do
+			group.fragments[i] = ZO_HUDFadeSceneFragment:New(toplevels[i], DEFAULT_SCENE_TRANSITION_TIME, 0)
 		end
+		if vars.hideUI then
+			for i=1,#toplevels do
+				toplevels[i]:SetHidden(true)
+			end
+		else
+			HUD_SCENE:AddFragmentGroup(group.fragments)
+			HUD_UI_SCENE:AddFragmentGroup(group.fragments)
+		end
+
+
+		for i=1,12 do
+			local topLevelID = math.floor((i-1)*AD.vars.Group.amountOfWindows/12)+1
+			frameDB['group'..i] = AD.Frame:new('group'..i, toplevels[topLevelID])
+			--if vars.showMagStam then
+			--	frameDB['group'..i]:SetMagStamHidden(false)
+			--end
+		end
+
+		group.scaleWindow()
+
+		if not vars.windowLocked then
+			ZO_Alert(UI_ALERT_CATEGORY_ERROR, SOUNDS.NEGATIVE_CLICK, "|cff0000Artaeum Group Tool's group UI has not been locked.|r")
+			group.unlockWindow()
+		end
+
+		-- adapted from ZOS's Code
+    	ZO_MostRecentPowerUpdateHandler:New("AD_UnitFrames", group.PowerUpdateHandlerFunction)
 
 
 
@@ -132,11 +121,18 @@ function group.init()
 		group.protocols.sync:OnData(group.handlers.onSync)
 		group.protocols.sync:Finalize({isRelevantInCombat = true, replaceQueuedMessages = false})
 
+		group.protocols.hammer = handler:DeclareProtocol(92, "ArtaeumDaedricArtifact") -- create seperate channel for artifact power, as it should replace queued messages
+		group.protocols.hammer:AddField(LGB.CreatePercentageField("hammer")) -- ArtaeumDaedricPower (502), only when holding
+		group.protocols.hammer:OnData(group.handlers.onHammerUpdate)
+		group.protocols.hammer:Finalize({isRelevantInCombat = true, replaceQueuedMessages = true})
+
 
 
 		local GroupResources = LibGroupBroadcast:GetHandlerApi("GroupResources")
-		GroupResources:RegisterForStaminaChanges(group.handlers.onStamUpdate)
-		GroupResources:RegisterForMagickaChanges(group.handlers.onMagUpdate)
+		if GroupResources then
+			GroupResources:RegisterForStaminaChanges(group.handlers.onStamUpdate)
+			GroupResources:RegisterForMagickaChanges(group.handlers.onMagUpdate)
+		end
 
 
 
@@ -209,7 +205,7 @@ function group.requestAssistPing()
 		ping = true
 	})
 	--group.handlers.onPing('player', {ping=true})
-	-- TODO: maybe display ping locally too
+	--LGB pings also display locally so not needed 
 end
 
 function group.ping()
@@ -324,14 +320,14 @@ function group.handlers.onSync(unitTag, data)
 end
 
 function group.handlers.onStamUpdate(unitTag, unitName, current, max, percent)
-	if vars.UI == "Custom" and vars.showMagStam then
+	if vars.showMagStam then
 		if frameDB[unitTag].magStamHidden then frameDB[unitTag]:SetMagStamHidden(false) end
 		frameDB[unitTag]:SetStam(percent,1)
 	end
 end
 
 function group.handlers.onMagUpdate(unitTag, unitName, current, max, percent)
-	if vars.UI == "Custom" and vars.showMagStam then
+	if vars.showMagStam then
 		if frameDB[unitTag].magStamHidden then frameDB[unitTag]:SetMagStamHidden(false) end
 		frameDB[unitTag]:SetMag(percent,1)
 	end
@@ -373,7 +369,9 @@ end
 function group.sendHammer(_, unit, powerIndex, powerType, current, max)
 	if max == 0 then max = 1 end
 	local hammerBar = current/max
-	group.send(nil, hammerBar, nil)
+	group.protocols.hammer:Send({
+		hammer = hammerBar
+	})
 end
 
 
@@ -388,7 +386,6 @@ function group.updateLock()
 end
 
 function group.newLock()
-	-- TODO: ALL OF THIS
 	group.send(true)
 	EVENT_MANAGER:RegisterForUpdate("AD Group Tool Camp Lock Check", 10000, group.updateLock)
 	activeLockUpdate = true
@@ -412,6 +409,7 @@ end
 
 
 --AD.hammer = 0
+-- TODO: REMOVE THIS AFTER THE NEXT UPDATE
 function group.toSend:send()
 	if true then return end
 
@@ -807,12 +805,10 @@ function group.updateSharing(sharing)
 		EVENT_MANAGER:UnregisterForEvent("AD Group Tool Group Camp", EVENT_FORWARD_CAMP_RESPAWN_TIMER_BEGINS)
 		
 
-		if vars.UI == "Custom" then
-			for i=1,12 do
-				frameDB['group'..i].frame:SetHidden(true)
-			end
-			ZO_UnitFramesGroups:SetHidden(false)
+		for i=1,12 do
+			frameDB['group'..i].frame:SetHidden(true)
 		end
+		ZO_UnitFramesGroups:SetHidden(false)
 		group.running = false
 		
 
@@ -840,14 +836,10 @@ function group.updateSharing(sharing)
 		
 		
 		
-		--if IsUnitGrouped("player") then
-		--	EVENT_MANAGER:RegisterForUpdate("AD Group Tool Group Ping", vars.frequency, group.ping)
-		--end
 
-		if vars.UI == "Custom" then
-			if vars.hideBaseUnitFrames then
-				ZO_UnitFramesGroups:SetHidden(true)
-			end
+
+		if vars.hideBaseUnitFrames then
+			ZO_UnitFramesGroups:SetHidden(true)
 		end
 
 		group.running = true
