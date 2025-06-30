@@ -72,10 +72,12 @@ function AD3D.create3D(toplevel, data)
 
 	function beam:show()
 		if self.enabled then
+			self:SetTexture(self.texture)
 			self:SetHidden(false)
 		end
 	end
 	function beam:hide()
+		self:SetTexture("")
 		if self.enabled then
 			self:SetHidden(true)
 		end
@@ -87,6 +89,7 @@ function AD3D.create3D(toplevel, data)
 	function beam:disable()
 		self.enabled = false
 		self:SetHidden(true)
+		self:SetTexture("")
 	end
 
 	function beam:setScale(scale)

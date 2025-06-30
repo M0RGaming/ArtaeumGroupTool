@@ -298,7 +298,7 @@ function frameObject:SetMagStamHidden(value)
 end
 
 function frameObject:SetDead(dead)
-	local current, max = GetUnitPower(self.unitTag, POWERTYPE_HEALTH)
+	local current, max = GetUnitPower(self.unitTag, COMBAT_MECHANIC_FLAGS_HEALTH)
 	if dead then
 		self.name:SetColor(1,0,0,1)
 		self:SetHealth(0,max)
@@ -332,7 +332,7 @@ function frameObject:DeathLoop()
 			self.name:SetColor(1,0,0,1)
 		end
 	else
-		local current, max = GetUnitPower(self.unitTag, POWERTYPE_HEALTH)
+		local current, max = GetUnitPower(self.unitTag, COMBAT_MECHANIC_FLAGS_HEALTH)
 		self.name:SetColor(1,1,1,1)
 		self:SetHealth(current,max)
 		EVENT_MANAGER:UnregisterForUpdate("AD Res " .. self.unitTag)
@@ -343,7 +343,7 @@ end
 
 
 function frameObject:SetOnline(online)
-	local current, max = GetUnitPower(self.unitTag, POWERTYPE_HEALTH)
+	local current, max = GetUnitPower(self.unitTag, COMBAT_MECHANIC_FLAGS_HEALTH)
 	if online then
 		self.name:SetColor(1,1,1,1)
 		self:SetHealth(current,max)

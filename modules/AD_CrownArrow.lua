@@ -14,11 +14,9 @@ function crown.init()
 	crown.createArrow()
 	crown.updateToggle(vars.enabled)
 	crown.toggleMarker(vars.showMarker)
-	crown.toggleArrow(vars.showArrow)
 	crown.toggleCyroOnly()
 end
 
-crown.arrow = nil
 crown.updateInterval = 10
 crown.crown = nil
 crown.running = false
@@ -26,7 +24,7 @@ crown.running = false
 
 crown.markerTypes = {
 	Beam = {
-		texture = "Lib3DArrow/art/pillar.dds",
+		texture = "ArtaeumGroupTool/Textures/pillar.dds",
 		scaleX = 1,
     	scaleY = 100,
     	X = 0,
@@ -56,25 +54,7 @@ crown.markerTypes = {
 
 
 
--- This creates an arrow using Lib3DArrow, then hides the marker bit of it
 function crown.createArrow()
-	crown.arrow = Lib3DArrow:CreateArrow({
-		depthBuffer = false, --Original: false
-		arrowMagnitude = 2, --Original: 5
-		arrowScale = 1,
-		arrowHeight = 0.25,
-		arrowColour = "00FFFF",
-
-		distanceDigits = 4,
-		distanceScale = 25, --Original: 25
-		distanceMagnitude = 2, --Added
-		distanceHeight = 0.25,
-		distanceColour = "FFFFFF",
-
-		markerColour = "00FFFF",
-		markerScale = 1,
-	})
-	crown.arrow.marker:SetHidden(true)
 	crown.pin = AD.AD3D.create3D(toplevel, crown.markerTypes[vars.markerType])
 	crown.pin:setUserOffset(vars.userOffset)
 	crown.pin:setScale(vars.scale)
@@ -83,7 +63,6 @@ end
 
 function crown.updateColours()
 	local rgb = vars.markerColour
-	crown.arrow.arrow.chevron:SetColor(rgb[1],rgb[2],rgb[3])
 	crown.pin:setColour(rgb[1],rgb[2],rgb[3],rgb[4])
 end
 
@@ -115,8 +94,7 @@ function crown.updateToggle(enable)
 		EVENT_MANAGER:UnregisterForEvent("AD Group Tool Crown Change")
 		EVENT_MANAGER:UnregisterForEvent("AD Group Tool Crown Group Update")
 		EVENT_MANAGER:UnregisterForUpdate("AD Group Tool Crown Update")
-		crown.arrow:SetTarget(0,0)
-		crown.pin:SetHidden(true)
+		crown.pin:hide()
 	end
 end
 
@@ -147,7 +125,6 @@ function crown.groupLeave(eventCode, _, _, isLocalPlayer, _, _)
 	end
 	--if not IsUnitGrouped("player") then
 	EVENT_MANAGER:UnregisterForUpdate("AD Group Tool Crown Update")
-	crown.arrow:SetTarget(0,0)
 	crown.crown = nil
 	crown.running = false
 	crown.pin:hide()
@@ -157,7 +134,6 @@ end
 function crown.groupLeadChange(eventCode, leaderTag)
 	if IsUnitGroupLeader('player') then
 		EVENT_MANAGER:UnregisterForUpdate("AD Group Tool Crown Update")
-		crown.arrow:SetTarget(0,0)
 		crown.running = false
 		crown.pin:hide()
 	else
@@ -187,11 +163,6 @@ function crown.updateMarker()
 		local X,Y,Z = WorldPositionToGuiRender3DPosition(Xw,Yw,Zw)
 		crown.pin:setPos(X,Y,Z)
 	end
-
-	if vars.showArrow then
-		local localX,localY = GetMapPlayerPosition(crown.crown)
-		crown.arrow:SetTarget(localX,localY)
-	end
 end
 
 function crown.toggleMarker(value)
@@ -204,16 +175,6 @@ function crown.toggleMarker(value)
 	end
 end
 
-function crown.toggleArrow(value)
-	vars.showArrow = value
-	if value then
-		crown.arrow.arrow:SetHidden(false)
-		crown.arrow.distance:SetHidden(false)
-	else
-		crown.arrow.arrow:SetHidden(true)
-		crown.arrow.distance:SetHidden(true)
-	end
-end
 
 function crown.toggleCyroOnly()
 	local value = vars.cyrodilOnly
@@ -236,12 +197,12 @@ end
 
 
 -- TESTING
-function quickTest()
+function crown.quickTest()
 	crown.crown = 'player'
 	crown.groupJoin(nil,nil,nil,true)
 	crown.crown = 'player'
 end
-function stopTest()
+function crown.stopTest()
 	crown.groupLeave(nil,nil,nil,true)
 end
 

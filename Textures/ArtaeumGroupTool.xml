@@ -2,7 +2,7 @@
 	<Controls>
 		
 		<TopLevelControl name="AD_Group_TopLevel" clampedToScreen="true" mouseEnabled="false" movable="true" virtual="true">
-			<Dimensions x="247" y="480" /> <!--Was 225, but that was with only 1 ult-->
+			<Dimensions x="247" y="480" />
 			<Anchor point="TOPLEFT" relativeTo="GuiRoot" relativePoint="TOPLEFT" offsetX="0" offsetY="0"/>
 			
 			<Controls>
@@ -10,7 +10,7 @@
 					<AnchorFill />
 					<Edge edgeSize="1"/>
 				</Backdrop>
-				<Label name="$(parent)Name" font="$(ANTIQUE_FONT)|$(KB_20)|soft-shadow-thick" wrapMode="ELLIPSIS" hidden="true">
+				<Label name="$(parent)Name" font="ZoFontTributeAntique30" wrapMode="ELLIPSIS" hidden="true">
 					<AnchorFill />
 				</Label>
 			</Controls>
@@ -20,7 +20,7 @@
 
 		<Control name="AD_Group_Template" virtual="true">
     		<Anchor point="TOPLEFT" relativeTo="$(parent)" relativePoint="TOPLEFT" offsetX="2" offsetY="3" />
-    		<Dimensions x="247" y="29" /> <!--edge with of 6 probably-->
+    		<Dimensions x="247" y="29" />
     		<Controls>
 
     			<Backdrop name="$(parent)BG">
@@ -45,20 +45,13 @@
 					<Dimensions x="191" y="4" />
 					<Limits min="0" max="100" />
 				</StatusBar>
-				<!--
-				<StatusBar name="$(parent)HealthResourceBreak" color="a99249">
-					<Anchor point="BOTTOMLEFT" relativeTo="$(parent)Mag" relativePoint="TOPLEFT" />
-					<Dimensions x="191" y="2" />
-				</StatusBar>
-			-->
-				
 
 
 				<Texture name="$(parent)Icon" textureFile="esoui\art\unitframes\gamepad\gp_group_leader.dds" layer='2' hidden="true">
                     <Anchor point="TOPLEFT"/>
                     <Dimensions x="20" y="20" />
                 </Texture>
-				<Label name="$(parent)Name" font="ZoFontGame" wrapMode="ELLIPSIS">
+				<Label name="$(parent)Name" font="ZoFontGamepad20" wrapMode="ELLIPSIS">
 					<Anchor point="TOPLEFT" />
 					<Dimensions x="163" y="29" />
 
@@ -84,29 +77,12 @@
 						<Texture name="$(parent)Icon" textureFile="/esoui/art/icons/ability_sorcerer_crushing_monsoon.dds">
 							<AnchorFill />
 						</Texture>
-						<Label name="$(parent)Percent" font="$(GAMEPAD_BOLD_FONT)|$(KB_13)|thick-outline" horizontalAlignment="2">
+						<Label name="$(parent)Percent" font="$(GAMEPAD_MEDIUM_FONT)|15|thick-outline" horizontalAlignment="2">
 							<Anchor point="BOTTOMLEFT" offsetX="-60" relativePoint="BOTTOMLEFT" relativeTo="$(parent)"/>
 							<Dimensions x="60" y="14" />
 						</Label>
 					</Controls>
 				</StatusBar>
-				<!--
-				<StatusBar name="$(parent)Ult" color="000000" orientation="0" barAlignment="1">
-					<Anchor point="TOPRIGHT" relativeTo="$(parent)Ult2" relativePoint="TOPRIGHT"/>
-					<Dimensions x="28" y="28" />
-					<Limits min="0" max="100" />
-					<Controls>
-						<Texture name="$(parent)Icon" textureFile="/esoui/art/icons/ability_sorcerer_crushing_monsoon.dds">
-							<AnchorFill />
-						</Texture>
-						<Label name="$(parent)Percent" font="$(ANTIQUE_FONT)|$(KB_13)|soft-shadow-thick">
-							<Anchor point="BOTTOMLEFT" offsetX="-36" />
-							<Dimensions x="36" y="20" />
-						</Label>
-					</Controls>
-				</StatusBar>
-				-->
-
 			</Controls>
 		</Control>
 
@@ -131,28 +107,6 @@
                 </StatusBar>
             </Controls>
         </StatusBar>
-        
-    	<StatusBar name="AD_Group_ShieldBarTemplate_Keyboard_Template" inherits="ZO_PowerShieldBar ZO_DefaultStatusBarBase" virtual="true">
-    		<Dimensions y="29" />
-            <Controls>
-                <StatusBar name="$(parent)Trauma" inherits="ZO_DefaultStatusBarBase">
-                    <Dimensions y="29" />
-                </StatusBar>
-
-                <StatusBar name="$(parent)FakeHealth" inherits="ZO_DefaultStatusBarBase">
-                	<Dimensions y="29" />
-                </StatusBar>
-
-                <StatusBar name="$(parent)NoHealingInner" inherits="ZO_DefaultStatusBarBase">
-                	<Dimensions y="29" />
-                </StatusBar>
-
-                <StatusBar name="$(parent)FakeNoHealingInner" inherits="ZO_DefaultStatusBarBase">
-                	<Dimensions y="29" />
-                </StatusBar>
-            </Controls>
-        </StatusBar>
-
         <StatusBar name="AD_Group_ShieldBarTemplate_Gamepad_Template" inherits="ZO_PowerShieldBar ZO_DefaultStatusBarBase" virtual="true">
     		<Dimensions y="29" />
             <Controls>
