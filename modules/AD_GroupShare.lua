@@ -322,7 +322,7 @@ local syncQueued = false
 
 function group.handlers.onSync(unitTag, data)
 
-	---[[
+	--[[
 	local syncData = ""
 	for i,v in pairs(data) do
 		syncData = syncData..i..", "
