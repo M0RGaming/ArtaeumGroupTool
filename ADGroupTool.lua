@@ -3,7 +3,7 @@ local AD = ArtaeumGroupTool
 
 -- Written by M0R_Gaming
 
-local debugMode = false
+local debugMode = true
 
 AD.name = "ArtaeumGroupTool"
 AD.varversion = 1

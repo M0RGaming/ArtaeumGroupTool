@@ -18,12 +18,14 @@ local roles = {
 
 
 local anchors = {}
+local parents = {}
 function AD.initAnchors(topLevels)
 	local amountCreated = 0
 	for i=1,12 do
 		local topLevelID = math.floor((i-1)*AD.vars.Group.amountOfWindows/12)+1
 		local anchor = ZO_Anchor:New(TOPLEFT, topLevels[topLevelID], TOPLEFT, 0, 40 * (amountCreated%(12/AD.vars.Group.amountOfWindows)))
 		anchors[i] = anchor
+		parents[i] = topLevels[topLevelID]
 		amountCreated = amountCreated + 1
 	end
 end
@@ -241,6 +243,7 @@ end
 function frameObject:setAnchors()
 	if self.index then
 		anchors[self.index]:Set(self.frame)
+		self.frame:SetParent(parents[self.index]) -- have to set parent too because of scale
 	end
 end
 function frameObject:setName()
