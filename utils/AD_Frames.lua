@@ -420,6 +420,11 @@ function frameObject:setUlt(ultValue, ult1Cost, icon1, ult2Cost, icon2, noUlt)
 		if AD.vars.Group.groupFrameText ~= "Health" then
 			self.ultPercent:SetText("")
 		end
+		local rgb = AD.vars.Group.colours.standardHealth
+		self.health:SetColor(unpack(rgb))
+		if self.healthEffects.fakeHealth ~= nil then
+			self.healthEffects.fakeHealth:SetColor(unpack(rgb))
+		end
 		self:SetOnline(IsUnitOnline(self.unitTag))
 		return
 	end
