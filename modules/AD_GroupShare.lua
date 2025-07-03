@@ -159,6 +159,7 @@ function group.createTopLevels()
 		end
 		WINDOW_MANAGER:GetControlByName("AD_Group_TopLevel"..i.."Name"):SetText("Group "..i)
 		toplevels[i]:SetAnchor(TOPLEFT, GuiRoot, TOPLEFT, vars.windowLocations[i][1], vars.windowLocations[i][2])
+		toplevels[i]:SetTransformNormalizedOriginPoint(0,0)
 	end
 end
 
@@ -648,11 +649,10 @@ end
 
 
 
---TODO: Replace this entire thing with transform scale next patch
 function group.scaleWindow()
 	local scale = vars.scale
 	for i=1,#toplevels do
-		toplevels[i]:SetScale(scale)
+		toplevels[i]:SetTransformScale(scale)
 	end
 end
 
