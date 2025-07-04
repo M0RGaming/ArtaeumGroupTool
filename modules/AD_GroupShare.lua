@@ -22,7 +22,7 @@ group.handlers = {}
 
 
 function group.init()
-	print("AD Initialized")
+	--print("AD Initialized")
 
 	vars = AD.vars.Group
 
@@ -346,15 +346,18 @@ function group.handlers.onSync(unitTag, data)
 		
 		-- send data
 		if not AreUnitsEqual(unitTag, 'player') then -- dont sync off of own sync request
-			print("Recieved Sync Request from "..GetUnitDisplayName(unitTag))
-			if syncQueued == false then group.sync(false) print("Starting Sync") end
+			--print("Recieved Sync Request from "..GetUnitDisplayName(unitTag))
+			if syncQueued == false then
+				group.sync(false)
+				--print("Starting Sync")
+			end
 			syncQueued = true
 		end
 		
 	elseif data.requestSync == false then
 		-- user just finished syncing
 		if AreUnitsEqual(unitTag, 'player') then
-			print("User Finished Syncing")
+			--print("User Finished Syncing")
 			syncQueued = false
 		end
 	end
@@ -402,7 +405,7 @@ end
 function group.handlers.onUlt(unitTag, data)
 	--data.ultValue
 	local playerName = GetUnitName(unitTag)
-	print("Got data from "..playerName.." to have ult of "..data.ultValue)
+	--print("Got data from "..playerName.." to have ult of "..data.ultValue)
 	if playerName and playerUltLookup[playerName] then
 		playerUltLookup[playerName].ultValue = data.ultValue
 
