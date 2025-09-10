@@ -512,7 +512,8 @@ function group.sync(requestSync)
 
 	--group.send(campLock, hammerBar, requestSync, playerUlt1Cost, playerUlt2Cost, playerUlt1ID, playerUlt2ID, ultValue)
 	group.send(campLock, hammerBar, nil, playerUlt1Cost, playerUlt2Cost, nil, nil, nil)
-	group.send(nil, nil, nil, nil, nil, group.ultiIndexes[playerUlt1ID or 0] or 0, group.ultiIndexes[playerUlt2ID or 0] or 0, ultValue)
+	group.send(nil, nil, nil, nil, nil, group.ultiIndexes[playerUlt1ID or 0] or 0, group.ultiIndexes[playerUlt2ID or 0] or 0, nil)
+	group.sendUlt(nil, nil, nil, nil, ultValue)
 	group.send(nil, nil, requestSync)
 end
 
@@ -784,8 +785,7 @@ end
 
 
 
-
-
+local lastZone = 0
 
 
 function group.updateSharing(sharing)
@@ -856,7 +856,13 @@ function group.updateSharing(sharing)
 	elseif group.running and sharing then
 		group.groupLeadChange()
 		group.groupUpdate()
-		group.sync(true)
+
+		local currentZone = GetUnitWorldPosition('player')
+		if currentZone ~= lastZone then
+			--d("Loaded into a new zone: "..currentZone..", last zone was: "..lastZone)
+			group.sync(true) -- Only sync when changing zones
+		end
+		lastZone = currentZone
 	end
 
 end
