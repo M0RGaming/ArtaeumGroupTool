@@ -30,6 +30,13 @@ function settings.createSettings()
 		"Health"
 	}
 
+	local dackVisOptions = { -- allBackdrop, outline, none
+		"Outlines",
+		"None",
+		"All Backdrops"
+	}
+
+
 	local vars = AD.vars
 
 	local panelName = "ArtaeumGroupToolSettingsPanel"
@@ -224,6 +231,27 @@ function settings.createSettings()
 					setFunc = function(value) vars.Group.enabled = value end,
 					requiresReload = true
 				},
+
+
+				{
+					type = "checkbox",
+					name = "Dack Group Frames",
+					tooltip = "Enable this to swap to the alternative group frames designed by DackJaniels",
+					getFunc = function() return vars.Group.dackUIEnabled end,
+					setFunc = function(value) vars.Group.dackUIEnabled = value end,
+					requiresReload = true
+				},
+				{
+					type = "dropdown",
+					name = "Dack Group Frames: Backdrops Mode",
+					warning = "Requires Dack Group Frames to be enabled.",
+					disabled = function() return not vars.Group.dackUIEnabled end,
+					choices = dackVisOptions,
+					getFunc = function() return vars.Group.dackVisType end,
+					setFunc = function(value) vars.Group.dackVisType = value; AD.Group.setAllVisType() end,
+				},
+
+
 				
 				{
 					type = "checkbox",

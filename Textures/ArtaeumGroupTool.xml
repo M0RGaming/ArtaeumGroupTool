@@ -66,7 +66,7 @@
 				
 
 
-				<StatusBar name="$(parent)Ult2" color="000000" orientation="0" barAlignment="1">
+				<StatusBar name="$(parent)Ult2" color="C8000000" orientation="0" barAlignment="1">
 					<Anchor point="TOPRIGHT" relativeTo="$(parent)" relativePoint="TOPRIGHT"/>
 					<Dimensions x="28" y="28" />
 					<Limits min="0" max="100" />
@@ -76,7 +76,7 @@
 						</Texture>
 					</Controls>
 				</StatusBar>
-				<StatusBar name="$(parent)Ult" color="000000" orientation="0" barAlignment="1">
+				<StatusBar name="$(parent)Ult" color="C8000000" orientation="0" barAlignment="1">
 					<Anchor point="TOPRIGHT" relativeTo="$(parent)Ult2" relativePoint="TOPLEFT"/>
 					<Dimensions x="28" y="28" />
 					<Limits min="0" max="100" />
@@ -247,10 +247,6 @@
 							<Anchor point="CENTER" relativeTo="$(parent)" relativePoint="CENTER" />
 							<Dimensions x="198" y="17" />
 							<Limits min="0" max="100" />
-							<OnInitialized>
-								self:SetMinMax(0,24376) -- this was just for testing purposes lol
-								self:SetValue(24376)
-							</OnInitialized>
 							<Controls>
 								<Label name="$(parent)Value" font="ZoFontWinH5" wrapMode="ELLIPSIS" text="Health Here" horizontalAlignment="1" verticalAlignment="1">
 									<Anchor point="TOPLEFT" relativeTo="$(parent)" relativePoint="TOPLEFT" offsetX="0" offsetY="-2" />
@@ -264,9 +260,9 @@
 							</Controls>
 
 							<OnValueChanged>
-								local value = self:GetValue()
-								local min, max = self:GetMinMax()
-								self:GetNamedChild("Value"):SetText(ZO_FormatResourceBarCurrentAndMax(value, max))
+								--local value = self:GetValue()
+								--local min, max = self:GetMinMax()
+								--self:GetNamedChild("Value"):SetText(ZO_FormatResourceBarCurrentAndMax(value, max))
 							</OnValueChanged>
 						</StatusBar>
 					</Controls>
@@ -276,7 +272,7 @@
 					<Anchor point="BOTTOMLEFT" relativeTo="$(parent)" relativePoint="BOTTOMLEFT"/>
 					<Dimensions x="200" y="20"/>
 					<Controls>
-						<StatusBar name="$(parent)Ult" color="000000" orientation="0" barAlignment="1">
+						<StatusBar name="$(parent)Ult" color="C8000000" orientation="0" barAlignment="1">
 							<Anchor point="LEFT" relativeTo="$(parent)" relativePoint="LEFT"/>
 							<Dimensions x="20" y="20" />
 							<Limits min="0" max="100" />
@@ -291,7 +287,7 @@
 								</Backdrop>
 							</Controls>
 						</StatusBar>
-						<StatusBar name="$(parent)Ult2" color="000000" orientation="0" barAlignment="1">
+						<StatusBar name="$(parent)Ult2" color="C8000000" orientation="0" barAlignment="1">
 							<Anchor point="LEFT" relativeTo="$(parent)Ult" relativePoint="RIGHT" offsetX="2"/>
 							<Dimensions x="20" y="20" />
 							<Limits min="0" max="100" />
@@ -350,7 +346,7 @@
 							</OnInitialized>
 						</StatusBar>
 
-						<Label name="$(parent)Level" font="ZoFontWinH5" wrapMode="ELLIPSIS" text="|t14:14:EsoUI/Art/Champion/champion_icon.dds|t 3600" horizontalAlignment="0" verticalAlignment="1">
+						<Label name="$(parent)Level" font="ZoFontWinH5" wrapMode="ELLIPSIS" text="|t14:14:EsoUI/Art/Champion/champion_icon.dds|t 3600" horizontalAlignment="2" verticalAlignment="1">
 							<Anchor point="RIGHT" offsetX="-2" offsetY="-1"/>
 							<Dimensions x="50" y="16" />
 							<Controls>

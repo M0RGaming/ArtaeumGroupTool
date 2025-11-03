@@ -18,12 +18,16 @@ local roles = {
 
 
 local anchors = {}
-function AD.initAnchors(topLevels)
+function AD.initAnchors(topLevels, dackFrameEnabled)
+	local verticalOffset = 40
+	if dackFrameEnabled then
+		verticalOffset = 65
+	end
 	local amountCreated = 0
 	for i=1,12 do
 		local topLevelID = math.floor((i-1)*AD.vars.Group.amountOfWindows/12)+1
 		--local anchor = ZO_Anchor:New(TOPLEFT, topLevels[topLevelID], TOPLEFT, 0, 40 * (amountCreated%(12/AD.vars.Group.amountOfWindows)))
-		local anchor = ZO_Anchor:New(TOPLEFT, topLevels[topLevelID], TOPLEFT, 0, 65 * (amountCreated%(12/AD.vars.Group.amountOfWindows)))
+		local anchor = ZO_Anchor:New(TOPLEFT, topLevels[topLevelID], TOPLEFT, 0, verticalOffset * (amountCreated%(12/AD.vars.Group.amountOfWindows)))
 		anchors[i] = anchor
 		amountCreated = amountCreated + 1
 	end
@@ -507,6 +511,9 @@ function dackFrame:new(unitTag, parent)
 	frame.level = bottomrow:GetNamedChild("Level")
 
 
+
+	frame.backdrop = frame.frame:GetNamedChild("BG")
+
 	frame.unitTag = unitTag
 	frame.index = nil
 	frame.unit = ""
@@ -545,7 +552,9 @@ function dackFrame:new(unitTag, parent)
 	return frame
 end
 function dackFrame:SetMagStamHidden(value)
-	return -- dont do that
+	self.mag:SetHidden(value)
+	self.stam:SetHidden(value)
+	self.magStamHidden = value
 end
 function dackFrame:setGroupLeader()
 	if IsUnitGroupLeader(self.unitTag) then
@@ -558,10 +567,16 @@ end
 
 function dackFrame:SetHealth(value,max)
 	ZO_StatusBar_SmoothTransition(self.health,value,max)
+	self.health:GetNamedChild("Value"):SetText(ZO_FormatResourceBarCurrentAndMax(value, max))
 end
 
 function dackFrame:SetOnline(online)
 	frameObject.SetOnline(self, online)
+
+	if not self.hasUlt then
+		self.image:SetTexture("/esoui/art/icons/heraldrycrests_misc_blank_01.dds")
+		self.image2:SetTexture("/esoui/art/icons/heraldrycrests_misc_blank_01.dds")
+	end
 
 	local role = GetGroupMemberSelectedRole(self.unitTag)
 	if role == 0 then
@@ -620,14 +635,6 @@ function dackFrame:setUlt(ultValue, ult1Cost, icon1, ult2Cost, icon2, noUlt)
 	self.bar2:SetValue(100-percent2)
 	self.image2:SetTexture(icon2)
 
-	if AD.vars.Group.groupFrameText == "Ult Number" then
-	elseif AD.vars.Group.groupFrameText == "Ult Percent" then
-		if ultValue == 500 then
-			self.ultPercent:SetText("|cE0B0FFMaxed |r")
-		else
-			self.ultPercent:SetText(""..zo_floor(percent1).."/"..zo_floor(percent2).."%")
-		end
-	end
 
 	local maxedUlt = false
 	if (ult1Cost >= ult2Cost) and (percent1 >= 100) then
@@ -661,10 +668,59 @@ function dackFrame:SetEdgeColor(r,g,b,a)
 		g = 0
 		b = 0
 	end
-	self.backdrop:SetEdgeColor(r,g,b,a)
+	self.backdrop:SetEdgeColor(r,g,b)
 end
 
 
+
+function dackFrame:SetVisType(visType)
+
+	if visType == "Outlines" then
+		self.ultPercent:GetNamedChild("BG"):SetAlpha(0)
+		self.name:GetNamedChild("BG"):SetAlpha(0)
+
+		self.class:GetNamedChild("BG"):SetAlpha(0)
+		self.role:GetNamedChild("BG"):SetAlpha(0)
+		self.level:GetNamedChild("BG"):SetAlpha(0)
+		self.bar:GetNamedChild("BG"):SetAlpha(0)
+		self.bar2:GetNamedChild("BG"):SetAlpha(0)
+
+		self.backdrop:SetEdgeColor(0,0,0,1)
+
+
+		self.health:GetNamedChild("BG"):SetCenterColor(0.1,0.1,0.1,0.75)
+		self.stam:GetNamedChild("BG"):SetCenterColor(0,0,0,0)
+		self.mag:GetNamedChild("BG"):SetCenterColor(0,0,0,0)
+	elseif visType == "None" then
+		self.ultPercent:GetNamedChild("BG"):SetAlpha(0)
+		self.name:GetNamedChild("BG"):SetAlpha(0)
+		self.health:GetNamedChild("BG"):SetAlpha(0)
+		self.stam:GetNamedChild("BG"):SetAlpha(0)
+		self.mag:GetNamedChild("BG"):SetAlpha(0)
+
+		self.backdrop:SetEdgeColor(0,0,0,0)
+
+		self.class:GetNamedChild("BG"):SetAlpha(0)
+		self.role:GetNamedChild("BG"):SetAlpha(0)
+		self.level:GetNamedChild("BG"):SetAlpha(0)
+		self.bar:GetNamedChild("BG"):SetAlpha(0)
+		self.bar2:GetNamedChild("BG"):SetAlpha(0)
+	else -- All Backdrops
+		self.ultPercent:GetNamedChild("BG"):SetAlpha(1)
+		self.name:GetNamedChild("BG"):SetAlpha(1)
+		self.health:GetNamedChild("BG"):SetAlpha(1)
+		self.stam:GetNamedChild("BG"):SetCenterColor(0.345, 0.345, 0.345, 1)
+		self.mag:GetNamedChild("BG"):SetCenterColor(0.345, 0.345, 0.345, 1)
+
+		self.backdrop:SetEdgeColor(0,0,0,1)
+
+		self.class:GetNamedChild("BG"):SetAlpha(1)
+		self.role:GetNamedChild("BG"):SetAlpha(1)
+		self.level:GetNamedChild("BG"):SetAlpha(1)
+		self.bar:GetNamedChild("BG"):SetAlpha(1)
+		self.bar2:GetNamedChild("BG"):SetAlpha(1)
+	end
+end
 
 
 
@@ -681,7 +737,9 @@ end
 
 
 
-function frames:new(unitTag, parent)
-	--return frameObject:new(unitTag,parent)
-	return dackFrame:new(unitTag, parent)
+function frames:new(unitTag, parent, dackFrameEnabled)
+	if dackFrameEnabled then
+		return dackFrame:new(unitTag, parent)
+	end
+	return frameObject:new(unitTag,parent)
 end

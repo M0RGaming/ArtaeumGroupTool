@@ -79,13 +79,16 @@ function group.init()
 
 		for i=1,12 do
 			local topLevelID = math.floor((i-1)*AD.vars.Group.amountOfWindows/12)+1
-			frameDB['group'..i] = AD.Frame:new('group'..i, toplevels[topLevelID])
+			frameDB['group'..i] = AD.Frame:new('group'..i, toplevels[topLevelID], vars.dackUIEnabled)
 			--if vars.showMagStam then
 			--	frameDB['group'..i]:SetMagStamHidden(false)
 			--end
 		end
 
 		group.scaleWindow()
+		if vars.dackUIEnabled then
+			group.setAllVisType()
+		end
 
 		if not vars.windowLocked then
 			ZO_Alert(UI_ALERT_CATEGORY_ERROR, SOUNDS.NEGATIVE_CLICK, "|cff0000Artaeum Group Tool's group UI has not been locked.|r")
@@ -320,14 +323,14 @@ function group.handlers.onSync(unitTag, data)
 end
 
 function group.handlers.onStamUpdate(unitTag, unitName, current, max, percent)
-	if vars.showMagStam then
+	if vars.showMagStam or vars.dackUIEnabled then
 		if frameDB[unitTag].magStamHidden then frameDB[unitTag]:SetMagStamHidden(false) end
 		frameDB[unitTag]:SetStam(percent,1)
 	end
 end
 
 function group.handlers.onMagUpdate(unitTag, unitName, current, max, percent)
-	if vars.showMagStam then
+	if vars.showMagStam or vars.dackUIEnabled then
 		if frameDB[unitTag].magStamHidden then frameDB[unitTag]:SetMagStamHidden(false) end
 		frameDB[unitTag]:SetMag(percent,1)
 	end
@@ -647,6 +650,13 @@ function group.groupLeadChange()
 	end
 end
 
+function group.setAllVisType()
+	for i=1,12 do
+		if frameDB['group'..i] then
+			frameDB['group'..i]:SetVisType(vars.dackVisType)
+		end
+	end
+end
 
 
 

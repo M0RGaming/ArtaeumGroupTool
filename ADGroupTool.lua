@@ -56,6 +56,8 @@ AD.Settings.DefaultSettings = {
 		},
 		showMagStam = false,
 		groupFrameText = "Ult Number", -- Ult Number, Ult Percent, Health
+		dackVisType = "Outlines",
+		dackUIEnabled = false,
 	}
 }
 
@@ -78,6 +80,8 @@ AD.Profiles.DefaultSettings = {
 	        cyrodilOnly = false,
 	        hideCustomFrame = false,
 			showMagStam = false,
+			dackVisType = "Outlines",
+			dackUIEnabled = false,
 	    },
 	    FD = {
 		    rightClickMenu=true
