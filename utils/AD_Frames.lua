@@ -22,7 +22,8 @@ function AD.initAnchors(topLevels)
 	local amountCreated = 0
 	for i=1,12 do
 		local topLevelID = math.floor((i-1)*AD.vars.Group.amountOfWindows/12)+1
-		local anchor = ZO_Anchor:New(TOPLEFT, topLevels[topLevelID], TOPLEFT, 0, 40 * (amountCreated%(12/AD.vars.Group.amountOfWindows)))
+		--local anchor = ZO_Anchor:New(TOPLEFT, topLevels[topLevelID], TOPLEFT, 0, 40 * (amountCreated%(12/AD.vars.Group.amountOfWindows)))
+		local anchor = ZO_Anchor:New(TOPLEFT, topLevels[topLevelID], TOPLEFT, 0, 65 * (amountCreated%(12/AD.vars.Group.amountOfWindows)))
 		anchors[i] = anchor
 		amountCreated = amountCreated + 1
 	end
@@ -220,7 +221,7 @@ function frameObject:Update(hasUlt)
 			
 			self:SetOnline(IsUnitOnline(self.unitTag))
 
-			self.backdrop:SetEdgeColor(1,1,1,1)
+			self:SetEdgeColor(1,1,1,1)
 			self.bar:SetValue(0)
 			self.bar2:SetValue(0)
 			self.ultPercent:SetText("")
@@ -480,6 +481,194 @@ end
 
 
 
+local dackFrame = frameObject:Subclass()
+
+function dackFrame:new(unitTag, parent)
+	local frame = frameBase.New(self)
+	frame.frame = CreateControlFromVirtual("ART"..unitTag,parent,"DackTemplate")
+	local toprow = frame.frame:GetNamedChild("TopRow")
+	local midrow = frame.frame:GetNamedChild("MidRow")
+	local bottomrow = frame.frame:GetNamedChild("BottomRow")
+
+	frame.bar = bottomrow:GetNamedChild("Ult")
+	frame.bar2 = bottomrow:GetNamedChild("Ult2")
+	frame.image = bottomrow:GetNamedChild("UltIcon")
+	frame.image2 = bottomrow:GetNamedChild("Ult2Icon")
+	frame.ultPercent = bottomrow:GetNamedChild("UltPercent")
+	frame.name = toprow:GetNamedChild("Name")
+	frame.health = midrow:GetNamedChild("Health")
+	frame.backdrop = frame.frame:GetNamedChild("BG")
+	--frame.groupLead = frame.frame:GetNamedChild("Icon") -- does not exist rn
+	frame.stam = bottomrow:GetNamedChild("Stam")
+	frame.mag = bottomrow:GetNamedChild("Mag")
+
+	frame.class = toprow:GetNamedChild("Class")
+	frame.role = toprow:GetNamedChild("Role")
+	frame.level = bottomrow:GetNamedChild("Level")
+
+
+	frame.unitTag = unitTag
+	frame.index = nil
+	frame.unit = ""
+	frame.displayName = ""
+	frame.originalHealthHeight = frame.health:GetHeight()
+	frame.magStamHidden = false
+
+	frame.hasUlt = false
+
+
+	frame.health.barControls = {frame.health}
+	frame.visualizer = ZO_UnitAttributeVisualizer:New(unitTag, nil, frame.health)
+	local rgb = AD.vars.Group.colours.standardHealth
+	local grad = ZO_ColorDef:New(unpack(rgb))
+
+	local VISUALIZER_POWER_SHIELD_LAYOUT_DATA =
+	{
+		barLeftOverlayTemplate = "AD_Dack_ShieldBarTemplate",
+		fakeHealthGradientOverride = {grad,grad},
+		--noHealingGradientOverride = { ZO_ColorDef:New(0,0,0,1), ZO_ColorDef:New(0,0,0,1) },
+	}
+
+	frame.shieldVis = ZO_UnitVisualizer_PowerShieldModule:New(VISUALIZER_POWER_SHIELD_LAYOUT_DATA)
+	frame.visualizer:AddModule(frame.shieldVis)
+
+	frame.shieldVis:InitializeBarValues()
+
+	frame.shieldVis:ShowOverlay(frame.shieldVis.attributeBarControls[ATTRIBUTE_HEALTH], frame.shieldVis.attributeInfo[ATTRIBUTE_HEALTH])
+
+	frame.healthEffects = {}
+	frame:GetHealthEffects()
+
+	frame.frame:SetHidden(true)
+
+
+	return frame
+end
+function dackFrame:SetMagStamHidden(value)
+	return -- dont do that
+end
+function dackFrame:setGroupLeader()
+	if IsUnitGroupLeader(self.unitTag) then
+		self.name:SetText(string.format("%s %s", "|t16:16:esoui/art/unitframes/gamepad/gp_group_leader.dds|t", self.displayName))
+	else
+		self.name:SetText(self.displayName)
+	end
+end
+
+
+function dackFrame:SetHealth(value,max)
+	ZO_StatusBar_SmoothTransition(self.health,value,max)
+end
+
+function dackFrame:SetOnline(online)
+	frameObject.SetOnline(self, online)
+
+	local role = GetGroupMemberSelectedRole(self.unitTag)
+	if role == 0 then
+		local alliance = GetUnitAlliance(self.unitTag)
+		self.role:SetTexture(alliances[alliance])
+	else
+		self.role:SetTexture(roles[role])
+	end
+
+	local class = GetUnitClassId(self.unitTag)
+	self.class:SetTexture(classIcons[class])
+
+	if IsUnitChampion(self.unitTag) then
+		self.level:SetText(string.format("%s %d", "|t14:14:EsoUI/Art/Champion/champion_icon.dds|t", GetUnitChampionPoints(self.unitTag)))
+	else
+		self.level:SetText(GetUnitLevel(self.unitTag))
+	end
+end
+
+function dackFrame:SetRole(role)
+	if role == 0 then
+		local alliance = GetUnitAlliance(self.unitTag)
+		self.role:SetTexture(alliances[alliance])
+	else
+		self.role:SetTexture(roles[role])
+	end
+end
+
+
+function dackFrame:setUlt(ultValue, ult1Cost, icon1, ult2Cost, icon2, noUlt)
+
+	if noUlt then -- libgroupcombatstats sometimes sends ult a couple ms after actual changes so this maybe might fix it
+		self.hasUlt = false
+		self.bar:SetValue(0)
+		self.bar2:SetValue(0)
+		if AD.vars.Group.groupFrameText ~= "Health" then
+			self.ultPercent:SetText("")
+		end
+		self:SetOnline(IsUnitOnline(self.unitTag))
+		return
+	end
+
+	local percent1
+	local percent2
+	if ult1Cost == 0 then percent1 = 100 else
+		percent1 = ultValue / ult1Cost * 100
+	end
+	if ult2Cost == 0 then percent2 = 100 else
+		percent2 = ultValue / ult2Cost * 100
+	end
+
+	self.bar:SetMinMax(0,100)
+	self.bar:SetValue(100-percent1)
+	self.image:SetTexture(icon1)
+	self.bar2:SetMinMax(0,100)
+	self.bar2:SetValue(100-percent2)
+	self.image2:SetTexture(icon2)
+
+	if AD.vars.Group.groupFrameText == "Ult Number" then
+	elseif AD.vars.Group.groupFrameText == "Ult Percent" then
+		if ultValue == 500 then
+			self.ultPercent:SetText("|cE0B0FFMaxed |r")
+		else
+			self.ultPercent:SetText(""..zo_floor(percent1).."/"..zo_floor(percent2).."%")
+		end
+	end
+
+	local maxedUlt = false
+	if (ult1Cost >= ult2Cost) and (percent1 >= 100) then
+		maxedUlt = true
+	elseif (ult2Cost >= ult1Cost) and (percent2 >= 100) then
+		maxedUlt = true
+	end
+
+	local colourString = ""
+	if maxedUlt then
+		colourString = "|c00FF00"
+	end
+	self.ultPercent:SetText(colourString..ultValue.."|r")
+
+
+	local rgb = AD.vars.Group.colours.standardHealth
+	if maxedUlt then
+		rgb = AD.vars.Group.colours.fullUlt
+	end
+	self.health:SetColor(unpack(rgb))
+	--local healthEffects = self:GetHealthEffects()
+	if self.healthEffects.fakeHealth ~= nil then
+		self.healthEffects.fakeHealth:SetColor(unpack(rgb))
+	end
+	self.hasUlt = true
+end
+
+function dackFrame:SetEdgeColor(r,g,b,a)
+	if (r == 1) and (g == 1) and (b == 1) then
+		r = 0
+		g = 0
+		b = 0
+	end
+	self.backdrop:SetEdgeColor(r,g,b,a)
+end
+
+
+
+
+
+
 
 -- removing vanilla frames since it is a pain to work with and just isnt supported really.
 -- for future note to revert, go back and look at artaeum group tool v2
@@ -493,5 +682,6 @@ end
 
 
 function frames:new(unitTag, parent)
-	return frameObject:new(unitTag,parent)
+	--return frameObject:new(unitTag,parent)
+	return dackFrame:new(unitTag, parent)
 end
