@@ -67,15 +67,32 @@ end
 --  Initialize Function --
 -------------------------------------------------------------------------------------------------
 function AD:Initialize()
+	local startInit = 0
+	if debugMode then
+		startInit = os.rawclock()
+	end
 	-- Addon Settings Menu
 	AD.vars = ZO_SavedVars:NewAccountWide("ADVars", AD.varversion, nil, AD.Settings.DefaultSettings)
 
 	AD.Settings.createSettings()
 
 	AD.Crown.init()
-	AD.Group.init()
+
+	---[[
+	AD.initLaterObject = ZO_DeferredInitializingObject:New(HUD_SCENE)
+	function AD.initLaterObject:OnDeferredInitialize()
+		AD.Group.init()
+	end
+	--]]
+
+	--AD.Group.init()
 
 	EVENT_MANAGER:UnregisterForEvent(AD.name, EVENT_ADD_ON_LOADED)
+
+	if debugMode then
+		AD.initTime = os.rawclock() - startInit
+		SLASH_COMMANDS['/adinittime'] = function() d(string.format("Artaeum took %dms to initialize", AD.initTime)) end
+	end
 end
  
 -------------------------------------------------------------------------------------------------

@@ -112,7 +112,9 @@ function group.init()
 		group.createArrow() -- todo: replace with pin
 
 
-		
+		if IsPlayerActivated() then
+			group.playerActivated()
+		end
 
 
 	end
@@ -401,7 +403,12 @@ end
 
 
 
-
+function group.lgcsPlayerCallback(player, data)
+	local playerTag = GetGroupUnitTagByIndex(GetGroupIndexByUnitTag('player'))
+	if playerTag ~= nil then
+		group.lgcsCallback(playerTag, data)
+	end
+end
 
 
 
