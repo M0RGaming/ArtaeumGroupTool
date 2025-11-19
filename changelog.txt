@@ -1,3 +1,15 @@
+Version 5.0.0
+----------
+Added new Group Frames designed by @DakJaniels, disabled by default.
+- If you like these, make sure to check out dack's other works, like LUIE!
+Removed Old/Depricated Libs: LibMapPing, Lib3D, LibGPS, Lib3DArrow
+- Make sure to uninstall these if none of your other addons require them!
+Merged in console updates for various bug fixes and improvements
+* API Bump
+
+
+
+
 Version 4.0.0
 ----------
 Major update to Frames UI (Very Big Revamp)

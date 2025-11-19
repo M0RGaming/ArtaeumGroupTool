@@ -135,6 +135,7 @@ function AD3D.createArrow()
 
 
 	arrow.verticalOffset = 50+iterator*10
+	arrow.iterator = iterator
 	arrow.enabled = false
 
 	arrow.chevron:SetTransformOffset(0,0,-0.25)
@@ -214,14 +215,14 @@ function AD3D.createArrow()
 
 	arrow.registered = false
 	function arrow:StartUpdating()
-		if not registered then
-			EVENT_MANAGER:RegisterForUpdate("ADArrow"..tostring(iterator), 0, function() self:UpdateLocation() end)
+		if not self.registered then
+			EVENT_MANAGER:RegisterForUpdate("ADArrow"..tostring(self.iterator), 0, function() self:UpdateLocation() end)
 			self.registered = true
 		end
 	end
 
 	function arrow:StopUpdating()
-		EVENT_MANAGER:UnregisterForUpdate("ADArrow"..tostring(iterator))
+		EVENT_MANAGER:UnregisterForUpdate("ADArrow"..tostring(self.iterator))
 		self.registered = false
 		self:SetTarget(0,0,0)
 	end
@@ -232,6 +233,7 @@ function AD3D.createArrow()
 	return arrow
 end
 
+--[[
 SLASH_COMMANDS['/adtest'] = function()
 	a = AD3D.createArrow()
 	local _, vx, vy, vz = GetUnitRawWorldPosition("player")
@@ -239,3 +241,4 @@ SLASH_COMMANDS['/adtest'] = function()
 	a:SetColour(0, 1, 1)
 	a:StartUpdating()
 end
+--]]
