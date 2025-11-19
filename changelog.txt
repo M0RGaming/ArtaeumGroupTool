@@ -6,6 +6,7 @@ Added new Group Frames designed by @DakJaniels, disabled by default.
 Removed Old/Depricated Libs: LibMapPing, Lib3D, LibGPS, Lib3DArrow
 - Make sure to uninstall these if none of your other addons require them!
 Merged in console updates for various bug fixes and improvements
+Added support for char names also in the unit frames, respecting your base game settings.
 * API Bump
 
 

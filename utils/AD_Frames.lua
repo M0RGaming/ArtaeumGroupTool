@@ -252,8 +252,11 @@ function frameObject:setAnchors()
 	end
 end
 function frameObject:setName()
-	--self.name:SetText(self.unit)
-	self.name:SetText(self.displayName)
+	local setName = self.unit
+	if ZO_ShouldPreferUserId() then
+		setName = self.displayName
+	end
+	self.name:SetText(setName)
 end
 
 function frameObject:SetEdgeColor(...)
@@ -571,10 +574,15 @@ function dackFrame:SetMagStamHidden(value)
 	self.magStamHidden = value
 end
 function dackFrame:setGroupLeader()
+	local setName = self.unit
+	if ZO_ShouldPreferUserId() then
+		setName = self.displayName
+	end
+
 	if IsUnitGroupLeader(self.unitTag) then
-		self.name:SetText(string.format("%s %s", "|t16:16:esoui/art/unitframes/gamepad/gp_group_leader.dds|t", self.displayName))
+		self.name:SetText(string.format("%s %s", "|t16:16:esoui/art/unitframes/gamepad/gp_group_leader.dds|t", setName))
 	else
-		self.name:SetText(self.displayName)
+		self.name:SetText(setName)
 	end
 end
 
