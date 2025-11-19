@@ -769,6 +769,8 @@ function group.updateSharing(sharing)
 		group.groupLeadChange()
 		group.groupUpdate()
 
+		group.pin:enable()
+
 		local currentZone = GetUnitWorldPosition('player')
 		if currentZone ~= lastZone then
 			--d("Loaded into a new zone: "..currentZone..", last zone was: "..lastZone)

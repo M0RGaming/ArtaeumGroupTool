@@ -108,27 +108,6 @@
             </Controls>
         </StatusBar>
 
-		<StatusBar name="AD_Group_ShieldBarTemplate_Keyboard_Template" inherits="ZO_PowerShieldBar ZO_DefaultStatusBarBase AD_EffectivelyShownResize" virtual="true">
-			<Dimensions y="29" />
-			<Controls>
-				<StatusBar name="$(parent)Trauma" inherits="ZO_DefaultStatusBarBase AD_EffectivelyShownResize">
-					<Dimensions y="29" />
-				</StatusBar>
-
-				<StatusBar name="$(parent)FakeHealth" inherits="ZO_DefaultStatusBarBase AD_EffectivelyShownResize">
-					<Dimensions y="29" />
-				</StatusBar>
-
-				<StatusBar name="$(parent)NoHealingInner" inherits="ZO_DefaultStatusBarBase AD_EffectivelyShownResize">
-					<Dimensions y="29" />
-				</StatusBar>
-
-				<StatusBar name="$(parent)FakeNoHealingInner" inherits="ZO_DefaultStatusBarBase AD_EffectivelyShownResize">
-					<Dimensions y="29" />
-				</StatusBar>
-			</Controls>
-		</StatusBar>
-
 		<Control name="AD_EffectivelyShownResize" virtual="true">
 			<OnEffectivelyShown>
 				self:SetHeight(self:GetParent():GetHeight()) --idk if this is too preformance heavy, 245ms for 1 million runs
