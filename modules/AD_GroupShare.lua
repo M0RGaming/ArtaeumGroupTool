@@ -142,9 +142,18 @@ end
 
 
 function group.createTopLevels()
+	local perFrameWidth = 250
+	local perFrameHeight = 40
+	if vars.dackUIEnabled then
+		perFrameWidth = 203
+		perFrameHeight = 65
+	end
 	for i=1,vars.amountOfWindows do
 		toplevels[i] = CreateControlFromVirtual("AD_Group_TopLevel"..i,nil,"AD_Group_TopLevel")
-		toplevels[i]:SetHeight(40*12/vars.amountOfWindows)
+		-- height = 40 or 65
+		-- width = 247 or 200
+		toplevels[i]:SetHeight(perFrameHeight*12/vars.amountOfWindows)
+		toplevels[i]:SetWidth(perFrameWidth)
 		if not vars.windowLocations[i] then
 			vars.windowLocations[i] = {0,0}
 		end

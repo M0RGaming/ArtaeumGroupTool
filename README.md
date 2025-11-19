@@ -11,6 +11,12 @@ This is an addon which provides utility to players both in Cyrodiil and PvE cont
 - If a player in the gorup is holding Volendrung, its current value will be shared with everyone in the group. In addition, players' Stamina and Magicka bars will be shared and have a visual effect on the group frames if enabled.
 - On the press of a keybind an 'Assist Ping' is sent, allowing everyone running the addon to get a beam of light where you are. This will also tell you which direction you are respective to the group leader in chat.
 
+### `Custom Group Frames: Dack Designed`
+- This is an optional alternative group frames, designed by @DakJaniels, with all the functionality of the base group frames in a more modern/informative layout.
+- This is disabled by default, but can be enabled in the settings for the Group Ultimate Share Module.
+- Three visual styles are provided by default, to allow you to choose what your frames look like. These include "All Backdrops", "Outlines", and "None". Outlines is the default selection.
+- If you like these frames, make sure to check out Dack's other works, such as LUI Extended
+
 ### `Crown Arrow`
 - A beam of light, crown icon, or downwards arrow will be placed above the group leader, with a blue arrow pointing towards them.
 

@@ -58,7 +58,8 @@ AD.Settings.DefaultSettings = {
 		groupFrameText = "Ult Percent", -- Ult Number, Ult Percent, Health
 		dackVisType = "Outlines",
 		dackUIEnabled = false,
-	}
+	},
+	latestUpdateMessage = 0
 }
 
 
@@ -186,7 +187,16 @@ end
 
 
 
+local updateMessages = {
+	[1] = "[ArtaeumGroupTool] Artaeum has updated to version 5.0, adding a new custom group frame layout designed by @DakJaniels. This is disabled by default, and "..
+	"can be enabled via the Group Share Settings menu!"
+}
 
+local playerActivated = function()
+	d(updateMessages[#updateMessages])
+	AD.vars.latestUpdateMessage = #updateMessages
+	EVENT_MANAGER:UnregisterForEvent("AD Group Tool Update Message", EVENT_PLAYER_ACTIVATED)
+end
 
 -- The following was adapted from https://wiki.esoui.com/Circonians_Stamina_Bar_Tutorial#lua_Structure
 
@@ -225,14 +235,19 @@ function AD:Initialize()
 	AD.Guild.init()
 	AD.Crown.init()
 
-	---[[
-	AD.initLaterObject = ZO_DeferredInitializingObject:New(HUD_SCENE)
-	function AD.initLaterObject:OnDeferredInitialize()
+	if IsConsoleUI() then
+		AD.initLaterObject = ZO_DeferredInitializingObject:New(HUD_SCENE)
+		function AD.initLaterObject:OnDeferredInitialize()
+			AD.Group.init()
+		end
+	else
 		AD.Group.init()
 	end
-	--]]
-
-	--AD.Group.init()
+	
+	if AD.vars.latestUpdateMessage < #updateMessages then
+		EVENT_MANAGER:RegisterForEvent("AD Group Tool Update Message", EVENT_PLAYER_ACTIVATED, playerActivated)
+	end
+	
 
 	EVENT_MANAGER:UnregisterForEvent(AD.name, EVENT_ADD_ON_LOADED)
 
