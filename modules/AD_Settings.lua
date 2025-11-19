@@ -108,7 +108,7 @@ function settings.createSettings()
 	                name = "Assist Ping Colour",
 	                tooltip = "This sets the colour of the arrow and/or marker of the assist ping.",
 	                getFunc = function() local rgb = vars.Group.colours.marker; return rgb[1], rgb[2], rgb[3] end,	--(alpha is optional)
-	                setFunc = function(r,g,b) local rgb = vars.Group.colours.marker; rgb[1] = r; rgb[2] = g; rgb[3] = b; AD.Group.updateColours() end,	--(alpha is optional)
+	                setFunc = function(r,g,b) local rgb = vars.Group.colours.marker; rgb[1] = r; rgb[2] = g; rgb[3] = b; AD.Group.setArrowColours() end,	--(alpha is optional)
 	            	width = "half",
 	            },
 	            {
@@ -119,7 +119,7 @@ function settings.createSettings()
 			        max = 100,
 			        step = 1,	--(optional)
 			        getFunc = function() return vars.Group.colours.marker[4]*100 end,
-			        setFunc = function(a) vars.Group.colours.marker[4] = a/100; AD.Group.updateColours() end,
+			        setFunc = function(a) vars.Group.colours.marker[4] = a/100; AD.Group.setArrowColours() end,
 			        width = "half",	--or "full" (optional)
 			    },
 			    {
@@ -127,7 +127,7 @@ function settings.createSettings()
 	                name = "Standard Health Colour",
 	                tooltip = "This sets the colour of players whos ultimate is not full.",
 	                getFunc = function() local rgb = vars.Group.colours.standardHealth; return rgb[1], rgb[2], rgb[3], rgb[4] end,	--(alpha is optional)
-	                setFunc = function(r,g,b,a) local rgb = vars.Group.colours.standardHealth; rgb[1] = r; rgb[2] = g; rgb[3] = b; rgb[4] = a; AD.Group.updateColours() end,	--(alpha is optional)
+	                setFunc = function(r,g,b,a) local rgb = vars.Group.colours.standardHealth; rgb[1] = r; rgb[2] = g; rgb[3] = b; rgb[4] = a; AD.Group.updateColours() end,
 	            	width = "half",
 	            },
 	            {
@@ -236,15 +236,17 @@ function settings.createSettings()
 				{
 					type = "checkbox",
 					name = "Dack Group Frames",
-					tooltip = "Enable this to swap to the alternative group frames designed by DackJaniels",
+					width = "half",
+					tooltip = "Enable this to swap to the alternative group frames designed by DackJaniels. If you like these, check out LUI Extended!",
 					getFunc = function() return vars.Group.dackUIEnabled end,
 					setFunc = function(value) vars.Group.dackUIEnabled = value end,
 					requiresReload = true
 				},
 				{
 					type = "dropdown",
-					name = "Dack Group Frames: Backdrops Mode",
+					name = "Dack Group Frames: Visual Style",
 					warning = "Requires Dack Group Frames to be enabled.",
+					width = "half",
 					disabled = function() return not vars.Group.dackUIEnabled end,
 					choices = dackVisOptions,
 					getFunc = function() return vars.Group.dackVisType end,

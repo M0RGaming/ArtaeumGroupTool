@@ -3,8 +3,6 @@ local AD = ArtaeumGroupTool
 AD.Group = {}
 local group = AD.Group
 local vars = {}
-local LMP = LibMapPing
-local LGPS = LibGPS3
 
 local print = AD.print
 
@@ -15,9 +13,6 @@ local frameDB = group.frameDB
 
 
 AD.last = {} -- TESTING
-group.toSend = {
-	assistPing = false
-}
 group.arrow = nil
 
 
@@ -60,7 +55,7 @@ function group.init()
 	if vars.enabled then
 		
 		group.createTopLevels()
-		AD.initAnchors(toplevels)
+		AD.initAnchors(toplevels, vars.dackUIEnabled)
 
 		
 		group.fragments = {}
@@ -141,7 +136,8 @@ function group.init()
 
 		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Activated", EVENT_PLAYER_ACTIVATED, group.playerActivated)
 		group.createArrow()
-		group.arrow:SetTarget(0, 0)
+		group.setArrowColours()
+		group.arrow:SetTarget(0, 0, 0)
 
 
 		
@@ -216,22 +212,24 @@ end
 
 
 function group.createArrow()
-	group.arrow = Lib3DArrow:CreateArrow({
-		depthBuffer = false,
-		arrowMagnitude = 3,
-		arrowScale = 1,
-		arrowHeight = 1,
-		arrowColour = "FF0000",
+	local beamProperties = {
+		texture = "ArtaeumGroupTool/Textures/Pillar.dds",
+		scaleX = 1,
+		scaleY = 100,
+		X = 0,
+		Y = 50,
+		Z = 0,
+		depthBuffer = true
+	}
 
-		distanceDigits = 4,
-		distanceScale = 25,
-		distanceMagnitude = 3,
-		distanceHeight = 1,
-		distanceColour = "FFFFFF",
+	group.arrow = AD.AD3D.createArrow()
+	group.pin = AD.AD3D.create3D(AD.AD3D.toplevel, beamProperties)
+end
 
-		markerColour = "FF0000",
-		markerScale = 1,
-	})
+function group.setArrowColours()
+	local rgb = vars.colours.marker
+	group.arrow:SetColour(rgb[1],rgb[2],rgb[3])
+	group.pin:setColour(rgb[1],rgb[2],rgb[3],rgb[4])
 end
 
 function group.addExternalHook(bitId, sendfunc, recievefunc, axis)
@@ -254,9 +252,18 @@ local playerUltLookup = {}
 function group.handlers.onPing(unitTag, data)
 	--data.ping
 	if data.ping == false then return end
-	local px, py = GetMapPlayerPosition(unitTag)
-	group.arrow:SetTarget(px, py)
-	zo_callLater(function() group.arrow:SetTarget(0, 0) end, 12500)
+	local _, Xw, Yw, Zw = GetUnitRawWorldPosition(unitTag)
+	group.pin:show()
+	local X,Y,Z = WorldPositionToGuiRender3DPosition(Xw,Yw,Zw)
+	group.pin:setPos(X, Y, Z)
+	group.arrow:SetTarget(Xw, Yw, Zw)
+	EVENT_MANAGER:RegisterForUpdate("ADGroupToolGroupSharePingFaceCamera", 50, function() group.pin:turnToFace() end)
+
+	zo_callLater(function()
+		EVENT_MANAGER:UnregisterForUpdate("ADGroupToolGroupSharePingFaceCamera")
+		group.pin:hide()
+		group.arrow:SetTarget(0, 0, 0)
+	end, 12500)
 end
 
 function group.handlers.onCampLock(unitTag, data)
@@ -410,45 +417,6 @@ function group.sync(requestSync)
 	group.send(campLock, hammerBar, requestSync)
 end
 
-
---AD.hammer = 0
--- TODO: REMOVE THIS AFTER THE NEXT UPDATE
-function group.toSend:send()
-	if true then return end
-
-	local assistPing = self.assistPing and 1 or 0
-	self.assistPing = false
-	local campLock = (GetNextForwardCampRespawnTime() > GetGameTimeMilliseconds()) and 1 or 0
-	local hammerCurrent, hammerMax = GetUnitPower('player',POWERTYPE_DAEDRIC)
-	if hammerMax == 0 then hammerMax = 1 end
-	local hammerBar = math.floor(hammerCurrent/hammerMax*15)
-	--local hammerBar = AD.hammer
-
-
-
---[[
-
-	local magCurrent, magMax = GetUnitPower('player',POWERTYPE_MAGICKA)
-	local magBar = math.floor(magCurrent/magMax*15)
-	local stamCurrent, stamMax = GetUnitPower('player',POWERTYPE_STAMINA)
-	local stamBar = math.floor(stamCurrent/stamMax*15)
---]]
-	local xstream = {0,campLock,assistPing,hammerBar,ult.id,0}
-
-end
-
-
-
-
-
-
-
--- Adapted from RdK Group Tool
-function group.OnAfterPingRemoved(pingType, pingTag, x, y, isPingOwner)
-	if (pingType == MAP_PIN_TYPE_PING) then
-		LMP:UnsuppressPing(pingType, pingTag)
-	end
-end
 
 
 
@@ -795,9 +763,6 @@ end
 function group.updateSharing(sharing)
 
 	if group.running and not sharing then
-		--EVENT_MANAGER:UnregisterForUpdate("AD Group Tool Group Ping")
-		--LMP:UnregisterCallback('BeforePingAdded', group.pingCallback)
-		--LMP:UnregisterCallback('AfterPingRemoved', group.OnAfterPingRemoved)
 		group.lgcs:UnregisterForEvent(LibGroupCombatStats.EVENT_GROUP_ULT_UPDATE, group.lgcsCallback)
 		group.lgcs:UnregisterForEvent(LibGroupCombatStats.EVENT_PLAYER_ULT_UPDATE, group.lgcsPlayerCallback)
 
@@ -822,9 +787,12 @@ function group.updateSharing(sharing)
 		group.running = false
 		
 
+		group.pin:disable()
+		group.arrow:SetTarget(0,0,0)
+		group.arrow:StopUpdating()
+
+
 	elseif not group.running and sharing then
-		--LMP:RegisterCallback('BeforePingAdded', group.pingCallback)
-		--LMP:RegisterCallback('AfterPingRemoved', group.OnAfterPingRemoved)
 		group.lgcs:RegisterForEvent(LibGroupCombatStats.EVENT_GROUP_ULT_UPDATE, group.lgcsCallback)
 		group.lgcs:RegisterForEvent(LibGroupCombatStats.EVENT_PLAYER_ULT_UPDATE, group.lgcsPlayerCallback)
 		EVENT_MANAGER:RegisterForEvent("AD Group Tool Unit Created", EVENT_UNIT_CREATED, group.unitCreate)
@@ -845,6 +813,8 @@ function group.updateSharing(sharing)
 		EVENT_MANAGER:RegisterForEvent("AD Group Tool Group Camp", EVENT_FORWARD_CAMP_RESPAWN_TIMER_BEGINS, group.newLock)
 		
 		
+		group.pin:enable()
+		group.arrow:StartUpdating()
 		
 
 
@@ -870,7 +840,7 @@ end
 function group.playerActivated(...)
 	local active = (not vars.cyrodilOnly) or ((IsPlayerInAvAWorld() or IsActiveWorldBattleground()) and vars.cyrodilOnly) 
 	group.updateSharing(active)
-
+	EVENT_MANAGER:UnregisterForUpdate("ADGroupToolGroupSharePingFaceCamera") -- if this got through the call later, just shut it off
 end
 
 

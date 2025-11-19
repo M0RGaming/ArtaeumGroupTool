@@ -132,43 +132,50 @@
 			</Controls>
 		</StatusBar>
 		
-		<StatusBar name="AD_Group_ShieldBarTemplate_Keyboard_Template" inherits="ZO_PowerShieldBar ZO_DefaultStatusBarBase" virtual="true">
+
+		<Control name="AD_EffectivelyShownResize" virtual="true">
+			<OnEffectivelyShown>
+				self:SetHeight(self:GetParent():GetHeight()) --idk if this is too preformance heavy, 245ms for 1 million runs
+			</OnEffectivelyShown>
+		</Control>
+
+		<StatusBar name="AD_Group_ShieldBarTemplate_Keyboard_Template" inherits="ZO_PowerShieldBar ZO_DefaultStatusBarBase AD_EffectivelyShownResize" virtual="true">
 			<Dimensions y="29" />
 			<Controls>
-				<StatusBar name="$(parent)Trauma" inherits="ZO_DefaultStatusBarBase">
+				<StatusBar name="$(parent)Trauma" inherits="ZO_DefaultStatusBarBase AD_EffectivelyShownResize">
 					<Dimensions y="29" />
 				</StatusBar>
 
-				<StatusBar name="$(parent)FakeHealth" inherits="ZO_DefaultStatusBarBase">
+				<StatusBar name="$(parent)FakeHealth" inherits="ZO_DefaultStatusBarBase AD_EffectivelyShownResize">
 					<Dimensions y="29" />
 				</StatusBar>
 
-				<StatusBar name="$(parent)NoHealingInner" inherits="ZO_DefaultStatusBarBase">
+				<StatusBar name="$(parent)NoHealingInner" inherits="ZO_DefaultStatusBarBase AD_EffectivelyShownResize">
 					<Dimensions y="29" />
 				</StatusBar>
 
-				<StatusBar name="$(parent)FakeNoHealingInner" inherits="ZO_DefaultStatusBarBase">
+				<StatusBar name="$(parent)FakeNoHealingInner" inherits="ZO_DefaultStatusBarBase AD_EffectivelyShownResize">
 					<Dimensions y="29" />
 				</StatusBar>
 			</Controls>
 		</StatusBar>
 
-		<StatusBar name="AD_Group_ShieldBarTemplate_Gamepad_Template" inherits="ZO_PowerShieldBar ZO_DefaultStatusBarBase" virtual="true">
+		<StatusBar name="AD_Group_ShieldBarTemplate_Gamepad_Template" inherits="ZO_PowerShieldBar ZO_DefaultStatusBarBase AD_EffectivelyShownResize" virtual="true">
 			<Dimensions y="29" />
 			<Controls>
-				<StatusBar name="$(parent)Trauma" inherits="ZO_DefaultStatusBarBase">
+				<StatusBar name="$(parent)Trauma" inherits="ZO_DefaultStatusBarBase AD_EffectivelyShownResize">
 					<Dimensions y="29" />
 				</StatusBar>
 
-				<StatusBar name="$(parent)FakeHealth" inherits="ZO_DefaultStatusBarBase">
+				<StatusBar name="$(parent)FakeHealth" inherits="ZO_DefaultStatusBarBase AD_EffectivelyShownResize">
 					<Dimensions y="29" />
 				</StatusBar>
 
-				<StatusBar name="$(parent)NoHealingInner" inherits="ZO_DefaultStatusBarBase">
+				<StatusBar name="$(parent)NoHealingInner" inherits="ZO_DefaultStatusBarBase AD_EffectivelyShownResize">
 					<Dimensions y="29" />
 				</StatusBar>
 
-				<StatusBar name="$(parent)FakeNoHealingInner" inherits="ZO_DefaultStatusBarBase">
+				<StatusBar name="$(parent)FakeNoHealingInner" inherits="ZO_DefaultStatusBarBase AD_EffectivelyShownResize">
 					<Dimensions y="29" />
 				</StatusBar>
 			</Controls>
@@ -362,24 +369,6 @@
 			</Controls>
 		</Control>
 
-		<!--
-		<TopLevelControl name="TestDack" clampedToScreen="true" mouseEnabled="false" movable="true" virtual="false">
-			<Controls>
-				<Control inherits="DackTemplate" name="group1" />
-				<Control inherits="DackTemplate" name="group2" />
-				<Control inherits="DackTemplate" name="group3" />
-				<Control inherits="DackTemplate" name="group4" />
-				<Control inherits="DackTemplate" name="group5" />
-				<Control inherits="DackTemplate" name="group6" />
-				<Control inherits="DackTemplate" name="group7" />
-				<Control inherits="DackTemplate" name="group8" />
-				<Control inherits="DackTemplate" name="group9" />
-				<Control inherits="DackTemplate" name="group10" />
-				<Control inherits="DackTemplate" name="group11" />
-				<Control inherits="DackTemplate" name="group12" />
-			</Controls>
-		</TopLevelControl>
-		-->
 		<StatusBar name="AD_Dack_ShieldBarTemplate" inherits="ZO_PowerShieldBar ZO_DefaultStatusBarBase" virtual="true">
 			<Dimensions y="17" />
 			<Controls>
@@ -407,6 +396,33 @@
 
 		<StatusBar name="AD_Dack_ShieldBarTemplate_Keyboard_Template" inherits="AD_Dack_ShieldBarTemplate" virtual="true">
         </StatusBar>
+
+
+
+
+        <Control name="ADArrowTemplate" virtual="true" space="WORLD">
+        	<Dimensions x="100" y="100" />
+        	<Controls>
+        		<Control name="$(parent)Div">
+        			<Controls>
+		        		<Texture name="$(parent)Chevron" hidden="false" textureFile="ArtaeumGroupTool/Textures/chevron.dds">
+							<Anchor point="CENTER" relativePoint="CENTER" relativeTo="$(parent)"/>
+							<Dimensions x="100" y="100" />
+						</Texture>
+						<Control name="$(parent)Div">
+							<Controls>
+								<Label name="$(parent)Text" font="$(GAMEPAD_BOLD_FONT)|$(GP_20)|thick-outline" horizontalAlignment="1" verticalAlignment="1" text="15m" scale="1.25">
+									<Anchor point="CENTER" relativePoint="CENTER" relativeTo="$(parent)" offsetY="15"/>
+									<Dimensions x="200" y="100" />
+								</Label>
+							</Controls>
+						</Control>
+					</Controls>
+				</Control>
+        	</Controls>
+        </Control>
+
+
 
 
 	</Controls>

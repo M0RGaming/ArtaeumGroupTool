@@ -20,7 +20,7 @@ This is an addon which provides utility to players both in Cyrodiil and PvE cont
 
 ### `Group Location Sharing`
 - Uses guild notes to transfer the position of group A's leader to members of other groups.
-- The location that is transferred shows up as a beam of light with a 3d arrow pointing towards it (Made using Lib3dArrow)
+- The location that is transferred shows up as a beam of light with a 3d arrow pointing towards it
 - Still in beta, and time is set to 10 seconds between transmissions (otherwise you will get kicked for spam)
 
 ### `Stay on Crown`
@@ -38,4 +38,4 @@ This is an addon which provides utility to players both in Cyrodiil and PvE cont
 - Visual notification if in healing range of crown
 
 ### Requirements:
-- LibAddonMenu2, LibMapPins, LibMapPing, Lib3D, LibGPS, Lib3DArrow, LibGroupCombatStats, LibGroupBroadcast
+- LibAddonMenu2, LibMapPins, LibGroupCombatStats, LibGroupBroadcast

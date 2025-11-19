@@ -10,7 +10,7 @@ local function pinCreateCallback()
 	local zone, subzone = LMP:GetZoneAndSubzone()
 	if not (zone == "cyrodiil") then return end
 	if not (subzone == "ava_whole") then return end
-	LMP:CreatePin("Group Share Pin", "main pin", guild.lastPos.x, guild.lastPos.y)
+	LMP:CreatePin("Group Share Pin", "main pin", guild.lastPos.x, guild.lastPos.y, guild.lastPos.z)
 end
 
 local function rallyCreateCallback()
@@ -36,6 +36,7 @@ local rallyPinData  = {
 function guild.init()
 	vars = AD.vars.Guild
 	guild.createArrow()
+	guild.updateColours()
 	--[[
 	local editBox = ZO_AutoComplete:New(WINDOW_MANAGER:GetControlByName(AD_Settings_Listen))
 	editBox:SetIncludeFlags({AUTO_COMPLETE_FLAG_GUILD})
@@ -97,9 +98,15 @@ function guild.toggleListen()
 		EVENT_MANAGER:UnregisterForEvent("AD Group Tool Note Listen", EVENT_GUILD_MEMBER_NOTE_CHANGED)
 		d("Stopped Listening to the specified person")
 		guild.listening = false
-		guild.arrow:SetTarget(0, 0)
+
+		guild.pin:hide()
+		guild.pin:disable()
+		guild.arrow:SetTarget(0,0,0)
+		guild.arrow:StopUpdating()
+
 		LMP:Disable("Group Share Pin")
 		LMP:Disable("Group Rally Pin")
+		EVENT_MANAGER:UnregisterForUpdate("ADGroupToolGuildShareFaceCamera")
 	else
 		if vars.guildID == -1 then
 			d('No guild specified, please run /adnoteguild guildID')
@@ -110,6 +117,11 @@ function guild.toggleListen()
 			guild.listening = true
 			LMP:Enable("Group Share Pin")
 			LMP:Enable("Group Rally Pin")
+			guild.pin:enable()
+			guild.pin:show()
+			EVENT_MANAGER:RegisterForUpdate("ADGroupToolGuildShareFaceCamera", 50, function() guild.pin:turnToFace() end)
+			guild.arrow:StartUpdating()
+
 		end
 	end
 end
@@ -119,14 +131,20 @@ function guild.noteCallback(event, guildID, displayName, note)
 	if displayName == vars.listenTo and tonumber(guildID) == tonumber(vars.guildID) then
 
 
-		-- Incoming data will be in the form of "x,y"
-		local x, y = note:match("([^,]+),([^,]+)\n")
-		if x and y then
-			guild.lastPos = {x=tonumber(x),y=tonumber(y)}
-			guild.arrow:SetTarget(guild.lastPos.x, guild.lastPos.y)
+		-- Incoming data will be in the form of "x,y,z"
+		local x, y, z = note:match("([^,]+),([^,]+),([^,]+)\n")
+		if x and y and z then
+			guild.lastPos = {x=tonumber(x),y=tonumber(y), z=tonumber(z)}
+			guild.arrow:SetTarget(guild.lastPos.x, guild.lastPos.y, guild.lastPos.z)
+
+			local X,Y,Z = WorldPositionToGuiRender3DPosition(guild.lastPos.x, guild.lastPos.y, guild.lastPos.z)
+			guild.pin:setPos(X, Y, Z)
+
 			local pin = LMP:FindCustomPin("Group Share Pin", "main pin")
 			if pin then
-				pin:SetLocation(guild.lastPos.x, guild.lastPos.y)
+				local zone = GetUnitWorldPosition('player')
+				local nx, ny = GetRawNormalizedWorldPosition(zone, guild.lastPos.x, guild.lastPos.y, guild.lastPos.z)
+				pin:SetLocation(nx, ny)
 			end
 		end
 
@@ -146,9 +164,10 @@ end
 
 local function getTransmitData()
 	local crown = GetGroupLeaderUnitTag()
-	local crownX,crownY = GetMapPlayerPosition(crown) -- Get group leader's position
+	--local crownX,crownY = GetMapPlayerPosition(crown) -- Get group leader's position
+	local _, crownX, crownY, crownZ = GetUnitRawWorldPosition(crown)
 	local rallyX,rallyY = GetMapRallyPoint() -- Get group rally marker
-	return crownX..","..crownY.."\n"..rallyX.."|"..rallyY
+	return crownX..","..crownY..","..crownZ.."\n"..rallyX.."|"..rallyY
 end
 
 
@@ -170,8 +189,6 @@ end
 
 
 function guild.autoTransmit()
-	local crown = GetGroupLeaderUnitTag()
-	local crownX,crownY = GetMapPlayerPosition(crown) -- Get group leader's position
 	SetGuildMemberNote(vars.guildID, guild.transmitTo, getTransmitData())
 end
 
@@ -193,25 +210,24 @@ end
 
 
 
-
-
 function guild.createArrow()
-	guild.arrow = Lib3DArrow:CreateArrow({
-		depthBuffer = false,
-		arrowMagnitude = 3,
-		arrowScale = 1,
-		arrowHeight = 1,
-		arrowColour = "00FF00",
+	local beamProperties = {
+		texture = "ArtaeumGroupTool/Textures/Pillar.dds",
+		scaleX = 1,
+		scaleY = 100,
+		X = 0,
+		Y = 50,
+		Z = 0,
+		depthBuffer = true
+	}
+	guild.arrow = AD.AD3D.createArrow()
+	guild.pin = AD.AD3D.create3D(AD.AD3D.toplevel, beamProperties)
+end
 
-		distanceDigits = 4,
-		distanceScale = 25,
-		distanceMagnitude = 3,
-		distanceHeight = 1,
-		distanceColour = "FFFFFF",
-
-		markerColour = "00FF00",
-		markerScale = 1,
-	})
+function guild.updateColours()
+	local rgb = vars.markerColour
+	guild.arrow:SetColour(rgb[1],rgb[2],rgb[3])
+	guild.pin:setColour(rgb[1],rgb[2],rgb[3],rgb[4])
 end
 
 
@@ -241,27 +257,21 @@ function guild.toggleTransmit()
 	end
 end
 
-function guild.updateColours()
-	local rgb = vars.markerColour
-	guild.arrow.arrow.chevron:SetColor(rgb[1],rgb[2],rgb[3])
-	guild.arrow.marker.pillar:SetColor(rgb[1],rgb[2],rgb[3],rgb[4])
-end
-
 
 function guild.toggleMarker()
 	if guild.markerShown then
-		guild.arrow.marker:SetHidden(true)
+		guild.pin:hide()
 		guild.markerShown = false
 	else
-		guild.arrow.marker:SetHidden(false)
+		guild.pin:show()
 		guild.markerShown = true
 	end
 end
 
 
-SLASH_COMMANDS["/adlistento"] = guild.setListento --
+--SLASH_COMMANDS["/adlistento"] = guild.setListento --
 SLASH_COMMANDS["/adlisten"] = guild.toggleListen
 SLASH_COMMANDS["/adtransmit"] = guild.toggleTransmit
-SLASH_COMMANDS["/adnoteguild"] = guild.setGuild --
-SLASH_COMMANDS["/admanual"] = guild.manualTransmit
-SLASH_COMMANDS["/admarker"] = guild.toggleMarker
+--SLASH_COMMANDS["/adnoteguild"] = guild.setGuild
+--SLASH_COMMANDS["/admanual"] = guild.manualTransmit
+--SLASH_COMMANDS["/admarker"] = guild.toggleMarker

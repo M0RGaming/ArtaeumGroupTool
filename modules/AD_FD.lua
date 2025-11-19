@@ -41,7 +41,7 @@ local function setRally(pin)
 	local _, pinTag = pin:GetPinTypeAndTag()
 	local x = pinTag.x
 	local y = pinTag.y
-	LibMapPing:SetMapPing(MAP_PIN_TYPE_RALLY_POINT,MAP_TYPE_LOCATION_CENTERED,x,y)
+	PingMap(MAP_PIN_TYPE_RALLY_POINT,MAP_TYPE_LOCATION_CENTERED,x,y)
 end
 
 

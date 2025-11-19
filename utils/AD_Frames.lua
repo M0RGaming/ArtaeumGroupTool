@@ -290,13 +290,19 @@ function frameObject:SetMagStamHidden(value)
 	self.mag:SetHidden(value)
 	self.stam:SetHidden(value)
 	self.magStamHidden = value
-	local newHeight = self.originalHealthHeight
 
+	local valueDelta = 0
 	if not value then
-		self.health:SetHeight(self.originalHealthHeight-8)
+		valueDelta = 8
 	end
+
+	local newHeight = self.originalHealthHeight-valueDelta
+
+	--d(newHeight)
+	--d(self.originalHealthHeight)
+
 	self.health:SetHeight(newHeight)
-	--local healthEffects = self:GetHealthEffects()
+	local healthEffects = self:GetHealthEffects()
 	for i,v in pairs(self.healthEffects) do
 		v:SetHeight(newHeight)
 	end
@@ -687,6 +693,9 @@ function dackFrame:SetVisType(visType)
 
 		self.backdrop:SetEdgeColor(0,0,0,1)
 
+		self.stam:GetNamedChild("BG"):SetAlpha(1)
+		self.mag:GetNamedChild("BG"):SetAlpha(1)
+
 
 		self.health:GetNamedChild("BG"):SetCenterColor(0.1,0.1,0.1,0.75)
 		self.stam:GetNamedChild("BG"):SetCenterColor(0,0,0,0)
@@ -713,6 +722,9 @@ function dackFrame:SetVisType(visType)
 		self.mag:GetNamedChild("BG"):SetCenterColor(0.345, 0.345, 0.345, 1)
 
 		self.backdrop:SetEdgeColor(0,0,0,1)
+
+		self.stam:GetNamedChild("BG"):SetAlpha(1)
+		self.mag:GetNamedChild("BG"):SetAlpha(1)
 
 		self.class:GetNamedChild("BG"):SetAlpha(1)
 		self.role:GetNamedChild("BG"):SetAlpha(1)
