@@ -256,6 +256,7 @@ function group.handlers.onPing(unitTag, data)
 	group.pin:show()
 	local X,Y,Z = WorldPositionToGuiRender3DPosition(Xw,Yw,Zw)
 	group.pin:setPos(X, Y, Z)
+	group.arrow:StartUpdating()
 	group.arrow:SetTarget(Xw, Yw, Zw)
 	EVENT_MANAGER:RegisterForUpdate("ADGroupToolGroupSharePingFaceCamera", 50, function() group.pin:turnToFace() end)
 
@@ -263,6 +264,7 @@ function group.handlers.onPing(unitTag, data)
 		EVENT_MANAGER:UnregisterForUpdate("ADGroupToolGroupSharePingFaceCamera")
 		group.pin:hide()
 		group.arrow:SetTarget(0, 0, 0)
+		group.arrow:StopUpdating()
 	end, 12500)
 end
 
@@ -814,7 +816,7 @@ function group.updateSharing(sharing)
 		
 		
 		group.pin:enable()
-		group.arrow:StartUpdating()
+		--group.arrow:StartUpdating()
 		
 
 
@@ -830,6 +832,9 @@ function group.updateSharing(sharing)
 		group.groupLeadChange()
 		group.groupUpdate()
 		group.sync(true)
+
+		group.pin:enable()
+		--group.arrow:StartUpdating()
 	end
 
 end
