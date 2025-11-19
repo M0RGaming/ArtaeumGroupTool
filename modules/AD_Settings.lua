@@ -309,7 +309,7 @@ function settings.createSettings()
 				{
 			        type = "slider",
 			        name = "Amount of group windows",
-			        tooltip = "This sets the amount of windows to display. If set to 2, it will display 2 windows of 6 people each.",
+			        tooltip = "This sets the amount of windows to display. If set to 2, it will display 2 windows of 6 people each. You will need to reload UI to apply this change.",
 			        min = 1,
 			        max = 12,
 			        step = 1,	--(optional)
@@ -335,7 +335,7 @@ function settings.createSettings()
 				{
 					type = "button",
 					name = "Show Windows",
-					tooltip = "Click here to Show Windows on this page",
+					tooltip = "Click here to show the Windows on this page",
 					width = "full",
 					func = AD.Group.showWindows,
 				},

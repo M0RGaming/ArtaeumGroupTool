@@ -26,7 +26,7 @@ crown.running = false
 
 crown.markerTypes = {
 	Beam = {
-		texture = "ArtaeumGroupTool/Textures/Pillar.dds",
+		texture = "ArtaeumGroupTool/Textures/pillar.dds",
 		scaleX = 1,
     	scaleY = 100,
     	X = 0,
@@ -219,16 +219,15 @@ end
 
 
 -- TESTING
---[[
-function quickTest()
+function crown.quickTest()
 	crown.crown = 'player'
 	crown.groupJoin(nil,nil,nil,true)
 	crown.crown = 'player'
 end
-function stopTest()
+function crown.stopTest()
 	crown.groupLeave(nil,nil,nil,true)
 end
---]]
+
 
 
 --[[

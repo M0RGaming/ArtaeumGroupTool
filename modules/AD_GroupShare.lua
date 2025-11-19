@@ -23,32 +23,8 @@ group.units = {}
 group.handlers = {}
 
 
-
-
-
-
--- Data that is transfered: 
---[[
-1 [free bit (true or false)] (previously verification)
-1 camp lock
-1 assist ping - if button pressed, beam of light is placed on user
-4 hammer bar (possibly able to remove, depending on demand) GetUnitPower('player',POWERTYPE_DAEDRIC)
-
-8 ult ID
-1 [free bit (true or false)] (previously hammer)
-
-
-7 ult bar
-1 [free bit (true or false)] may implement proxy timer
-
-4 mag bar
-4 stam bar
-]]
-
-
-
 function group.init()
-	print("AD Initialized")
+	--print("AD Initialized")
 
 	vars = AD.vars.Group
 
@@ -114,10 +90,10 @@ function group.init()
 		-- between 3 and 4 bytes
 		group.protocols.sync = handler:DeclareProtocol(91, "ArtaeumDataSync")
 		group.protocols.sync:AddField(LGB.CreateOptionalField(LGB.CreateFlagField("lock"))) -- ArtaeumCampLock (501), only when lock updates on/off
-		group.protocols.sync:AddField(LGB.CreateOptionalField(LGB.CreatePercentageField("hammer"))) -- ArtaeumDaedricPower (502), only when holding
+		group.protocols.sync:AddField(LGB.CreateOptionalField(LGB.CreatePercentageField("hammer", {numBits=5}))) -- ArtaeumDaedricPower (502), only when holding
 		group.protocols.sync:AddField(LGB.CreateOptionalField(LGB.CreateFlagField("requestSync"))) -- ArtaeumRequestSync (503), request resend
 		group.protocols.sync:OnData(group.handlers.onSync)
-		group.protocols.sync:Finalize({isRelevantInCombat = true, replaceQueuedMessages = false})
+		group.protocols.sync:Finalize({isRelevantInCombat = false, replaceQueuedMessages = false})
 
 		group.protocols.hammer = handler:DeclareProtocol(92, "ArtaeumDaedricArtifact") -- create seperate channel for artifact power, as it should replace queued messages
 		group.protocols.hammer:AddField(LGB.CreatePercentageField("hammer")) -- ArtaeumDaedricPower (502), only when holding
@@ -128,6 +104,9 @@ function group.init()
 
 		local GroupResources = LibGroupBroadcast:GetHandlerApi("GroupResources")
 		if GroupResources then
+			--TEMP: ADD POWERTYPE ALIASES SINCE LGB STILL USES THEM
+			POWERTYPE_MAGICKA = COMBAT_MECHANIC_FLAGS_MAGICKA
+			POWERTYPE_STAMINA = COMBAT_MECHANIC_FLAGS_STAMINA
 			GroupResources:RegisterForStaminaChanges(group.handlers.onStamUpdate)
 			GroupResources:RegisterForMagickaChanges(group.handlers.onMagUpdate)
 		end
@@ -140,7 +119,9 @@ function group.init()
 		group.arrow:SetTarget(0, 0, 0)
 
 
-		
+		if IsPlayerActivated() then
+			group.playerActivated()
+		end
 
 
 	end
@@ -169,6 +150,7 @@ function group.createTopLevels()
 		end
 		WINDOW_MANAGER:GetControlByName("AD_Group_TopLevel"..i.."Name"):SetText("Group "..i)
 		toplevels[i]:SetAnchor(TOPLEFT, GuiRoot, TOPLEFT, vars.windowLocations[i][1], vars.windowLocations[i][2])
+		toplevels[i]:SetTransformNormalizedOriginPoint(0,0)
 	end
 end
 
@@ -232,9 +214,6 @@ function group.setArrowColours()
 	group.pin:setColour(rgb[1],rgb[2],rgb[3],rgb[4])
 end
 
-function group.addExternalHook(bitId, sendfunc, recievefunc, axis)
-	d("Note: ArtaeumGroupTool has removed externalHooks as LibGroupBroadcast is now released. Please update to using LibGroupBroadcast instead.")
-end
 
 
 
@@ -314,6 +293,10 @@ function group.handlers.onHammerUpdate(unitTag, data)
 	lgcsUpdate(unitTag)
 end
 
+
+local syncQueued = false
+
+
 function group.handlers.onSync(unitTag, data)
 	--a = data
 	--data.lock
@@ -326,8 +309,23 @@ function group.handlers.onSync(unitTag, data)
 		group.handlers.onHammerUpdate(unitTag, data)
 	end
 	if data.requestSync == true then
+		
 		-- send data
-		group.sync()
+		if not AreUnitsEqual(unitTag, 'player') then -- dont sync off of own sync request
+			--print("Recieved Sync Request from "..GetUnitDisplayName(unitTag))
+			if syncQueued == false then
+				group.sync(false)
+				--print("Starting Sync")
+			end
+			syncQueued = true
+		end
+		
+	elseif data.requestSync == false then
+		-- user just finished syncing
+		if AreUnitsEqual(unitTag, 'player') then
+			--print("User Finished Syncing")
+			syncQueued = false
+		end
 	end
 end
 
@@ -347,11 +345,7 @@ end
 
 
 
---group.protocols.ping
---group.protocols.sync
 
--- EVENT_FORWARD_CAMP_RESPAWN_TIMER_BEGINS
--- EVENT_POWER_UPDATE - add filter for POWERTYPE_DAEDRIC
 
 
 -- on player activated:
@@ -394,6 +388,7 @@ function group.updateLock()
 	if (GetNextForwardCampRespawnTime() <= GetGameTimeMilliseconds()) then
 		group.send(false)
 		EVENT_MANAGER:UnregisterForUpdate("AD Group Tool Camp Lock Check")
+		activeLockUpdate = false
 	end
 end
 
@@ -406,12 +401,12 @@ end
 
 
 function group.sync(requestSync)
-	local hammerCurrent, hammerMax = GetUnitPower('player',POWERTYPE_DAEDRIC)
+	local hammerCurrent, hammerMax = GetUnitPower('player',COMBAT_MECHANIC_FLAGS_DAEDRIC)
 	if hammerMax == 0 then hammerMax = 1 end
 	local hammerBar = hammerCurrent/hammerMax
 
 	local campLock = GetNextForwardCampRespawnTime() > GetGameTimeMilliseconds()
-	if not activeLockUpdate then
+	if (not activeLockUpdate) and campLock then
 		EVENT_MANAGER:RegisterForUpdate("AD Group Tool Camp Lock Check", 10000, group.updateLock)
 		activeLockUpdate = true
 	end
@@ -429,7 +424,8 @@ function group.lgcsPlayerCallback(player, data)
 	end
 end
 
-group.lgcsCallbackDebug = {}
+
+
 
 local ultIconLookup = {
 	[0] = "/esoui/art/icons/heraldrycrests_misc_blank_01.dds", -- no ult
@@ -438,8 +434,7 @@ local ultIconLookup = {
 
 
 function group.lgcsCallback(unitTag, data)
-	print("Unit "..tostring(GetUnitDisplayName(unitTag)).."("..unitTag..") has ults "..data.ult1ID.." and "..data.ult2ID)
-	group.lgcsCallbackDebug[unitTag] = data --- DEBUG STUFF
+	--print("Unit "..tostring(GetUnitDisplayName(unitTag)).."("..unitTag..") has ults "..data.ult1ID.." and "..data.ult2ID)
 
 
 
@@ -519,7 +514,7 @@ end
 
 -- Adapted from zos
 function group.PowerUpdateHandlerFunction(unitTag, powerPoolIndex, powerType, powerPool, powerPoolMax)
-	if powerType == POWERTYPE_HEALTH and frameDB[unitTag] then
+	if powerType == COMBAT_MECHANIC_FLAGS_HEALTH and frameDB[unitTag] then
 	    local unitFrame = frameDB[unitTag]
         local oldHealth = unitFrame.health:GetValue()
         if oldHealth == powerPool then return end
@@ -545,23 +540,6 @@ end
 
 
 
-
-
---[[
---Need to find alternative
-function group.unitCreate(_, unitTag)
-	if not (unitTag:find("group") or IsUnitGrouped(unitTag)) then return end
-	--d("Created "..unitTag)
-	group.groupUpdate()
-end
-
-function group.unitDestroy(_, unitTag)
-	if not (unitTag:find("group") or IsUnitGrouped(unitTag)) then return end
-	--d("Destroyed "..unitTag)
-	group.groupUpdate()
-end
-/script a = ArtaeumGroupTool.Group.lgcs:GetUnitULT('group1')
---]]
 
 latest = {}
 
@@ -632,11 +610,10 @@ end
 
 
 
---TODO: Replace this entire thing with transform scale next patch
 function group.scaleWindow()
 	local scale = vars.scale
 	for i=1,#toplevels do
-		toplevels[i]:SetScale(scale)
+		toplevels[i]:SetTransformScale(scale)
 	end
 end
 
@@ -649,16 +626,6 @@ function group.showWindows()
 	end
 end
 
-
-
-function group.moveBoxes()
-
-	local _,topl,frame,top,x,y,z = ZO_LargeGroupAnchorFrame2:GetAnchor()
-	ZO_LargeGroupAnchorFrame2:SetAnchor(topl,frame,top,x+40,y,z)
-	local _,topl,frame,top,x,y,z = ZO_LargeGroupAnchorFrame3:GetAnchor()
-	ZO_LargeGroupAnchorFrame3:SetAnchor(topl,frame,top,x+80,y,z)
-
-end
 
 
 
@@ -681,6 +648,7 @@ end
 
 
 function group.unlockWindow()
+	group.showWindows()
 	for i=1,#toplevels do
 		local toplevel = toplevels[i]
 		toplevel:SetMouseEnabled(true)
@@ -707,59 +675,28 @@ function group.lockWindow()
 end
 
 
-
-
-
-
--- Legacy Stuff (Keeping read/write stream since I may still use it later)
-
---/script PingMap(MAP_PIN_TYPE_PLAYER_WAYPOINT, 1, 1 / 2^16, 1 / 2^16) StartChatInput(table.concat({GetMapPlayerWaypoint()}, ","))
--- Adapted from RdK group tool, who adapted it from lib group socket
--- 1.1058949894505e-05,1.1058949894505e-05
---group.stepSize = 1.333333329967e-05 -- For some reason cyro's step works, but artaeums doesnt? 
---group.mapID = 33
---group.mapID = 1429
---group.stepSize = 1.1058949894505e-05
-
-
---group.rdkMap = 23
---group.rdkStep = 1.4285034012573e-005
-
--- 1.1058949894505e-05 in Artaeum (ID = 33)
--- 1.333333329967e-05 in Cyro (ID = 14)
--- 1.4285034012573e-005 from LGS in Coldharbour
-
--- breakdownArray is in the form of [1,1,2,4] or something, where the number refer to how long to read
-function group.readStream(stream, breakdownArray)
-	local value = 0
-	local outstream = {}
-	local current = 0
-	for i=#breakdownArray,1,-1 do
-		value = 0
-		for j=breakdownArray[i],1,-1 do
-			current = (stream%2)
-			value = value + current * 2^(breakdownArray[i]-j)
-			stream = (stream-current)/2
-		end
-		outstream[i] = value
+function group.saveWindowLocationX(i, x)
+	local toplevel = toplevels[i]
+	if not vars.windowLocations[i] then
+		vars.windowLocations[i] = {0,0}
 	end
-	return outstream
+	vars.windowLocations[i][1] = x
+	toplevel:ClearAnchors()
+	toplevel:SetAnchor(TOPLEFT, GuiRoot, TOPLEFT, vars.windowLocations[i][1], vars.windowLocations[i][2])	
 end
-
-
--- Example inputs: {1,0,10} {1,1,4}, stream is a list of data points
-function group.writeStream(stream, breakdownArray)
-	local index = 0
-	local outstream = 0
-	for i=#breakdownArray,1,-1 do
-		outstream = outstream + stream[i] * 2^(index)
-		index = index + breakdownArray[i]
+function group.saveWindowLocationY(i, y)
+	local toplevel = toplevels[i]
+	if not vars.windowLocations[i] then
+		vars.windowLocations[i] = {0,0}
 	end
-	return outstream
+	vars.windowLocations[i][2] = y
+	toplevel:ClearAnchors()
+	toplevel:SetAnchor(TOPLEFT, GuiRoot, TOPLEFT, vars.windowLocations[i][1], vars.windowLocations[i][2])	
 end
 
 
 
+local lastZone = 0
 
 
 function group.updateSharing(sharing)
@@ -831,10 +768,13 @@ function group.updateSharing(sharing)
 	elseif group.running and sharing then
 		group.groupLeadChange()
 		group.groupUpdate()
-		group.sync(true)
 
-		group.pin:enable()
-		--group.arrow:StartUpdating()
+		local currentZone = GetUnitWorldPosition('player')
+		if currentZone ~= lastZone then
+			--d("Loaded into a new zone: "..currentZone..", last zone was: "..lastZone)
+			group.sync(true) -- Only sync when changing zones
+		end
+		lastZone = currentZone
 	end
 
 end
@@ -851,5 +791,4 @@ end
 
 
 ZO_CreateStringId("SI_BINDING_NAME_ARTAEUMGROUPTOOL_REQUEST_PING", "Send a assist ping.")
-SLASH_COMMANDS["/ping"] = group.ping
 

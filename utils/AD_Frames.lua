@@ -18,6 +18,7 @@ local roles = {
 
 
 local anchors = {}
+local parents = {}
 function AD.initAnchors(topLevels, dackFrameEnabled)
 	local verticalOffset = 40
 	if dackFrameEnabled then
@@ -29,6 +30,7 @@ function AD.initAnchors(topLevels, dackFrameEnabled)
 		--local anchor = ZO_Anchor:New(TOPLEFT, topLevels[topLevelID], TOPLEFT, 0, 40 * (amountCreated%(12/AD.vars.Group.amountOfWindows)))
 		local anchor = ZO_Anchor:New(TOPLEFT, topLevels[topLevelID], TOPLEFT, 0, verticalOffset * (amountCreated%(12/AD.vars.Group.amountOfWindows)))
 		anchors[i] = anchor
+		parents[i] = topLevels[topLevelID]
 		amountCreated = amountCreated + 1
 	end
 end
@@ -246,6 +248,7 @@ end
 function frameObject:setAnchors()
 	if self.index then
 		anchors[self.index]:Set(self.frame)
+		self.frame:SetParent(parents[self.index]) -- have to set parent too because of scale
 	end
 end
 function frameObject:setName()
@@ -309,7 +312,7 @@ function frameObject:SetMagStamHidden(value)
 end
 
 function frameObject:SetDead(dead)
-	local current, max = GetUnitPower(self.unitTag, POWERTYPE_HEALTH)
+	local current, max = GetUnitPower(self.unitTag, COMBAT_MECHANIC_FLAGS_HEALTH)
 	if dead then
 		self.name:SetColor(1,0,0,1)
 		self:SetHealth(0,max)
@@ -343,7 +346,7 @@ function frameObject:DeathLoop()
 			self.name:SetColor(1,0,0,1)
 		end
 	else
-		local current, max = GetUnitPower(self.unitTag, POWERTYPE_HEALTH)
+		local current, max = GetUnitPower(self.unitTag, COMBAT_MECHANIC_FLAGS_HEALTH)
 		self.name:SetColor(1,1,1,1)
 		self:SetHealth(current,max)
 		EVENT_MANAGER:UnregisterForUpdate("AD Res " .. self.unitTag)
@@ -354,7 +357,7 @@ end
 
 
 function frameObject:SetOnline(online)
-	local current, max = GetUnitPower(self.unitTag, POWERTYPE_HEALTH)
+	local current, max = GetUnitPower(self.unitTag, COMBAT_MECHANIC_FLAGS_HEALTH)
 	if online then
 		self.name:SetColor(1,1,1,1)
 		self:SetHealth(current,max)
@@ -427,6 +430,11 @@ function frameObject:setUlt(ultValue, ult1Cost, icon1, ult2Cost, icon2, noUlt)
 		self.bar2:SetValue(0)
 		if AD.vars.Group.groupFrameText ~= "Health" then
 			self.ultPercent:SetText("")
+		end
+		local rgb = AD.vars.Group.colours.standardHealth
+		self.health:SetColor(unpack(rgb))
+		if self.healthEffects.fakeHealth ~= nil then
+			self.healthEffects.fakeHealth:SetColor(unpack(rgb))
 		end
 		self:SetOnline(IsUnitOnline(self.unitTag))
 		return
