@@ -173,7 +173,7 @@
 					<Anchor point="TOPLEFT" relativeTo="$(parent)" relativePoint="TOPLEFT"/>
 					<Dimensions x="200" y="20"/>
 					<Controls>
-						<Label name="$(parent)Name" font="ZoFontWinH5" wrapMode="ELLIPSIS" text="@name" horizontalAlignment="0" verticalAlignment="1">
+						<Label name="$(parent)Name" font="$(GAMEPAD_BOLD_FONT)|16|soft-shadow-thick" wrapMode="ELLIPSIS" text="@name" horizontalAlignment="0" verticalAlignment="1">
 							<Anchor point="TOPLEFT" offsetX="2"/>
 							<Dimensions x="150" y="16" />
 							<Controls>
@@ -230,7 +230,7 @@
 							<Dimensions x="198" y="17" />
 							<Limits min="0" max="100" />
 							<Controls>
-								<Label name="$(parent)Value" font="ZoFontWinH5" wrapMode="ELLIPSIS" text="Health Here" horizontalAlignment="1" verticalAlignment="1">
+								<Label name="$(parent)Value" font="$(GAMEPAD_BOLD_FONT)|16|soft-shadow-thick" wrapMode="ELLIPSIS" text="Health Here" horizontalAlignment="1" verticalAlignment="1">
 									<Anchor point="TOPLEFT" relativeTo="$(parent)" relativePoint="TOPLEFT" offsetX="0" offsetY="-2" />
 									<Anchor point="BOTTOMRIGHT" relativeTo="$(parent)" relativePoint="BOTTOMRIGHT" offsetX="0" offsetY="0" />
 								</Label>
@@ -284,7 +284,7 @@
 								</Backdrop>
 							</Controls>
 						</StatusBar>
-						<Label name="$(parent)UltPercent" font="ZoFontWinH5" horizontalAlignment="1" verticalAlignment="1" text="|c00FF00500|r">
+						<Label name="$(parent)UltPercent" font="$(GAMEPAD_BOLD_FONT)|16|soft-shadow-thick" horizontalAlignment="1" verticalAlignment="1" text="|c00FF00500|r">
 							<Anchor point="LEFT" relativePoint="RIGHT" relativeTo="$(parent)Ult2" offsetX="3" offsetY="-1"/>
 							<Dimensions x="25" y="17" />
 							<Controls>
@@ -328,7 +328,7 @@
 							</OnInitialized>
 						</StatusBar>
 
-						<Label name="$(parent)Level" font="ZoFontWinH5" wrapMode="ELLIPSIS" text="|t14:14:EsoUI/Art/Champion/champion_icon.dds|t 3600" horizontalAlignment="2" verticalAlignment="1">
+						<Label name="$(parent)Level" font="$(GAMEPAD_BOLD_FONT)|16|soft-shadow-thick" wrapMode="ELLIPSIS" text="|t14:14:EsoUI/Art/Champion/champion_icon.dds|t 3600" horizontalAlignment="2" verticalAlignment="1">
 							<Anchor point="RIGHT" offsetX="-2" offsetY="-1"/>
 							<Dimensions x="50" y="16" />
 							<Controls>

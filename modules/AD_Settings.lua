@@ -67,7 +67,8 @@ function settings.createSettings()
 				{
 					type = "description",
 					title = "",
-					text = 'To edit the visuals of this (colours, etc), please scroll down until you reach the section labelled "Colours"',
+					text = 'To edit the visuals of this (colours, etc), please scroll down until you reach the section labelled "Colours". '..
+						'To change if userIDs or charecter names are displayed, use the base game settings.',
 					width = "full",
 				},
 				{
@@ -75,7 +76,13 @@ function settings.createSettings()
 					name = "Enable Module",
 					tooltip = "If this is enabled, your ultimate will be shared with the group.",
 					getFunc = function() return vars.Group.enabled end,
-					setFunc = function(value) vars.Group.enabled = value end,
+					setFunc = function(value)
+						vars.Group.enabled = value
+						ZO_Dialogs_ShowGamepadDialog("GAMEPAD_CONFIRM_LEAVE_ADDON_MANAGER", {
+							confirmCallback = function() ReloadUI("ingame") end,
+							declineCallback = function() end,
+						})
+					end,
 					requiresReload = true
 				},
 
@@ -84,15 +91,22 @@ function settings.createSettings()
 					type = "checkbox",
 					name = "Dack Group Frames",
 					width = "half",
-					tooltip = "Enable this to swap to the alternative group frames designed by DackJaniels. If you like these, check out LUI Extended!",
+					tooltip = "Enable this to swap to the alternative group frames designed by DackJaniels. If you like these, check out LUI Extended!\nA reload UI is required "..
+						"for this change to be applied",
 					getFunc = function() return vars.Group.dackUIEnabled end,
-					setFunc = function(value) vars.Group.dackUIEnabled = value end,
+					setFunc = function(value)
+						vars.Group.dackUIEnabled = value
+						ZO_Dialogs_ShowGamepadDialog("GAMEPAD_CONFIRM_LEAVE_ADDON_MANAGER", {
+							confirmCallback = function() ReloadUI("ingame") end,
+							declineCallback = function() end,
+						})
+					end,
 					requiresReload = true
 				},
 				{
 					type = "dropdown",
 					name = "Dack Group Frames: Visual Style",
-					warning = "Requires Dack Group Frames to be enabled.",
+					tooltip = "Changing this requires [Dack Group Frames] to be enabled.",
 					width = "half",
 					disabled = function() return not vars.Group.dackUIEnabled end,
 					choices = dackVisOptions,
@@ -185,7 +199,6 @@ function settings.createSettings()
 			        step = 1,
 			        getFunc = function() return selectedWindow end,
 			        setFunc = function(number) selectedWindow = number end,
-			        requiresReload = true,
 			       	width = "half",
 			    },
 				{
@@ -284,7 +297,7 @@ function settings.createSettings()
 	                name = "Assist Ping Colour",
 	                tooltip = "This sets the colour of the arrow and/or marker of the assist ping.",
 	                getFunc = function() local rgb = vars.Group.colours.marker; return rgb[1], rgb[2], rgb[3] end,	--(alpha is optional)
-	                setFunc = function(r,g,b) local rgb = vars.Group.colours.marker; rgb[1] = r; rgb[2] = g; rgb[3] = b; AD.Group.updateColours() end,	--(alpha is optional)
+	                setFunc = function(r,g,b) local rgb = vars.Group.colours.marker; rgb[1] = r; rgb[2] = g; rgb[3] = b; AD.Group.setArrowColours() end,	--(alpha is optional)
 	            	width = "half",
 	            },
 	            {
@@ -295,7 +308,7 @@ function settings.createSettings()
 			        max = 100,
 			        step = 1,	--(optional)
 			        getFunc = function() return vars.Group.colours.marker[4]*100 end,
-			        setFunc = function(a) vars.Group.colours.marker[4] = a/100; AD.Group.updateColours() end,
+			        setFunc = function(a) vars.Group.colours.marker[4] = a/100; AD.Group.setArrowColours() end,
 			        width = "half",	--or "full" (optional)
 			    },
 			    {

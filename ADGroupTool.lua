@@ -56,7 +56,7 @@ end
 
 
 local updateMessages = {
-	[1] = "[ArtaeumGroupTool] Artaeum has updated to version 5.0, adding a new custom group frame layout designed by @DakJaniels. This is disabled by default, and "..
+	[1] = "[ArtaeumGroupTool] Artaeum has updated to version 6.1, adding a new custom group frame layout designed by @DakJaniels. This is disabled by default, and "..
 	"can be enabled via the Group Share Settings menu!"
 }
 
@@ -104,6 +104,14 @@ function AD:Initialize()
 		function AD.initLaterObject:OnDeferredInitialize()
 			AD.Group.init()
 		end
+
+		if LibRadialMenu then
+			LibRadialMenu:RegisterAddon("artaeum", "Artaeum Group Tool")
+			LibRadialMenu:RegisterEntry("artaeum", "Assist Ping", "ping", "/esoui/art/floatingmarkers/quest_icon_assisted.dds", -- todo add texture
+				function() AD.Group.requestAssistPing() end,
+				"Sends an assist ping to everyone in your group, shown as a beam of light on their screen at your location.")
+		end
+
 	else
 		AD.Group.init()
 	end

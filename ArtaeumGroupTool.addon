@@ -1,11 +1,11 @@
 ## Title: |cFFD700Artaeum Group Tool|r
-## APIVersion:  101047
-## Version: 6.0.1 - Console
-## AddOnVersion: 601
-## Description: A toolset for groups in Cyrodiil
+## APIVersion:  101048
+## Version: 6.1.0 - Console
+## AddOnVersion: 610
+## Description: A toolset for groups, including a custom group frame!
 ## Author: |c0DC1CF@M0R_Gaming|r
 ## SavedVariables: ADVars
-## DependsOn: LibAddonMenu-2.0>=40 LibGroupBroadcast>=91 LibGroupResources>=91 LibGroupCombatStats
+## DependsOn: LibAddonMenu-2.0>=40 LibGroupBroadcast>=91 LibGroupResources>=91 LibGroupCombatStats LibRadialMenu
 
 ADGroupTool.lua
 modules/AD_Settings.lua
