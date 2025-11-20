@@ -9,6 +9,13 @@ function settings.createSettings()
 		"Health"
 	}
 
+	local dackVisOptions = { -- allBackdrop, outline, none
+		"Outlines",
+		"None",
+		"All Backdrops"
+	}
+
+
 	local vars = AD.vars
 
 	local panelName = "ArtaeumGroupToolSettingsPanel"
@@ -71,6 +78,29 @@ function settings.createSettings()
 					setFunc = function(value) vars.Group.enabled = value end,
 					requiresReload = true
 				},
+
+
+				{
+					type = "checkbox",
+					name = "Dack Group Frames",
+					width = "half",
+					tooltip = "Enable this to swap to the alternative group frames designed by DackJaniels. If you like these, check out LUI Extended!",
+					getFunc = function() return vars.Group.dackUIEnabled end,
+					setFunc = function(value) vars.Group.dackUIEnabled = value end,
+					requiresReload = true
+				},
+				{
+					type = "dropdown",
+					name = "Dack Group Frames: Visual Style",
+					warning = "Requires Dack Group Frames to be enabled.",
+					width = "half",
+					disabled = function() return not vars.Group.dackUIEnabled end,
+					choices = dackVisOptions,
+					getFunc = function() return vars.Group.dackVisType end,
+					setFunc = function(value) vars.Group.dackVisType = value; AD.Group.setAllVisType() end,
+				},
+
+
 				
 				{
 					type = "checkbox",
@@ -197,12 +227,6 @@ function settings.createSettings()
 			name = "|cFFD700[Crown Arrow Module]|r",
 			controls = {
 				{
-					type = "description",
-					title = "",
-					text = "This module will only work in non Trial/Dungeon environments until Update 47.",
-					width = "full",
-				},
-				{
 					type = "checkbox",
 					name = "Enable Module",
 					tooltip = "If this is enabled, an arrow will point towards the group leader.",
@@ -235,6 +259,13 @@ function settings.createSettings()
 						vars.Crown.markerType = value
 						AD.Crown.pin:updateMarkerData(AD.Crown.markerTypes[value])
 					end
+				},
+				{
+					type = "checkbox",
+					name = "Show 3D Arrow",
+					tooltip = "If this is enabled, a 3D arrow will be created and point towards the group leader.",
+					getFunc = function() return vars.Crown.showArrow end,
+					setFunc = AD.Crown.toggleArrow
 				}
 			}
 		},

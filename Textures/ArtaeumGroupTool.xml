@@ -19,18 +19,18 @@
 
 
 		<Control name="AD_Group_Template" virtual="true">
-    		<Anchor point="TOPLEFT" relativeTo="$(parent)" relativePoint="TOPLEFT" offsetX="2" offsetY="3" />
-    		<Dimensions x="247" y="29" />
-    		<Controls>
+			<Anchor point="TOPLEFT" relativeTo="$(parent)" relativePoint="TOPLEFT" offsetX="2" offsetY="3" />
+			<Dimensions x="247" y="29" /> <!--edge with of 6 probably-->
+			<Controls>
 
-    			<Backdrop name="$(parent)BG">
+				<Backdrop name="$(parent)BG">
 					<Anchor point="TOPLEFT" relativeTo="$(parent)" relativePoint="TOPLEFT" offsetX="-2" offsetY="-3" />
 					<Dimensions x="253" y="36" />
 					<Edge file="EsoUI/Art/Tooltips/UI-Border.dds" edgeFileWidth="128" edgeFileHeight="16" />
-                    <Center file="EsoUI/Art/Tooltips/UI-TooltipCenter.dds" />
-                    <Insets left="16" top="16" right="-16" bottom="-16" />
+					<Center file="EsoUI/Art/Tooltips/UI-TooltipCenter.dds" />
+					<Insets left="16" top="16" right="-16" bottom="-16" />
 				</Backdrop>
-            	<StatusBar name="$(parent)Health" color="cc1a1a">
+				<StatusBar name="$(parent)Health" color="cc1a1a">
 					<Anchor point="TOPLEFT" relativeTo="$(parent)" relativePoint="TOPLEFT" />
 					<Dimensions x="191" y="29" />
 					<Limits min="0" max="100" />
@@ -48,9 +48,9 @@
 
 
 				<Texture name="$(parent)Icon" textureFile="esoui\art\unitframes\gamepad\gp_group_leader.dds" layer='2' hidden="true">
-                    <Anchor point="TOPLEFT"/>
-                    <Dimensions x="20" y="20" />
-                </Texture>
+					<Anchor point="TOPLEFT"/>
+					<Dimensions x="20" y="20" />
+				</Texture>
 				<Label name="$(parent)Name" font="ZoFontGamepad20" wrapMode="ELLIPSIS">
 					<Anchor point="TOPLEFT" />
 					<Dimensions x="163" y="29" />
@@ -59,7 +59,7 @@
 				
 
 
-				<StatusBar name="$(parent)Ult2" color="000000" orientation="0" barAlignment="1">
+				<StatusBar name="$(parent)Ult2" color="C8000000" orientation="0" barAlignment="1">
 					<Anchor point="TOPRIGHT" relativeTo="$(parent)" relativePoint="TOPRIGHT"/>
 					<Dimensions x="28" y="28" />
 					<Limits min="0" max="100" />
@@ -69,7 +69,7 @@
 						</Texture>
 					</Controls>
 				</StatusBar>
-				<StatusBar name="$(parent)Ult" color="000000" orientation="0" barAlignment="1">
+				<StatusBar name="$(parent)Ult" color="C8000000" orientation="0" barAlignment="1">
 					<Anchor point="TOPRIGHT" relativeTo="$(parent)Ult2" relativePoint="TOPLEFT"/>
 					<Dimensions x="28" y="28" />
 					<Limits min="0" max="100" />
@@ -88,15 +88,15 @@
 
 
 
-        <StatusBar name="AD_Group_ShieldBarTemplate" inherits="ZO_PowerShieldBar" virtual="true">
-            <Controls>
-                <StatusBar name="$(parent)Trauma" inherits="ZO_DefaultStatusBarBase" level="ZO_ATTRIBUTE_BAR_POWER_SHIELD_TRAUMA_LEVEL">
-                    <Anchor point="RIGHT" relativePoint="LEFT" offsetX="11" />
-                </StatusBar>
+		<StatusBar name="AD_Group_ShieldBarTemplate" inherits="ZO_PowerShieldBar" virtual="true">
+			<Controls>
+				<StatusBar name="$(parent)Trauma" inherits="ZO_DefaultStatusBarBase" level="ZO_ATTRIBUTE_BAR_POWER_SHIELD_TRAUMA_LEVEL">
+					<Anchor point="RIGHT" relativePoint="LEFT" offsetX="11" />
+				</StatusBar>
 
-                <StatusBar name="$(parent)FakeHealth" inherits="ZO_DefaultStatusBarBase" level="ZO_ATTRIBUTE_BAR_POWER_SHIELD_FAKE_HEALTH_LEVEL">
-                    <Anchor point="RIGHT" relativeTo="$(parent)Trauma" relativePoint="LEFT" offsetX="11" />
-                </StatusBar>
+				<StatusBar name="$(parent)FakeHealth" inherits="ZO_DefaultStatusBarBase" level="ZO_ATTRIBUTE_BAR_POWER_SHIELD_FAKE_HEALTH_LEVEL">
+					<Anchor point="RIGHT" relativeTo="$(parent)Trauma" relativePoint="LEFT" offsetX="11" />
+				</StatusBar>
 
                 <StatusBar name="$(parent)NoHealingInner" inherits="ZO_DefaultStatusBarBase" level="ZO_ATTRIBUTE_BAR_POWER_SHIELD_NO_HEALING_LEVEL">
                     <Anchor point="RIGHT" relativeTo="$(parent)Trauma" relativePoint="LEFT" offsetX="11" />
@@ -107,26 +107,296 @@
                 </StatusBar>
             </Controls>
         </StatusBar>
-        <StatusBar name="AD_Group_ShieldBarTemplate_Gamepad_Template" inherits="ZO_PowerShieldBar ZO_DefaultStatusBarBase" virtual="true">
-    		<Dimensions y="29" />
-            <Controls>
-                <StatusBar name="$(parent)Trauma" inherits="ZO_DefaultStatusBarBase">
-                    <Dimensions y="29" />
-                </StatusBar>
 
-                <StatusBar name="$(parent)FakeHealth" inherits="ZO_DefaultStatusBarBase">
-                	<Dimensions y="29" />
-                </StatusBar>
+		<Control name="AD_EffectivelyShownResize" virtual="true">
+			<OnEffectivelyShown>
+				self:SetHeight(self:GetParent():GetHeight()) --idk if this is too preformance heavy, 245ms for 1 million runs
+			</OnEffectivelyShown>
+		</Control>
 
-                <StatusBar name="$(parent)NoHealingInner" inherits="ZO_DefaultStatusBarBase">
-                	<Dimensions y="29" />
-                </StatusBar>
+		<StatusBar name="AD_Group_ShieldBarTemplate_Keyboard_Template" inherits="ZO_PowerShieldBar ZO_DefaultStatusBarBase AD_EffectivelyShownResize" virtual="true">
+			<Dimensions y="29" />
+			<Controls>
+				<StatusBar name="$(parent)Trauma" inherits="ZO_DefaultStatusBarBase AD_EffectivelyShownResize">
+					<Dimensions y="29" />
+				</StatusBar>
 
-                <StatusBar name="$(parent)FakeNoHealingInner" inherits="ZO_DefaultStatusBarBase">
-                	<Dimensions y="29" />
-                </StatusBar>
-            </Controls>
+				<StatusBar name="$(parent)FakeHealth" inherits="ZO_DefaultStatusBarBase AD_EffectivelyShownResize">
+					<Dimensions y="29" />
+				</StatusBar>
+
+				<StatusBar name="$(parent)NoHealingInner" inherits="ZO_DefaultStatusBarBase AD_EffectivelyShownResize">
+					<Dimensions y="29" />
+				</StatusBar>
+
+				<StatusBar name="$(parent)FakeNoHealingInner" inherits="ZO_DefaultStatusBarBase AD_EffectivelyShownResize">
+					<Dimensions y="29" />
+				</StatusBar>
+			</Controls>
+		</StatusBar>
+
+		<StatusBar name="AD_Group_ShieldBarTemplate_Gamepad_Template" inherits="ZO_PowerShieldBar ZO_DefaultStatusBarBase AD_EffectivelyShownResize" virtual="true">
+			<Dimensions y="29" />
+			<Controls>
+				<StatusBar name="$(parent)Trauma" inherits="ZO_DefaultStatusBarBase AD_EffectivelyShownResize">
+					<Dimensions y="29" />
+				</StatusBar>
+
+				<StatusBar name="$(parent)FakeHealth" inherits="ZO_DefaultStatusBarBase AD_EffectivelyShownResize">
+					<Dimensions y="29" />
+				</StatusBar>
+
+				<StatusBar name="$(parent)NoHealingInner" inherits="ZO_DefaultStatusBarBase AD_EffectivelyShownResize">
+					<Dimensions y="29" />
+				</StatusBar>
+
+				<StatusBar name="$(parent)FakeNoHealingInner" inherits="ZO_DefaultStatusBarBase AD_EffectivelyShownResize">
+					<Dimensions y="29" />
+				</StatusBar>
+			</Controls>
+		</StatusBar>
+
+
+
+		<Control name="DackTemplate" virtual="true" clampedToScreen="true" mouseEnabled="true" movable="true" >
+			<Anchor point="CENTER" relativeTo="GuiRoot" relativePoint="CENTER" offsetX="0" offsetY="0" />
+			<Dimensions x="200" y="60" />
+			<Controls>
+
+				<Backdrop name="$(parent)BG" alpha="0.3" centerColor="000000" edgeColor="ff000000">
+					<Anchor point="TOPLEFT" relativeTo="$(parent)" relativePoint="TOPLEFT" offsetX="-3" offsetY="-3" />
+					<Anchor point="BOTTOMRIGHT" relativeTo="$(parent)" relativePoint="BOTTOMRIGHT" offsetX="3" offsetY="3" />
+					<Edge edgeSize="3"/>
+				</Backdrop>
+
+				<Control name="$(parent)TopRow">
+					<Anchor point="TOPLEFT" relativeTo="$(parent)" relativePoint="TOPLEFT"/>
+					<Dimensions x="200" y="20"/>
+					<Controls>
+						<Label name="$(parent)Name" font="ZoFontWinH5" wrapMode="ELLIPSIS" text="@name" horizontalAlignment="0" verticalAlignment="1">
+							<Anchor point="TOPLEFT" offsetX="2"/>
+							<Dimensions x="150" y="16" />
+							<Controls>
+								<Backdrop name="$(parent)BG" alpha="0.8" centerColor="585858" edgeColor="ff000000">
+									<Anchor point="TOPLEFT" relativeTo="$(parent)" relativePoint="TOPLEFT" offsetX="-2" offsetY="0" />
+									<Anchor point="BOTTOMRIGHT" relativeTo="$(parent)" relativePoint="BOTTOMRIGHT" offsetX="2" offsetY="4" />
+									<Edge edgeSize="1"/>
+								</Backdrop>
+							</Controls>
+							<OnInitialized>
+								--[[
+								local text = self:GetText()  -- this is just to demo the crown thing
+								if not firstOne then
+									self:SetText(string.format("%s %s", "|t16:16:esoui/art/unitframes/gamepad/gp_group_leader.dds|t", text))
+									firstOne = true
+								end
+								--]]
+							</OnInitialized>
+						</Label>
+
+						<Texture name="$(parent)Class" textureFile="esoui/art/icons/class/gamepad/gp_class_sorcerer.dds" layer='2' hidden="false">
+							<Anchor point="RIGHT" relativeTo="$(parent)" relativePoint="RIGHT"/>
+							<Dimensions x="20" y="20" />
+
+							<Controls>
+								<Backdrop name="$(parent)BG" alpha="0.8" centerColor="585858" edgeColor="ff000000">
+									<Anchor point="TOPLEFT" relativeTo="$(parent)" relativePoint="TOPLEFT" />
+									<Anchor point="BOTTOMRIGHT" relativeTo="$(parent)" relativePoint="BOTTOMRIGHT" />
+									<Edge edgeSize="1"/>
+								</Backdrop>
+							</Controls>
+						</Texture>
+						<Texture name="$(parent)Role" textureFile="esoui/art/lfg/gamepad/lfg_roleicon_tank.dds" layer='2' hidden="false">
+							<Anchor point="RIGHT" relativeTo="$(parent)Class" relativePoint="LEFT" offsetX="-2.5"/>
+							<Dimensions x="20" y="20" />
+
+							<Controls>
+								<Backdrop name="$(parent)BG" alpha="0.8" centerColor="585858" edgeColor="ff000000">
+									<Anchor point="TOPLEFT" relativeTo="$(parent)" relativePoint="TOPLEFT" />
+									<Anchor point="BOTTOMRIGHT" relativeTo="$(parent)" relativePoint="BOTTOMRIGHT" />
+									<Edge edgeSize="1"/>
+								</Backdrop>
+							</Controls>
+						</Texture>
+					</Controls>
+				</Control>
+
+				<Control name="$(parent)MidRow">
+					<Anchor point="CENTER" relativeTo="$(parent)" relativePoint="CENTER"/>
+					<Dimensions x="200" y="20"/>
+					<Controls>
+						<StatusBar name="$(parent)Health" color="cc1a1a">
+							<Anchor point="CENTER" relativeTo="$(parent)" relativePoint="CENTER" />
+							<Dimensions x="198" y="17" />
+							<Limits min="0" max="100" />
+							<Controls>
+								<Label name="$(parent)Value" font="ZoFontWinH5" wrapMode="ELLIPSIS" text="Health Here" horizontalAlignment="1" verticalAlignment="1">
+									<Anchor point="TOPLEFT" relativeTo="$(parent)" relativePoint="TOPLEFT" offsetX="0" offsetY="-2" />
+									<Anchor point="BOTTOMRIGHT" relativeTo="$(parent)" relativePoint="BOTTOMRIGHT" offsetX="0" offsetY="0" />
+								</Label>
+								<Backdrop name="$(parent)BG" alpha="0.8" centerColor="191919" edgeColor="ff000000">
+									<Anchor point="TOPLEFT" relativeTo="$(parent)" relativePoint="TOPLEFT" offsetX="-1" offsetY="-1"/>
+									<Anchor point="BOTTOMRIGHT" relativeTo="$(parent)" relativePoint="BOTTOMRIGHT" offsetX="1" offsetY="1" />
+									<Edge edgeSize="1"/>
+								</Backdrop>
+							</Controls>
+
+							<OnValueChanged>
+								--local value = self:GetValue()
+								--local min, max = self:GetMinMax()
+								--self:GetNamedChild("Value"):SetText(ZO_FormatResourceBarCurrentAndMax(value, max))
+							</OnValueChanged>
+						</StatusBar>
+					</Controls>
+				</Control>
+
+				<Control name="$(parent)BottomRow">
+					<Anchor point="BOTTOMLEFT" relativeTo="$(parent)" relativePoint="BOTTOMLEFT"/>
+					<Dimensions x="200" y="20"/>
+					<Controls>
+						<StatusBar name="$(parent)Ult" color="C8000000" orientation="0" barAlignment="1">
+							<Anchor point="LEFT" relativeTo="$(parent)" relativePoint="LEFT"/>
+							<Dimensions x="20" y="20" />
+							<Limits min="0" max="100" />
+							<Controls>
+								<Texture name="$(parent)Icon" textureFile="/esoui/art/icons/ability_sorcerer_crushing_monsoon.dds">
+									<AnchorFill />
+								</Texture>
+								<Backdrop name="$(parent)BG" alpha="0.8" centerColor="585858" edgeColor="ff000000">
+									<Anchor point="TOPLEFT" relativeTo="$(parent)" relativePoint="TOPLEFT" offsetX="-1" offsetY="-1" />
+									<Anchor point="BOTTOMRIGHT" relativeTo="$(parent)" relativePoint="BOTTOMRIGHT" offsetX="1" offsetY="0" />
+									<Edge edgeSize="1"/>
+								</Backdrop>
+							</Controls>
+						</StatusBar>
+						<StatusBar name="$(parent)Ult2" color="C8000000" orientation="0" barAlignment="1">
+							<Anchor point="LEFT" relativeTo="$(parent)Ult" relativePoint="RIGHT" offsetX="2"/>
+							<Dimensions x="20" y="20" />
+							<Limits min="0" max="100" />
+							<Controls>
+								<Texture name="$(parent)Icon" textureFile="/esoui/art/icons/ability_dragonknight_006.dds">
+									<AnchorFill />
+								</Texture>
+								<Backdrop name="$(parent)BG" alpha="0.8" centerColor="585858" edgeColor="ff000000">
+									<Anchor point="TOPLEFT" relativeTo="$(parent)" relativePoint="TOPLEFT" offsetX="-1" offsetY="-1" />
+									<Anchor point="BOTTOMRIGHT" relativeTo="$(parent)" relativePoint="BOTTOMRIGHT" offsetX="1" offsetY="0" />
+									<Edge edgeSize="1"/>
+								</Backdrop>
+							</Controls>
+						</StatusBar>
+						<Label name="$(parent)UltPercent" font="ZoFontWinH5" horizontalAlignment="1" verticalAlignment="1" text="|c00FF00500|r">
+							<Anchor point="LEFT" relativePoint="RIGHT" relativeTo="$(parent)Ult2" offsetX="3" offsetY="-1"/>
+							<Dimensions x="25" y="17" />
+							<Controls>
+								<Backdrop name="$(parent)BG" alpha="0.8" centerColor="585858" edgeColor="ff000000">
+									<Anchor point="TOPLEFT" relativeTo="$(parent)" relativePoint="TOPLEFT" offsetX="-2" offsetY="-0.5" />
+									<Anchor point="BOTTOMRIGHT" relativeTo="$(parent)" relativePoint="BOTTOMRIGHT" offsetX="2" offsetY="3" />
+									<Edge edgeSize="1"/>
+								</Backdrop>
+							</Controls>
+						</Label>
+						<StatusBar name="$(parent)Stam" color="00ff00">
+							<Anchor point="TOPLEFT" relativeTo="$(parent)UltPercent" relativePoint="TOPRIGHT" offsetX="4" offsetY="1"/>
+							<Dimensions x="70" y="7" />
+							<Limits min="0" max="100" />
+							<Controls>
+
+								<Backdrop name="$(parent)BG" alpha="0.8" centerColor="585858" edgeColor="ff000000">
+									<Anchor point="TOPLEFT" relativeTo="$(parent)" relativePoint="TOPLEFT" offsetX="-1" offsetY="-1"/>
+									<Anchor point="BOTTOMRIGHT" relativeTo="$(parent)" relativePoint="BOTTOMRIGHT" offsetX="1" offsetY="1" />
+									<Edge edgeSize="1"/>
+								</Backdrop>
+							</Controls>
+							<OnInitialized>
+								self:SetValue(100)
+							</OnInitialized>
+						</StatusBar>
+						<StatusBar name="$(parent)Mag" color="0252c7">
+							<Anchor point="BOTTOMLEFT" relativeTo="$(parent)UltPercent" relativePoint="BOTTOMRIGHT" offsetX="4" offsetY="1" />
+							<Dimensions x="70" y="7" />
+							<Limits min="0" max="100" />
+							<Controls>
+								
+								<Backdrop name="$(parent)BG" alpha="0.8" centerColor="585858" edgeColor="ff000000">
+									<Anchor point="TOPLEFT" relativeTo="$(parent)" relativePoint="TOPLEFT" offsetX="-1" offsetY="-1"/>
+									<Anchor point="BOTTOMRIGHT" relativeTo="$(parent)" relativePoint="BOTTOMRIGHT" offsetX="1" offsetY="1" />
+									<Edge edgeSize="1"/>
+								</Backdrop>
+							</Controls>
+							<OnInitialized>
+								self:SetValue(100)
+							</OnInitialized>
+						</StatusBar>
+
+						<Label name="$(parent)Level" font="ZoFontWinH5" wrapMode="ELLIPSIS" text="|t14:14:EsoUI/Art/Champion/champion_icon.dds|t 3600" horizontalAlignment="2" verticalAlignment="1">
+							<Anchor point="RIGHT" offsetX="-2" offsetY="-1"/>
+							<Dimensions x="50" y="16" />
+							<Controls>
+								<Backdrop name="$(parent)BG" alpha="0.8" centerColor="585858" edgeColor="ff000000">
+									<Anchor point="TOPLEFT" relativeTo="$(parent)" relativePoint="TOPLEFT" offsetX="-2" offsetY="-1" />
+									<Anchor point="BOTTOMRIGHT" relativeTo="$(parent)" relativePoint="BOTTOMRIGHT" offsetX="2" offsetY="3" />
+									<Edge edgeSize="1"/>
+								</Backdrop>
+							</Controls>
+						</Label>
+					</Controls>
+				</Control>
+			</Controls>
+		</Control>
+
+		<StatusBar name="AD_Dack_ShieldBarTemplate" inherits="ZO_PowerShieldBar ZO_DefaultStatusBarBase" virtual="true">
+			<Dimensions y="17" />
+			<Controls>
+				<StatusBar name="$(parent)Trauma" inherits="ZO_DefaultStatusBarBase" level="ZO_ATTRIBUTE_BAR_POWER_SHIELD_TRAUMA_LEVEL">
+					<Dimensions y="17" />
+				</StatusBar>
+
+				<StatusBar name="$(parent)FakeHealth" inherits="ZO_DefaultStatusBarBase" level="ZO_ATTRIBUTE_BAR_POWER_SHIELD_FAKE_HEALTH_LEVEL">
+					<Dimensions y="17" />
+				</StatusBar>
+
+				<StatusBar name="$(parent)NoHealingInner" inherits="ZO_DefaultStatusBarBase" level="ZO_ATTRIBUTE_BAR_POWER_SHIELD_NO_HEALING_LEVEL">
+					<Dimensions y="17" />
+				</StatusBar>
+
+				<StatusBar name="$(parent)FakeNoHealingInner" inherits="ZO_DefaultStatusBarBase" level="ZO_ATTRIBUTE_BAR_POWER_SHIELD_FAKE_NO_HEALING_INNER_LEVEL">
+					<Dimensions y="17" />
+				</StatusBar>
+			</Controls>
+		</StatusBar>
+
+    	
+		<StatusBar name="AD_Dack_ShieldBarTemplate_Gamepad_Template" inherits="AD_Dack_ShieldBarTemplate" virtual="true">
+		</StatusBar>
+
+		<StatusBar name="AD_Dack_ShieldBarTemplate_Keyboard_Template" inherits="AD_Dack_ShieldBarTemplate" virtual="true">
         </StatusBar>
+
+
+
+
+        <Control name="ADArrowTemplate" virtual="true" space="WORLD">
+        	<Dimensions x="100" y="100" />
+        	<Controls>
+        		<Control name="$(parent)Div">
+        			<Controls>
+		        		<Texture name="$(parent)Chevron" hidden="false" textureFile="ArtaeumGroupTool/Textures/chevron.dds">
+							<Anchor point="CENTER" relativePoint="CENTER" relativeTo="$(parent)"/>
+							<Dimensions x="100" y="100" />
+						</Texture>
+						<Control name="$(parent)Div">
+							<Controls>
+								<Label name="$(parent)Text" font="$(GAMEPAD_BOLD_FONT)|$(GP_20)|thick-outline" horizontalAlignment="1" verticalAlignment="1" text="15m" scale="1.25">
+									<Anchor point="CENTER" relativePoint="CENTER" relativeTo="$(parent)" offsetY="15"/>
+									<Dimensions x="200" y="100" />
+								</Label>
+							</Controls>
+						</Control>
+					</Controls>
+				</Control>
+        	</Controls>
+        </Control>
+
 
 
 
