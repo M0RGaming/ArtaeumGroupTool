@@ -732,6 +732,9 @@ function group.updateSharing(sharing)
 			frameDB['group'..i].frame:SetHidden(true)
 		end
 		ZO_UnitFramesGroups:SetHidden(false)
+		if KFS_UnitFramesGroups then
+			KFS_UnitFramesGroups:SetHidden(false)
+		end
 		group.running = false
 		
 
@@ -768,6 +771,9 @@ function group.updateSharing(sharing)
 
 		if vars.hideBaseUnitFrames then
 			ZO_UnitFramesGroups:SetHidden(true)
+			if KFS_UnitFramesGroups then
+				KFS_UnitFramesGroups:SetHidden(true)
+			end
 		end
 
 		group.running = true

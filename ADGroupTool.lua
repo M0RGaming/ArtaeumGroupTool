@@ -100,10 +100,18 @@ function AD:Initialize()
 	AD.Crown.init()
 
 	if IsConsoleUI() then
-		AD.initLaterObject = ZO_DeferredInitializingObject:New(HUD_SCENE)
+		local hudScenes = ZO_SceneGroup:New("hud","hudui")
+		AD.initLaterObject = ZO_DeferredInitializingObject:New(hudScenes) -- formerly HUD_SCENE
 		function AD.initLaterObject:OnDeferredInitialize()
 			AD.Group.init()
 		end
+		
+		--[[
+		EVENT_MANAGER:RegisterForEvent("ArtaeumGroupToolGroupInitDelayedActivate", EVENT_PLAYER_ACTIVATED, function()
+	        EVENT_MANAGER:UnregisterForEvent("ArtaeumGroupToolGroupInitDelayedActivate", EVENT_PLAYER_ACTIVATED)
+	        AD.Group.init()
+	    end)
+	    --]]
 
 		if LibRadialMenu then
 			LibRadialMenu:RegisterAddon("artaeum", "Artaeum Group Tool")
