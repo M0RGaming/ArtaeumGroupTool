@@ -57,7 +57,9 @@ end
 
 local updateMessages = {
 	[1] = "[ArtaeumGroupTool] Artaeum has updated to version 6.1, adding a new custom group frame layout designed by @DakJaniels. This is disabled by default, and "..
-	"can be enabled via the Group Share Settings menu!"
+	"can be enabled via the Group Share Settings menu!",
+	[2] = "[ArtaeumGroupTool] Due to fraudulent copyright claims against addons, LibHarvensAddonSettings was taken down in addition to several other libraries. "..
+	"Because of this, Artaeum is temporary using an old method for sharing ultimate until LGCS is republished! If any issues are present, please report them to M0R."
 }
 
 local playerActivated = function()
