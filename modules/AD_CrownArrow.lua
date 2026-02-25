@@ -14,9 +14,11 @@ function crown.init()
 	crown.createArrow()
 	crown.updateToggle(vars.enabled)
 	crown.toggleMarker(vars.showMarker)
+	crown.toggleArrow(vars.showArrow)
 	crown.toggleCyroOnly()
 end
 
+crown.arrow = nil
 crown.updateInterval = 10
 crown.crown = nil
 crown.running = false
@@ -55,6 +57,7 @@ crown.markerTypes = {
 
 
 function crown.createArrow()
+	crown.arrow = AD.AD3D.createArrow()
 	crown.pin = AD.AD3D.create3D(toplevel, crown.markerTypes[vars.markerType])
 	crown.pin:setUserOffset(vars.userOffset)
 	crown.pin:setScale(vars.scale)
@@ -63,6 +66,7 @@ end
 
 function crown.updateColours()
 	local rgb = vars.markerColour
+	crown.arrow:SetColour(rgb[1],rgb[2],rgb[3])
 	crown.pin:setColour(rgb[1],rgb[2],rgb[3],rgb[4])
 end
 
@@ -85,6 +89,7 @@ function crown.updateToggle(enable)
 		EVENT_MANAGER:RegisterForEvent("AD Group Tool Crown Leave", EVENT_GROUP_MEMBER_LEFT, crown.groupLeave)
 		EVENT_MANAGER:RegisterForEvent("AD Group Tool Crown Change", EVENT_LEADER_UPDATE, crown.groupLeadChange)
 		EVENT_MANAGER:RegisterForEvent("AD Group Tool Crown Group Update", EVENT_GROUP_UPDATE, crown.groupUpdate)
+		crown.arrow:StartUpdating()
 		if IsUnitGrouped("player") then -- If the user is already in a group when module is toggled,
 			crown.groupJoin(nil, nil, nil, true) -- run the group join event
 		end
@@ -94,7 +99,9 @@ function crown.updateToggle(enable)
 		EVENT_MANAGER:UnregisterForEvent("AD Group Tool Crown Change")
 		EVENT_MANAGER:UnregisterForEvent("AD Group Tool Crown Group Update")
 		EVENT_MANAGER:UnregisterForUpdate("AD Group Tool Crown Update")
-		crown.pin:hide()
+		crown.arrow:SetTarget(0,0,0)
+		crown.arrow:StopUpdating()
+		crown.pin:SetHidden(true)
 	end
 end
 
@@ -125,6 +132,7 @@ function crown.groupLeave(eventCode, _, _, isLocalPlayer, _, _)
 	end
 	--if not IsUnitGrouped("player") then
 	EVENT_MANAGER:UnregisterForUpdate("AD Group Tool Crown Update")
+	crown.arrow:SetTarget(0,0,0)
 	crown.crown = nil
 	crown.running = false
 	crown.pin:hide()
@@ -134,6 +142,7 @@ end
 function crown.groupLeadChange(eventCode, leaderTag)
 	if IsUnitGroupLeader('player') then
 		EVENT_MANAGER:UnregisterForUpdate("AD Group Tool Crown Update")
+		crown.arrow:SetTarget(0,0,0)
 		crown.running = false
 		crown.pin:hide()
 	else
@@ -158,10 +167,14 @@ end
 
 
 function crown.updateMarker()
+	local _,Xw,Yw,Zw = GetUnitRawWorldPosition(crown.crown)
 	if vars.showMarker then
-		local _,Xw,Yw,Zw = GetUnitWorldPosition(crown.crown)
 		local X,Y,Z = WorldPositionToGuiRender3DPosition(Xw,Yw,Zw)
 		crown.pin:setPos(X,Y,Z)
+	end
+
+	if vars.showArrow then
+		crown.arrow:SetTarget(Xw, Yw, Zw)
 	end
 end
 
@@ -175,6 +188,15 @@ function crown.toggleMarker(value)
 	end
 end
 
+function crown.toggleArrow(value)
+	vars.showArrow = value
+	if value then
+		crown.arrow:StartUpdating()
+	else
+		crown.arrow:StopUpdating()
+		crown.arrow:SetTarget(0,0,0)
+	end
+end
 
 function crown.toggleCyroOnly()
 	local value = vars.cyrodilOnly
