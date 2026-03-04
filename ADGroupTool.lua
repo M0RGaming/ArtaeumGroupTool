@@ -57,7 +57,8 @@ end
 
 local updateMessages = {
 	[1] = "[ArtaeumGroupTool] Artaeum has updated to version 6.1, adding a new custom group frame layout designed by @DakJaniels. This is disabled by default, and "..
-	"can be enabled via the Group Share Settings menu!"
+	"can be enabled via the Group Share Settings menu!",
+	[2] = ""
 }
 
 local playerActivated = function()
