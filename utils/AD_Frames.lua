@@ -280,7 +280,7 @@ end
 function frameObject:SetHealth(value,max)
 	ZO_StatusBar_SmoothTransition(self.health,value,max)
 	if AD.vars.Group.groupFrameText == "Health" then
-		self.ultPercent:SetText(ZO_FormatResourceBarCurrentAndMax(value, max))
+		self.ultPercent:SetText(ZO_FormatResourceBarCurrentAndMax(value, max, AD.vars.Group.HealthFormat))
 	end
 end
 
@@ -589,7 +589,7 @@ end
 
 function dackFrame:SetHealth(value,max)
 	ZO_StatusBar_SmoothTransition(self.health,value,max)
-	self.health:GetNamedChild("Value"):SetText(ZO_FormatResourceBarCurrentAndMax(value, max))
+	self.health:GetNamedChild("Value"):SetText(ZO_FormatResourceBarCurrentAndMax(value, max, AD.vars.Group.HealthFormat))
 end
 
 function dackFrame:SetOnline(online)

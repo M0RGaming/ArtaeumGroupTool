@@ -1,3 +1,7 @@
+Version 5.0.1
+----------
+Added a setting to overwrite the base game healthbar formatting (number/percent/off/both/base game)
+
 Version 5.0.0
 ----------
 Added new Group Frames designed by @DakJaniels, disabled by default.

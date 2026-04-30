@@ -58,6 +58,7 @@ AD.Settings.DefaultSettings = {
 		groupFrameText = "Ult Percent", -- Ult Number, Ult Percent, Health
 		dackVisType = "Outlines",
 		dackUIEnabled = false,
+		HealthFormat = nil,
 	},
 	latestUpdateMessage = 0
 }
@@ -83,6 +84,7 @@ AD.Profiles.DefaultSettings = {
 			showMagStam = false,
 			dackVisType = "Outlines",
 			dackUIEnabled = false,
+			HealthFormat = nil,
 	    },
 	    FD = {
 		    rightClickMenu=true

@@ -36,6 +36,17 @@ function settings.createSettings()
 		"All Backdrops"
 	}
 
+    local HealthFormatValues = {
+        ["Off"] = RESOURCE_NUMBERS_SETTING_OFF,
+        ["Number Only"] = RESOURCE_NUMBERS_SETTING_NUMBER_ONLY,
+        ["Percent Only"] = RESOURCE_NUMBERS_SETTING_PERCENT_ONLY,
+        ["Number and Percent"] = RESOURCE_NUMBERS_SETTING_NUMBER_AND_PERCENT,
+    }
+    local HealthFormatLookup = {}
+    for i,v in pairs(HealthFormatValues) do
+        HealthFormatLookup[v] = i
+    end
+
 
 	local vars = AD.vars
 
@@ -295,6 +306,21 @@ function settings.createSettings()
 					getFunc = function() return vars.Group.groupFrameText end,
 					setFunc = function(value) vars.Group.groupFrameText = value end,
 				},
+				{
+		            type = "dropdown",
+		            name = "Health Bar Number Format",
+		            choices = {"Base Game", "Off", "Number Only", "Percent Only", "Number and Percent"},
+		            getFunc = function()
+		            	if vars.Group.HealthFormat == nil then
+		            		return "Base Game"
+		            	end
+		            	return HealthFormatLookup[vars.Group.HealthFormat] 
+		            end,
+		            setFunc = function(newValue)
+		                local formattedValue = HealthFormatValues[newValue]
+		                vars.Group.HealthFormat = formattedValue
+		            end,
+		        },
 				{
 			        type = "slider",
 			        name = "Window Scale",
