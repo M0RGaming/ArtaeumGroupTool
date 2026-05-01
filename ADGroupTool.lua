@@ -59,6 +59,7 @@ AD.Settings.DefaultSettings = {
 		dackVisType = "Outlines",
 		dackUIEnabled = false,
 		HealthFormat = nil,
+		dackFontSelection = "Keyboard",
 	},
 	latestUpdateMessage = 0
 }
@@ -85,6 +86,7 @@ AD.Profiles.DefaultSettings = {
 			dackVisType = "Outlines",
 			dackUIEnabled = false,
 			HealthFormat = nil,
+			dackFontSelection = "Keyboard",
 	    },
 	    FD = {
 		    rightClickMenu=true

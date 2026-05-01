@@ -74,6 +74,9 @@ end
 function frameBase:SetRole(value)
 	-- (optional) sets the role icon of the unit
 end
+function frameBase:SetCustomFonts(value)
+	-- (optional) sets the fonts to either Keyboard or Gamepad
+end
 
 
 frames.frameBase = frameBase
@@ -748,6 +751,19 @@ function dackFrame:SetVisType(visType)
 		self.bar:GetNamedChild("BG"):SetAlpha(1)
 		self.bar2:GetNamedChild("BG"):SetAlpha(1)
 	end
+end
+
+
+
+function dackFrame:SetCustomFonts(value)
+	local font = "ZoFontWinH5"
+	if value == "Gamepad" then
+		font = "ZoFontGamepadBold18"
+	end
+	self.name:SetFont(font)
+	self.health:GetNamedChild("Value"):SetFont(font)
+	self.ultPercent:SetFont(font)
+	self.level:SetFont(font)
 end
 
 

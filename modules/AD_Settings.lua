@@ -310,6 +310,7 @@ function settings.createSettings()
 		            type = "dropdown",
 		            name = "Health Bar Number Format",
 		            choices = {"Base Game", "Off", "Number Only", "Percent Only", "Number and Percent"},
+		            width = "half",
 		            getFunc = function()
 		            	if vars.Group.HealthFormat == nil then
 		            		return "Base Game"
@@ -321,6 +322,23 @@ function settings.createSettings()
 		                vars.Group.HealthFormat = formattedValue
 		            end,
 		        },
+
+				{
+		            type = "dropdown",
+		            name = "Dack Frames Font",
+		            choices = {"Keyboard", "Gamepad"},
+		            tooltip = "This changes the font of the Dack Group Frames to be either keyboard fonts or gamepad fonts.",
+		            disabled = function() return not vars.Group.dackUIEnabled end,
+		            width = "half",
+		            getFunc = function()
+		            	return vars.Group.dackFontSelection
+		            end,
+		            setFunc = function(newValue)
+		                vars.Group.dackFontSelection = newValue
+		                AD.Group.UpdateDackFonts()
+		            end,
+		        },
+
 				{
 			        type = "slider",
 			        name = "Window Scale",

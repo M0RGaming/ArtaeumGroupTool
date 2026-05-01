@@ -123,6 +123,8 @@ function group.init()
 			group.playerActivated()
 		end
 
+		group.UpdateDackFonts()
+
 
 	end
 end
@@ -702,6 +704,18 @@ function group.saveWindowLocationY(i, y)
 	toplevel:ClearAnchors()
 	toplevel:SetAnchor(TOPLEFT, GuiRoot, TOPLEFT, vars.windowLocations[i][1], vars.windowLocations[i][2])	
 end
+
+
+
+function group.UpdateDackFonts()
+	local setting = vars.dackFontSelection
+	for i,v in pairs(frameDB) do
+		v:SetCustomFonts(setting)
+	end
+end
+
+
+
 
 
 
